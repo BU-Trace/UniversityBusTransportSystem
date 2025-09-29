@@ -1,13 +1,20 @@
 #!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
-echo "🚦 Running typecheck & lint before push..."
-# Run across all workspaces (server, client). Adjust if you don’t have these scripts yet.
-npm run typecheck && npm run lint
+# husky pre-push hook
 
 echo "🔍 Checking for build errors before push..."
-npm run build
+
+# Run server build
+npm --prefix server run build
 if [ $? -ne 0 ]; then
-  echo "❌ Build failed. Push aborted."
+  echo "❌ Server build failed. Push aborted."
   exit 1
 fi
+
+# Run client build
+npm --prefix client run build
+if [ $? -ne 0 ]; then
+  echo "❌ Client build failed. Push aborted."
+  exit 1
+fi
+
+echo "✅ Build succeeded. Proceeding with push."
