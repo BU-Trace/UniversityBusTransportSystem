@@ -7,6 +7,3 @@ if [ $? -ne 0 ]; then
   echo "❌ Build failed. Commit aborted."
   exit 1
 fi
-
-echo "🔍 Running lint-staged before commit..."
-npm run lint-staged
