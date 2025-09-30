@@ -19,7 +19,7 @@ npm install
 - Copy `.env.example` from `server/` to `server/.env` and update `mongoUri` with your MongoDB connection string.
 
 ```bash
-cp server/.env.example server/.env
+cp server/.env server/.env
 # Edit server/.env and set mongoUri
 ```
 
