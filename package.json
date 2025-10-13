@@ -28,6 +28,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-tabs": "^5.0.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "chalk": "^5.6.2",
@@ -40,5 +41,8 @@
     "prettier": "^3.3.3",
     "turbo": "^2.0.6",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "react-tabs": "^6.1.0"
   }
 }

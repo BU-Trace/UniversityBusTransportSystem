@@ -6,4 +6,9 @@ const router = Router();
 
 router.post('/login', clientInfoParser, AuthController.loginUser);
 
+router.post('/change-password', AuthController.changePassword);
+
+
+router.post('/forget-password', AuthController.forgetPassword);
+
 export const AuthRoutes = router;

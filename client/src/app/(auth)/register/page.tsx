@@ -1,10 +1,12 @@
+
 import React from 'react';
+import  RegisterPageComponent   from '@/modules/register/register-page';
 
 const RegisterPage = () => {
   return (
-    <div>
-      Register Page
-    </div>
+    <React.Fragment>
+      <RegisterPageComponent />
+    </React.Fragment>
   );
 };
 

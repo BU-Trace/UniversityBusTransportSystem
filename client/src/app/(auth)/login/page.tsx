@@ -1,10 +1,11 @@
+import LoginPageComponent from '@/modules/login/login-page';
 import React from 'react';
 
 const LogInPage = () => {
   return (
-    <div>
-      Log In Page
-    </div>
+    <React.Fragment>
+     <LoginPageComponent  />
+    </React.Fragment>
   );
 };
 

@@ -23,6 +23,7 @@ export type ClientITInfo = {
 
 // --- Role-specific client info --------------------------------
 type BaseClientInfo = {
+
   bio?: string;
 };
 

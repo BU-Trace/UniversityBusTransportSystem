@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 const Util = require('util');
 const ReadFile = Util.promisify(fs.readFile);
-const Handlebars = require('handlebars');
+import Handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
 import config from '../config';
 
@@ -28,7 +28,7 @@ const sendEmail = async (
 
     // Email configuration
     const mailOptions: any = {
-      from: '"NextMart" <support@nextmart.com>',
+      from: '"CampusConnect" <mimam22.cse@bu.ac.bd>',
       to: email,
       subject,
       html,
@@ -62,7 +62,10 @@ const createEmailContent = async (data: object, templateType: string) => {
     const template = Handlebars.compile(content);
 
     return template(data);
-  } catch (error) {}
+  } catch (error) {
+    console.error('createEmailContent error:', error);
+    throw error;
+  }
 };
 
 export const EmailHelper = {
