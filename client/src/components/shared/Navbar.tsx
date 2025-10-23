@@ -5,7 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useUser } from "@/context/UserContext";
 import { logOutUser } from "@/services/AuthServices";
 
-export default function Navbar() {
+export default function Navbar() 
+{
   const { user, setIsLoading } = useUser();
   const pathName = usePathname();
   const router = useRouter();
