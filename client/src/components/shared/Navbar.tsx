@@ -50,10 +50,10 @@ export default function Navbar() {
           <Link href="/schedules" className="text-gray-700 hover:text-gray-800">
             Schedules
           </Link>
-          <Link href="/routes" className="text-gray-700 hover:text-gray-800">
+          <Link href="/about" className="text-gray-700 hover:text-gray-800">
             About
           </Link>
-          <Link href="/schedules" className="text-gray-700 hover:text-gray-800">
+          <Link href="/contacts" className="text-gray-700 hover:text-gray-800">
             Contacts
           </Link>
 
