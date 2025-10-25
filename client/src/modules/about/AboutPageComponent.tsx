@@ -7,7 +7,7 @@ const AboutPageComponent = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center">
             {/* hero */}
-            <div className="w-full relative h-[300px] md:h-[400px] lg:h-[450px] mt-16">
+            <div className="w-full relative h-[300px] md:h-[400px] lg:h-[450px]">
                 <Image
                     width={1600}
                     height={600}
