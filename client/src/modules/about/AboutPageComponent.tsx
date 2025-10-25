@@ -1,50 +1,21 @@
-"use client";
-
-import React from "react";
-import Image from "next/image";
+import Header from "@/components/Header";
 
 const AboutPageComponent: React.FC = () => {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start">
             {/* hero */}
-            <header className="w-full relative h-[320px] sm:h-[380px] md:h-[420px] lg:h-[480px]">
-                <Image
-                    width={1600}
-                    height={600}
-                    src="/static/loginpagebanner.png"
-                    alt="About Us Banner"
-                    className="w-full h-full object-cover"
-                    priority
-                />
-
-                {/* dark overlay */}
-                <div className="absolute inset-0 bg-black/35 flex items-center justify-center px-6">
-                    <div className="text-center max-w-3xl">
-                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white uppercase tracking-tight mb-4">
-                            Smarter University Transport with <span className="text-black">CampusConnect</span>
-                        </h1>
-                        <p className="text-sm sm:text-base md:text-lg text-white/90 mb-6">
-                            Real-time tracking, dynamic scheduling and instant notifications — all in one
-                            beautiful, reliable platform built for students and staff.
-                        </p>
-                        <div className="flex items-center justify-center gap-3">
-                            <a
-                                href="#features"
-                                className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-full font-semibold shadow-lg"
-                            >
-                                Get Started
-                            </a>
-                            <a
-                                href="#contact"
-                                className="inline-flex items-center gap-2 bg-white/90 hover:bg-white text-red-600 px-4 py-2 rounded-full font-medium"
-                            >
-                                Contact Sales
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
+            {/* Use shared Header component */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* Header is a client component with props to customize content */}
+            <Header
+            title="Smarter University Transport "
+            subtitle="Real-time tracking, dynamic scheduling and instant notifications — all in one place."
+            imageSrc="/static/loginpagebanner.png"
+            primaryText="Explore Features"
+            primaryHref="#features"
+            secondaryText="Contact Us"
+            secondaryHref="#contact"
+            />
             {/* main content */}
             <main className="max-w-7xl w-full px-6  py-12 ">
                 <section id="features" className="bg-white rounded-3xl   p-6 md:p-10 mb-12">
@@ -75,19 +46,19 @@ const AboutPageComponent: React.FC = () => {
                         </div>
 
                         <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                            <div className="p-6 rounded-2xl shadow-md border border-gray-100">
+                            <div className="p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Live Bus Tracking</h3>
                                 <p className="text-gray-600 text-sm">View vehicle locations in real-time and share ETAs with students.</p>
                             </div>
-                            <div className="p-6 rounded-2xl shadow-md border border-gray-100">
+                            <div className="p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Dynamic Scheduling</h3>
                                 <p className="text-gray-600 text-sm">Routes update automatically when delays or detours occur.</p>
                             </div>
-                            <div className="p-6 rounded-2xl shadow-md border border-gray-100">
+                            <div className="p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Notifications</h3>
                                 <p className="text-gray-600 text-sm">Instant alerts for students about delays, arrivals and changes.</p>
                             </div>
-                            <div className="p-6 rounded-2xl shadow-md border border-gray-100">
+                            <div className="p-6 rounded-2xl shadow-md border border-gray-100 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                                 <h3 className="font-semibold text-lg text-gray-900 mb-2">Secure Access</h3>
                                 <p className="text-gray-600 text-sm">Role-based authentication and permissions keep your campus safe.</p>
                             </div>
@@ -100,28 +71,28 @@ const AboutPageComponent: React.FC = () => {
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6">Campus Dashboard (Grid View)</h2>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 auto-rows-fr">
-                        <div className="lg:col-span-2 row-span-2 bg-white rounded-2xl shadow p-6">
+                        <div className="lg:col-span-2 row-span-2 bg-white rounded-2xl shadow p-6 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                             <h4 className="font-semibold text-lg text-gray-900 mb-2">Live Map</h4>
                             <p className="text-gray-600 text-sm">Interactive map showing all active vehicles and routes.</p>
                         </div>
-                        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-6">
+                        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-6 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                             <h4 className="font-semibold text-lg text-gray-900 mb-2">Next Arrivals</h4>
                             <p className="text-gray-600 text-sm">Upcoming arrivals for selected stops.</p>
                         </div>
-                        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-6">
+                        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-6 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                             <h4 className="font-semibold text-lg text-gray-900 mb-2">Driver Status</h4>
                             <p className="text-gray-600 text-sm">Vehicle assignments and driver availability overview.</p>
                         </div>
 
-                        <div className="lg:col-span-1 bg-white rounded-2xl shadow p-4">
+                        <div className="lg:col-span-1 bg-white rounded-2xl shadow p-4 hover:bg-red-50 hover:shadow-lg transition-colors duration-200">
                             <h5 className="font-semibold text-sm text-gray-900 mb-1">Active Routes</h5>
                             <div className="text-3xl font-bold text-red-600">28</div>
                         </div>
-                        <div className="lg:col-span-1 bg-white rounded-2xl shadow p-4">
+                        <div className="lg:col-span-1 bg-white rounded-2xl shadow p-4 hover:bg-red-50 hover:shadow-lg transition-colors duration-200">
                             <h5 className="font-semibold text-sm text-gray-900 mb-1">Vehicles</h5>
                             <div className="text-3xl font-bold text-red-600">62</div>
                         </div>
-                        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-4">
+                        <div className="lg:col-span-2 bg-white rounded-2xl shadow p-4 hover:bg-red-50 hover:shadow-lg transition-colors duration-200">
                             <h5 className="font-semibold text-sm text-gray-900 mb-1">On-time Rate</h5>
                             <div className="text-3xl font-bold text-red-600">92%</div>
                         </div>
@@ -130,15 +101,15 @@ const AboutPageComponent: React.FC = () => {
 
                 {/* Bottom cards */}
                 <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-white shadow-md rounded-2xl p-6">
+                    <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                         <h3 className="font-semibold text-lg text-gray-900 mb-2">Secure Login System</h3>
                         <p className="text-gray-600 text-sm">UBTS ensures secure authentication for students and staff with role-based access.</p>
                     </div>
-                    <div className="bg-white shadow-md rounded-2xl p-6">
+                    <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                         <h3 className="font-semibold text-lg text-gray-900 mb-2">Optimized for Performance</h3>
                         <p className="text-gray-600 text-sm">The system runs smoothly on all modern devices, keeping the user experience fast and seamless.</p>
                     </div>
-                    <div className="bg-white shadow-md rounded-2xl p-6">
+                    <div className="bg-white shadow-md rounded-2xl p-6 hover:shadow-xl hover:-translate-y-1 transition-transform duration-200">
                         <h3 className="font-semibold text-lg text-gray-900 mb-2">24/7 Accessibility</h3>
                         <p className="text-gray-600 text-sm">Access bus details anytime, anywhere — ensuring reliable information at your fingertips.</p>
                     </div>
@@ -151,8 +122,8 @@ const AboutPageComponent: React.FC = () => {
                         <p className="text-sm opacity-90">Start a free trial or book a demo with our team.</p>
                     </div>
                     <div className="flex gap-3">
-                        <a href="#" className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold">Start Free Trial</a>
-                        <a href="#contact" className="border border-white/30 px-4 py-2 rounded-md">Book Demo</a>
+                        <a href="#" className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold hover:scale-105 transform transition-transform duration-150">Start Free Trial</a>
+                        <a href="#contact" className="border border-white/30 px-4 py-2 rounded-md hover:bg-white/10 transition-colors duration-150">Book Demo</a>
                     </div>
                 </section>
             </main>
