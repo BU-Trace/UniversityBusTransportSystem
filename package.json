@@ -28,6 +28,7 @@
     ]
   },
   "devDependencies": {
+    "@types/react-icons": "^2.2.7",
     "@types/react-tabs": "^5.0.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",

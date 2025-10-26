@@ -39,3 +39,11 @@ npm-debug.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+.next/
+.env
+.next
+dist
+dist/
+.out/
