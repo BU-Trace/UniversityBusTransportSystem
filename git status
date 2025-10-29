@@ -1,0 +1,131 @@
+[33mcommit 08c08c4545caca119f5fecf46d77c34bc4c59857[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mAbout[m[33m, [m[1;31morigin/About[m[33m)[m
+Author: Mahruf <baisakh2015@gmail.com>
+Date:   Thu Oct 23 21:26:11 2025 +0600
+
+    complete page..almost
+
+[33mcommit 9c300a859a3063db38534d7c213359f6137623cf[m
+Author: Mahruf <baisakh2015@gmail.com>
+Date:   Thu Oct 23 15:46:51 2025 +0600
+
+    About
+
+[33mcommit ce0e3ad5bc65c7a71e910e6a241b2fc24ca2fec9[m[33m ([m[1;32mmain[m[33m)[m
+Author: Mahruf <baisakh2015@gmail.com>
+Date:   Thu Oct 23 15:39:31 2025 +0600
+
+    first commit
+
+[33mcommit 810e2de18b1e0aadcade4b994c07e121d103d945[m
+Author: Imam Hosen <119607102+mdimamhosen@users.noreply.github.com>
+Date:   Mon Oct 13 16:46:38 2025 +0600
+
+    Create nextjs.yml
+
+[33mcommit 33822c02521861853940f1639aa2e38bcec80a96[m
+Merge: 545bb03 29d803a
+Author: Imam Hosen <119607102+mdimamhosen@users.noreply.github.com>
+Date:   Mon Oct 13 16:45:32 2025 +0600
+
+    Merge pull request #4 from mdimamhosen/fix/auth/30/9
+    
+    Auth pages
+
+[33mcommit 29d803abaeaea53d1c3459a9fe80601272f126bf[m[33m ([m[1;31morigin/fix/auth/30/9[m[33m)[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Oct 13 16:39:08 2025 +0600
+
+    auth pages
+
+[33mcommit 273027231bc2745a807ae3e023e7b980c1640e2e[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Oct 13 16:38:22 2025 +0600
+
+    auth pages
+
+[33mcommit 48a1ed4a8f715182ae28b789af9ddb2701b20a60[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Oct 13 13:53:18 2025 +0600
+
+    auth forget password  route
+
+[33mcommit f3e16ddd23cad1ab78f11012d3d49ba0b4f41676[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Oct 13 12:52:57 2025 +0600
+
+    push new yml file
+
+[33mcommit 737d5d1d82dbf2ecb62a536fabca2587d9672a40[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Oct 13 12:29:20 2025 +0600
+
+    issue
+
+[33mcommit 545bb0399459d821d9d3b5ea0bcc04159d2f3f69[m
+Merge: 2ad2f68 33dedbb
+Author: Imam Hosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 30 23:47:56 2025 +0600
+
+    Merge pull request #3 from mdimamhosen/dev
+    
+    Dev
+
+[33mcommit 33dedbb33cc3e553e7117da2fc7e6c95ff341cc1[m[33m ([m[1;31morigin/dev[m[33m)[m
+Merge: 69dc812 581a288
+Author: Imam Hosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 30 23:47:17 2025 +0600
+
+    Merge pull request #2 from mdimamhosen/fix/auth/30/9
+    
+    Fix/auth/30/9
+
+[33mcommit 581a2884725170a3675e22abc2a18ae5224ba20c[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 30 23:18:41 2025 +0600
+
+    fix registration issue
+
+[33mcommit 2ad2f686b00d9abffeef94b042b19e7dc9db1442[m
+Merge: 69dc812 c5d5d45
+Author: Imam Hosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Sep 29 15:06:01 2025 +0600
+
+    Merge pull request #1 from mdimamhosen/29/9/2025
+    
+    Feat/server/9/9
+
+[33mcommit c5d5d4537d6ce4f8ededab366f48429c5e25a5c9[m[33m ([m[1;31morigin/feat/server/9/9[m[33m)[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Sep 29 15:02:46 2025 +0600
+
+    concurrently add and fixed frontend auth issue
+
+[33mcommit 7a3324a288de8754e917077e63a5dad3524f7a6f[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Mon Sep 29 14:07:45 2025 +0600
+
+    auth services
+
+[33mcommit 69dc812e505b36cf6a039e728dce390ddc4ea5e5[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 9 16:57:30 2025 +0600
+
+    add git rules
+
+[33mcommit 0c853983e0beec5c85d75c1f02f9b07401329335[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 9 16:56:20 2025 +0600
+
+    initialization
+
+[33mcommit 4accd03af25c32f3fb32bf3c6d834ac234780be5[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 9 16:45:16 2025 +0600
+
+    first commit
+
+[33mcommit 99c663fb66b5da1798fdce4f2e7a093524f0872c[m
+Author: mdimamhosen <mimam22.cse@bu.ac.bd>
+Date:   Tue Sep 9 16:45:08 2025 +0600
+
+    first commit
