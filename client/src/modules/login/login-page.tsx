@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import InputField from "@/components/shared/InputField";
 import Image from "next/image";
 import Link from "next/link";
+import { Home } from "lucide-react";
 
 const LoginPageComponent = () => {
   const [formData, setFormData] = useState({
@@ -41,10 +42,10 @@ const LoginPageComponent = () => {
 
         {/* ---------- RIGHT SECTION (FORM AREA) ---------- */}
         <div className="w-full lg:w-[30%] p-8 md:p-10 flex flex-col justify-center h-full">
-          <h2 className="text-3xl font-bold text-black   text-center uppercase tracking-wide">
+          <h2 className="text-3xl font-bold text-black text-center uppercase tracking-wide">
             Login
           </h2>
-<div className="h-1 w-16 bg-red-500 mx-auto   rounded-full"></div>
+          <div className="h-1 w-16 bg-red-500 mx-auto rounded-full"></div>
           <form
             onSubmit={handleSubmit}
             className="flex flex-col space-y-4 w-full max-w-md mx-auto"
@@ -83,6 +84,15 @@ const LoginPageComponent = () => {
           </form>
         </div>
       </div>
+
+      {/*home btn*/}
+      <Link
+        href="/"
+        title="Go to Home"
+        className="fixed bottom-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
+      >
+        <Home size={24} />
+      </Link>
     </div>
   );
 };
