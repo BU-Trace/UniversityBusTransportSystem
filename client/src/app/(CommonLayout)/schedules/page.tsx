@@ -3,7 +3,6 @@
 import { MapPin, Expand, Clock } from "lucide-react";
 import React, { useState } from "react";
 
-// --- START: Schedule Data (Unchanged) ---
 type Schedule = {
   fromCity: { [time: string]: string[] };
   fromUniversity: { [time: string]: string[] };
@@ -131,12 +130,7 @@ const schedules: Record<string, Schedule> = {
     },
   },
 };
-// --- END: Schedule Data ---
 
-
-// ----------------------------------------------------------------------
-// Helper component to display the combined schedule table (6-Column Layout)
-// ----------------------------------------------------------------------
 interface ScheduleTableProps {
   route: string;
   data: Schedule;
@@ -160,7 +154,7 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ route, data, isModal = fa
   });
 
   return (
-    // Only apply max height and scrolling when NOT in the modal.
+
     <div className={`overflow-x-auto ${!isModal ? 'max-h-[300px] lg:max-h-[350px] overflow-y-auto border border-gray-200 rounded-lg' : ''}`}>
       <table className="min-w-full text-left border-collapse">
         <thead>
@@ -187,12 +181,12 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ route, data, isModal = fa
               key={idx}
               className={`${idx % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-red-50 transition`}
             >
-              {/* University -> City Data */}
+              {}
               <td className="py-3 px-4 font-medium text-gray-800 border-r border-gray-100">{row.uniTime}</td>
               <td className="py-3 px-4 text-gray-700 text-sm border-r border-gray-100">{row.uniBuses.length > 0 ? row.uniBuses[0] : ''}</td>
               <td className="py-3 px-4 text-gray-500 text-xs border-r border-gray-100">{row.uniBuses.length > 1 ? `(${row.uniBuses.slice(1).join(', ')})` : ''}</td>
               
-              {/* City -> University Data */}
+              {}
               <td className="py-3 px-4 font-medium text-gray-800 border-r border-gray-100">{row.cityTime}</td>
               <td className="py-3 px-4 text-gray-700 text-sm border-r border-gray-100">{row.cityBuses.length > 0 ? row.cityBuses[0] : ''}</td>
               <td className="py-3 px-4 text-gray-500 text-xs">{row.cityBuses.length > 1 ? `(${row.cityBuses.slice(1).join(', ')})` : ''}</td>
@@ -204,10 +198,6 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ route, data, isModal = fa
   );
 };
 
-
-// ----------------------------------------------------------------------
-// Modal Component for Full Schedule
-// ----------------------------------------------------------------------
 interface ModalProps {
     route: string;
     data: Schedule;
@@ -217,7 +207,7 @@ interface ModalProps {
 const FullScheduleModal: React.FC<ModalProps> = ({ route, data, onClose }) => {
     return (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-            {/* Modal container adjusted to max-w-6xl and no fixed max-h for full schedule view */}
+            {}
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl overflow-hidden flex flex-col"> 
                 <div className="p-6 border-b flex justify-between items-center sticky top-0 bg-white z-10">
                     <h2 className="text-2xl font-bold text-red-600">
@@ -231,7 +221,7 @@ const FullScheduleModal: React.FC<ModalProps> = ({ route, data, onClose }) => {
                         &times;
                     </button>
                 </div>
-                {/* Content area: Removed overflow-y-auto to allow full table height */}
+                {}
                 <div className="p-6"> 
                     <ScheduleTable route={route} data={data} isModal={true} />
                 </div>
@@ -248,10 +238,6 @@ const FullScheduleModal: React.FC<ModalProps> = ({ route, data, onClose }) => {
     );
 };
 
-
-// ----------------------------------------------------------------------
-// Main Schedule Page Component
-// ----------------------------------------------------------------------
 export default function BusSchedulePage() {
     const [modalData, setModalData] = useState<{ route: string; data: Schedule } | null>(null);
 
@@ -265,7 +251,7 @@ export default function BusSchedulePage() {
 
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-6 flex flex-col items-center">
-            {/* Added padding for fixed navbar */}
+            {}
             <br /><br />
             <div className="max-w-6xl w-full">
                 <h1 className="text-4xl font-bold text-red-600 text-center mb-2">
@@ -304,7 +290,7 @@ export default function BusSchedulePage() {
                 </div>
             </div>
 
-            {/* Modal Renderer */}
+            {}
             {modalData && (
                 <FullScheduleModal
                     route={modalData.route}
