@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ScrollToTopButton from "@/components/common/ScrollToTopButton";
 import Providers from "@/app/provider";
 import { Toaster } from "sonner";
 
@@ -40,6 +41,7 @@ export default function RootLayout({
 
           {/* Global Footer */}
           <Footer />
+          <ScrollToTopButton />
         </Providers>
       </body>
     </html>
