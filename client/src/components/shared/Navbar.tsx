@@ -66,6 +66,12 @@ export default function Navbar() {
           <Link href="/schedules" className={getLinkClasses("/schedules")}>
             Schedules
           </Link>
+          <Link href="/buses" className={getLinkClasses("/buses")}>
+            Buses
+          </Link>
+          <Link href="/transport" className={getLinkClasses("/transport")}>
+            Transportation Pool
+          </Link>
           <Link href="/about" className={getLinkClasses("/about")}>
             About Us
           </Link>
