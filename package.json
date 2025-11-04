@@ -28,6 +28,8 @@
     ]
   },
   "devDependencies": {
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
     "@types/react-icons": "^2.2.7",
     "@types/react-tabs": "^5.0.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -44,6 +46,10 @@
     "typescript": "^5.5.4"
   },
   "dependencies": {
+    "lucide-react": "^0.552.0",
+    "next": "^16.0.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
     "react-tabs": "^6.1.0"
   }

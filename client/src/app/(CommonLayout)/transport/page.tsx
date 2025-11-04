@@ -193,12 +193,6 @@ export default function TransportPage() {
                                     <Mail className="w-4 h-4 mr-1 text-red-500" /> Email: {CHIEF_INFO.email}
                                 </span>
                             </div>
-                            
-                            {CHIEF_INFO.message === 'x' && (
-                                <p className="mt-4 text-sm text-gray-500 italic">
-                                    Chief's message unavailable (marked "x").
-                                </p>
-                            )}
                         </div>
                     </div>
                 </section>
