@@ -189,7 +189,7 @@ const HomePage: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="bg-white/70 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border-t-4 border-blue-600"
+          className="bg-white/70 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border-t-4 border-red-600"
         >
           <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center border-b pb-3 flex justify-center items-center gap-2">
             <Clock className="w-6 h-6 text-blue-600" /> Live Next Bus Reminder
@@ -198,7 +198,7 @@ const HomePage: React.FC = () => {
           <div className="overflow-x-auto rounded-2xl">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-left text-base uppercase tracking-wider">
+                <tr className="bg-gradient-to-r from-red-500 to-red-900 text-white text-left text-base uppercase tracking-wider">
                   <th className="py-4 px-6 rounded-tl-xl">Route Location</th>
                   <th className="py-4 px-6">Next Departure</th>
                   <th className="py-4 px-6 rounded-tr-xl">Status / Direction</th>

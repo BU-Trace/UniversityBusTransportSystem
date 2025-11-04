@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { MapPin, Bus } from "lucide-react";
+import { motion } from "framer-motion";
 
 const routes = [
   {
@@ -74,25 +75,73 @@ const routes = [
 
 export default function RoutePage() {
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-6 flex flex-col items-center">
-      <br /><br />
-      <div className="max-w-7xl w-full">
-        <h1 className="text-4xl font-bold text-red-600 text-center mb-3">
-          UBTS Bus Routes
-        </h1>
-        <p className="text-gray-600 text-center mb-10 max-w-3xl mx-auto">
+    <div className="relative min-h-screen bg-gradient-to-br from-red-50 via-white to-red-100 py-12 px-6 flex flex-col items-center overflow-hidden">
+      
+      {/* Background Water Wave Effect (Maroon, Shaky Animation) */}
+      <div className="absolute inset-0 overflow-hidden z-0">
+        <style jsx global>{`
+          /* Custom CSS keyframes for the continuous background shake */
+          @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+          }
+          .animate-shaky-wave {
+            animation: shake 0.5s infinite alternate;
+          }
+        `}</style>
+        {/* Maroon radial gradient with the fast shake animation */}
+        <div className="absolute w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,rgba(128,0,0,0.15)_0%,transparent_70%)] animate-shaky-wave" />
+      </div>
+
+      <br />
+      <br />
+      <div className="max-w-7xl w-full relative z-10">
+        <motion.h1
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-6xl font-extrabold text-red-900 text-center mb-4 tracking-tight drop-shadow-md"
+        >
+          University Bus Routes
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="text-gray-700 text-lg text-center mb-12 max-w-4xl mx-auto leading-relaxed"
+        >
           Explore all UBTS bus routes operating between different city locations
           and the University of Barishal. Each route includes departure points,
-          major stops, timing schedules and corresponding bus types.
-        </p>
+          major stops, timing schedules and corresponding bus types for your convenience.
+        </motion.p>
 
         <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {routes.map((route) => (
-            <div
+          {routes.map((route, index) => (
+            <motion.div
               key={route.name}
-              className="bg-white rounded-3xl shadow hover:shadow-lg transition p-5 flex flex-col"
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              // FIX: Use type: "tween" for multiple rotation keyframes to avoid Framer Motion error
+              whileHover={{ scale: 1.05, rotate: [-1, 1, -1, 1, 0] }} 
+              transition={{
+                duration: 0.6,
+                delay: index * 0.1,
+                type: "tween", // Solves the "Only two keyframes currently supported with spring..." error
+                ease: "easeInOut" 
+              }}
+              viewport={{ once: true, amount: 0.3 }}
+              className="bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-red-300/50 transition-all duration-300 p-6 flex flex-col border border-red-200"
             >
-              <div className="relative w-full h-52 rounded-2xl overflow-hidden mb-4">
+              <div className="relative w-full h-52 rounded-2xl overflow-hidden mb-5 border border-gray-100 shadow-inner">
                 <Image
                   src={route.map}
                   alt={route.name}
@@ -101,35 +150,36 @@ export default function RoutePage() {
                 />
               </div>
 
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2 mb-2">
-                <MapPin className="text-red-600" size={20} />
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-3">
+                <MapPin className="text-red-700" size={24} />
                 {route.name}
               </h2>
 
-              <p className="text-gray-600 text-sm mb-4">{route.description}</p>
+              <p className="text-gray-700 text-base mb-5 leading-relaxed flex-grow">{route.description}</p>
 
-              <div className="mt-auto bg-gray-50 rounded-xl p-4 border">
-                <div className="flex items-center gap-2 mb-2 text-gray-800 font-medium">
-                  <Bus className="text-red-600" size={18} />
+              <div className="mt-auto bg-red-50/60 rounded-xl p-5 border border-red-100 shadow-sm">
+                <div className="flex items-center gap-3 mb-3 text-red-800 font-semibold text-lg">
+                  <Bus className="text-red-700" size={20} />
                   {route.busType}
                 </div>
-                <div className="text-sm text-gray-700">
+                <div className="text-base text-gray-700 space-y-1">
                   <p>
-                    <strong>To University:</strong> {route.schedule.toUniversity}
+                    <strong>To University:</strong>{" "}
+                    <span className="font-medium text-red-700">{route.schedule.toUniversity}</span>
                   </p>
                   <p>
                     <strong>From University:</strong>{" "}
-                    {route.schedule.fromUniversity}
+                    <span className="font-medium text-red-900">{route.schedule.fromUniversity}</span>
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
 
-        <div className="text-center mt-12 text-gray-500 text-sm">
-          Last updated on {new Date().toLocaleDateString()}
-        </div>
+        <p className="text-center mt-16 text-gray-600 text-sm italic">
+          Last updated on {new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
       </div>
     </div>
   );
