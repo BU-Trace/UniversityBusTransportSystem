@@ -24,7 +24,7 @@ const DEVELOPERS: Developer[] = [
     name: 'Md Imam Hosen',
     role: 'Backend Developer & Security Specialist',
     imageSrc: '/static/im1.png',
-    bio: 'Focused on Typescript, Nest.js and DevOps design systems.',
+    bio: 'Full-stack developer, focused on Typescript, Nest.js and DevOps design systems.',
   },
   {
     name: 'Imam Hossen',
