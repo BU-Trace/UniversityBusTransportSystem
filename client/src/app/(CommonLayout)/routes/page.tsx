@@ -76,111 +76,136 @@ const routes = [
 export default function RoutePage() {
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-red-50 via-white to-red-100 py-12 px-6 flex flex-col items-center overflow-hidden">
-      
       {}
-      <div className="absolute inset-0 overflow-hidden z-0">
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <style jsx global>{`
-          /* Custom CSS keyframes for the continuous background shake */
-          @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            10% { transform: translate(-1px, -2px) rotate(-1deg); }
-            20% { transform: translate(-3px, 0px) rotate(1deg); }
-            30% { transform: translate(3px, 2px) rotate(0deg); }
-            40% { transform: translate(1px, -1px) rotate(1deg); }
-            50% { transform: translate(-1px, 2px) rotate(-1deg); }
-            60% { transform: translate(-3px, 1px) rotate(0deg); }
-            70% { transform: translate(3px, 1px) rotate(-1deg); }
-            80% { transform: translate(-1px, -1px) rotate(1deg); }
-            90% { transform: translate(1px, 2px) rotate(0deg); }
-            100% { transform: translate(1px, -2px) rotate(-1deg); }
+          @keyframes waterFlow {
+            0% {
+              transform: translateX(0) translateY(0) rotate(0deg);
+            }
+            50% {
+              transform: translateX(-50px) translateY(25px) rotate(1deg);
+            }
+            100% {
+              transform: translateX(0) translateY(0) rotate(0deg);
+            }
           }
-          .animate-shaky-wave {
-            animation: shake 0.5s infinite alternate;
+          .wave-layer {
+            background: radial-gradient(
+              circle at center,
+              rgba(255, 0, 0, 0.15) 0%,
+              transparent 70%
+            );
+            animation: waterFlow 8s ease-in-out infinite alternate;
+            filter: blur(80px);
+          }
+          .wave-layer-2 {
+            background: radial-gradient(
+              circle at 70% 30%,
+              rgba(255, 150, 150, 0.2) 0%,
+              transparent 70%
+            );
+            animation: waterFlow 10s ease-in-out infinite alternate-reverse;
+            filter: blur(120px);
           }
         `}</style>
-        {}
-        <div className="absolute w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,rgba(128,0,0,0.15)_0%,transparent_70%)] animate-shaky-wave" />
+
+        <div className="absolute w-[200%] h-[200%] top-[-50%] left-[-50%] wave-layer opacity-70"></div>
+        <div className="absolute w-[200%] h-[200%] top-[-40%] left-[-60%] wave-layer-2 opacity-70"></div>
       </div>
 
-      <br />
-      <br />
-      <div className="max-w-7xl w-full relative z-10">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-5xl md:text-6xl font-extrabold text-red-700 text-center mb-4 tracking-tight drop-shadow-md"
-        >
+      {}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="relative z-10 max-w-7xl w-full text-center"
+      >
+        <br />
+        <br />
+        <h1 className="text-5xl md:text-6xl font-extrabold text-red-700 mb-4 tracking-tight drop-shadow-lg">
           University Bus Routes
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-gray-700 text-lg text-center mb-12 max-w-4xl mx-auto leading-relaxed"
-        >
+        </h1>
+        <p className="text-gray-700 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
           Explore all UBTS bus routes operating between different city locations
           and the University of Barishal. Each route includes departure points,
-          major stops, timing schedules and corresponding bus types for your convenience.
-        </motion.p>
-
-        <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {routes.map((route, index) => (
-            <motion.div
-              key={route.name}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              
-              whileHover={{ scale: 1.05, rotate: [-1, 1, -1, 1, 0] }} 
-              transition={{
-                duration: 0.6,
-                delay: index * 0.1,
-                type: "tween", 
-                ease: "easeInOut" 
-              }}
-              viewport={{ once: true, amount: 0.3 }}
-              className="bg-white/70 backdrop-blur-md rounded-3xl shadow-xl hover:shadow-red-300/50 transition-all duration-300 p-6 flex flex-col border border-red-200"
-            >
-              <div className="relative w-full h-52 rounded-2xl overflow-hidden mb-5 border border-gray-100 shadow-inner">
-                <Image
-                  src={route.map}
-                  alt={route.name}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-3">
-                <MapPin className="text-red-700" size={24} />
-                {route.name}
-              </h2>
-
-              <p className="text-gray-700 text-base mb-5 leading-relaxed flex-grow">{route.description}</p>
-
-              <div className="mt-auto bg-red-50/60 rounded-xl p-5 border border-red-100 shadow-sm">
-                <div className="flex items-center gap-3 mb-3 text-red-800 font-semibold text-lg">
-                  <Bus className="text-red-700" size={20} />
-                  {route.busType}
-                </div>
-                <div className="text-base text-gray-700 space-y-1">
-                  <p>
-                    <strong>To University:</strong>{" "}
-                    <span className="font-medium text-red-700">{route.schedule.toUniversity}</span>
-                  </p>
-                  <p>
-                    <strong>From University:</strong>{" "}
-                    <span className="font-medium text-red-900">{route.schedule.fromUniversity}</span>
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        <p className="text-center mt-16 text-gray-600 text-sm italic">
-          Last updated on {new Date().toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}
+          major stops, timing schedules, and corresponding bus types for your
+          convenience.
         </p>
+      </motion.div>
+
+      {}
+      <div className="grid gap-10 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 max-w-7xl relative z-10">
+        {routes.map((route, index) => (
+          <motion.div
+            key={route.name}
+            initial={{ opacity: 0, y: 50, scale: 0.95 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            whileHover={{
+              y: -10,
+              scale: 1.04,
+              rotate: [0, -1, 1, 0],
+              transition: { duration: 0.6 },
+            }}
+            transition={{
+              duration: 0.7,
+              delay: index * 0.1,
+              ease: "easeInOut",
+            }}
+            viewport={{ once: true }}
+            className="bg-white/60 backdrop-blur-lg border border-red-200 rounded-3xl shadow-xl hover:shadow-red-300/50 p-6 flex flex-col transform-gpu"
+          >
+            <div className="relative w-full h-52 rounded-2xl overflow-hidden mb-5 border border-gray-100 shadow-inner">
+              <Image
+                src={route.map}
+                alt={route.name}
+                fill
+                className="object-cover transition-transform duration-700 hover:scale-110"
+              />
+            </div>
+
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3 mb-3">
+              <MapPin className="text-red-700" size={24} />
+              {route.name}
+            </h2>
+
+            <p className="text-gray-700 text-base mb-5 leading-relaxed flex-grow">
+              {route.description}
+            </p>
+
+            <div className="mt-auto bg-gradient-to-r from-red-50/70 to-white/60 rounded-xl p-5 border border-red-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-3 text-red-800 font-semibold text-lg">
+                <Bus className="text-red-700" size={20} />
+                {route.busType}
+              </div>
+              <div className="text-base text-gray-700 space-y-1">
+                <p>
+                  <strong>To University:</strong>{" "}
+                  <span className="font-medium text-red-700">
+                    {route.schedule.toUniversity}
+                  </span>
+                </p>
+                <p>
+                  <strong>From University:</strong>{" "}
+                  <span className="font-medium text-red-900">
+                    {route.schedule.fromUniversity}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
+
+      {}
+      <p className="text-center mt-16 text-gray-600 text-sm italic relative z-10">
+        Last updated on{" "}
+        {new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      </p>
     </div>
   );
 }
