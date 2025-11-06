@@ -9,7 +9,6 @@ import {
   Clock,
   Calendar,
   Mail,
-  Droplets,
   Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -98,11 +97,14 @@ interface StaffCardProps {
 
 const StaffCard: React.FC<StaffCardProps> = ({ member }) => (
   <motion.div
-    whileHover={{ scale: 1.03 }}
-    transition={{ type: "spring", stiffness: 200 }}
-    className="bg-white/70 backdrop-blur-md border border-red-200 shadow-lg hover:shadow-red-400/30 rounded-2xl overflow-hidden transition-all duration-300"
+    whileHover={{
+      scale: 1.05,
+      rotate: [0, 1, -1, 0],
+      transition: { duration: 0.4 },
+    }}
+    className="relative bg-white/80 backdrop-blur-md border border-red-200 shadow-lg rounded-2xl overflow-hidden hover:shadow-red-400/50 transition-all duration-300"
   >
-    <div className="relative h-48 w-full">
+    <div className="relative h-48 w-full overflow-hidden">
       <Image
         src={member.imageSrc}
         alt={member.name}
@@ -110,13 +112,14 @@ const StaffCard: React.FC<StaffCardProps> = ({ member }) => (
         sizes="(max-width: 600px) 100vw, 33vw"
         className="object-cover object-top"
       />
-      <span className="absolute bottom-0 right-0 bg-gradient-to-r from-red-600 to-maroon-700 text-white text-xs font-semibold px-3 py-1 rounded-tl-xl shadow-md">
+      <div className="absolute inset-0 bg-gradient-to-t from-red-800/60 to-transparent"></div>
+      <span className="absolute bottom-0 right-0 bg-gradient-to-r from-red-600 to-red-800 text-white text-xs font-semibold px-3 py-1 rounded-tl-xl shadow-md">
         {member.duty}
       </span>
     </div>
 
     <div className="p-5">
-      <h3 className="text-lg font-extrabold text-maroon-700 mb-2 tracking-tight">
+      <h3 className="text-lg font-extrabold text-red-800 mb-2 tracking-tight">
         {member.name}
       </h3>
 
@@ -149,46 +152,55 @@ const StaffCard: React.FC<StaffCardProps> = ({ member }) => (
 
 export default function TransportPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-100">
-      {/* Hero Banner */}
-      <div className="relative w-full h-[320px] mt-16 overflow-hidden shadow-xl">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-red-100 via-white to-red-200">
+      {}
+      <div className="absolute inset-0 -z-10 animate-[wave_10s_infinite_linear] opacity-30 bg-[url('/static/waves.svg')] bg-repeat-x bg-bottom"></div>
+
+      {}
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1 }}
+        className="relative w-full h-[340px] mt-16 overflow-hidden shadow-2xl"
+      >
         <Image
           src="/static/loginpagebanner.png"
           alt="University of Barishal Campus"
           width={1600}
           height={700}
-          className="w-full h-full object-cover transition-all duration-500"
+          className="w-full h-full object-cover"
           priority
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/20 flex items-center justify-center backdrop-blur-[1px]">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            className="text-5xl md:text-6xl font-extrabold text-white uppercase tracking-wider text-center drop-shadow-lg"
-          >
-            Office of the Registrar <br />
-            <span className="text-red-300 font-bold">(Transport Pool)</span>
-          </motion.h1>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-red-800/30 to-black/30 flex items-center justify-center backdrop-blur-[1px]">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-white uppercase tracking-wider text-center drop-shadow-lg">
+            Office of the Registrar
+            <br />
+            <span className="text-red-500 md:text-3xl font-bold">(Transportation Pool)</span>
+          </h1>
         </div>
-      </div>
+      </motion.div>
 
+      {}
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-12">
-        {/* Head of Transportation Section */}
+        {}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-16 p-8 bg-white/70 backdrop-blur-md border border-red-200 shadow-xl rounded-3xl border-t-4 border-maroon-700"
+          className="mb-16 p-8 bg-white/80 backdrop-blur-md border border-red-200 shadow-xl rounded-3xl border-t-4 border-red-700"
         >
-          <h2 className="text-3xl font-extrabold text-maroon-800 mb-6 text-center">
+          <h2 className="text-3xl font-extrabold text-red-800 mb-6 text-center">
             <Users className="inline w-6 h-6 mr-2 text-red-500" />
             Head of Transportation
           </h2>
 
           <div className="flex flex-col lg:flex-row items-center gap-8">
-            <div className="relative w-44 h-44 flex-shrink-0 rounded-full overflow-hidden border-4 border-maroon-600 shadow-lg bg-gray-100">
+            <motion.div
+              whileHover={{ rotate: [0, 2, -2, 0], scale: 1.05 }}
+              transition={{ duration: 0.4 }}
+              className="relative w-44 h-44 flex-shrink-0 rounded-full overflow-hidden border-4 border-red-600 shadow-lg bg-gray-100"
+            >
               <Image
                 src={CHIEF_INFO.imageSrc}
                 alt={CHIEF_INFO.name}
@@ -196,25 +208,25 @@ export default function TransportPage() {
                 sizes="160px"
                 className="object-cover object-top"
               />
-            </div>
+            </motion.div>
 
             <div>
-              <p className="text-2xl font-bold text-maroon-700">
+              <p className="text-2xl font-bold text-red-700">
                 {CHIEF_INFO.name}
               </p>
               <p className="text-lg text-gray-700 mb-4">{CHIEF_INFO.title}</p>
 
-              <blockquote className="italic text-gray-600 border-l-4 border-maroon-500 pl-4 py-2 my-4">
+              <blockquote className="italic text-gray-600 border-l-4 border-red-500 pl-4 py-2 my-4">
                 {CHIEF_INFO.message}
               </blockquote>
 
               <div className="flex flex-wrap gap-4 text-sm text-gray-700 font-medium">
                 <span className="flex items-center">
-                  <Phone className="w-4 h-4 mr-1 text-maroon-600" /> Phone:{" "}
+                  <Phone className="w-4 h-4 mr-1 text-red-600" /> Phone:{" "}
                   {CHIEF_INFO.phone}
                 </span>
                 <span className="flex items-center">
-                  <Mail className="w-4 h-4 mr-1 text-maroon-600" /> Email:{" "}
+                  <Mail className="w-4 h-4 mr-1 text-red-600" /> Email:{" "}
                   {CHIEF_INFO.email}
                 </span>
               </div>
@@ -222,10 +234,10 @@ export default function TransportPage() {
           </div>
         </motion.section>
 
-        {/* Staff Members Section */}
+        {}
         <section>
-          <h2 className="text-3xl font-extrabold text-maroon-800 mb-8 text-center border-b pb-4 border-red-300">
-            🚍 Our Dedicated Team Members
+          <h2 className="text-3xl font-extrabold text-red-800 mb-8 text-center border-b pb-4 border-red-300">
+            Our Dedicated Team Members
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
@@ -235,11 +247,22 @@ export default function TransportPage() {
           </div>
 
           <p className="mt-12 text-center text-sm text-gray-500 border-t pt-6">
-            Note: Driver names, contact, and service history are placeholders
-            ("x") awaiting internal data.
+            Note: Driver names, contact and services can change anytime.
           </p>
         </section>
       </div>
+
+      {}
+      <style jsx>{`
+        @keyframes wave {
+          from {
+            background-position-x: 0;
+          }
+          to {
+            background-position-x: 1000px;
+          }
+        }
+      `}</style>
     </div>
   );
 }
