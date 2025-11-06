@@ -4,6 +4,7 @@ import "./globals.css";
 import ScrollToTopButton from "@/components/common/ScrollToTopButton";
 import Providers from "@/app/provider";
 import { Toaster } from "sonner";
+import { IntroProvider } from "@/context/IntroContext";
 import CallUsButton from '@/components/common/CallUsButton';
 
 import Footer from "@/components/common/Footer";
@@ -42,7 +43,9 @@ export default function RootLayout({
 
           {/* Global Footer */}
           <Footer />
+          <IntroProvider>
           <CallUsButton />
+          </IntroProvider>
           <ScrollToTopButton />
         </Providers>
       </body>
