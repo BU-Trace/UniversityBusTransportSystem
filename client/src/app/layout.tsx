@@ -6,6 +6,7 @@ import Providers from "@/app/provider";
 import { Toaster } from "sonner";
 import { IntroProvider } from "@/context/IntroContext";
 import CallUsButton from '@/components/common/CallUsButton';
+import TeamButton from '@/components/common/TeamButton';
 
 import Footer from "@/components/common/Footer";
 
@@ -45,6 +46,7 @@ export default function RootLayout({
           <Footer />
           <IntroProvider>
           <CallUsButton />
+          <TeamButton/>
           </IntroProvider>
           <ScrollToTopButton />
         </Providers>
