@@ -11,7 +11,7 @@ const CallUsButton: React.FC = () => {
 
   if (isIntroActive) return null;
 
-  const handleRipple = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleRipple = () => {
     const id = Date.now();
     setRipples((prev) => [...prev, { id }]);
     setTimeout(() => setRipples((prev) => prev.filter((r) => r.id !== id)), 800);

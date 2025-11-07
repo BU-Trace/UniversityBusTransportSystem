@@ -1,26 +1,18 @@
-"use client";
+'use client';
 
-import React from "react";
-import Image from "next/image";
-import {
-  User,
-  Phone,
-  Bus,
-  Clock,
-  Calendar,
-  Mail,
-  Users,
-} from "lucide-react";
-import { motion } from "framer-motion";
+import React from 'react';
+import Image from 'next/image';
+import { Phone, Bus, Calendar, Mail, Users } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const CHIEF_INFO = {
-  name: "Uzzal Hossain",
-  title: "Manager (In-Charge), Office of the Registrar (Transport Pool)",
+  name: 'Uzzal Hossain',
+  title: 'Manager (In-Charge), Office of the Registrar (Transport Pool)',
   message:
-    "Our transport system ensures smooth, reliable and safe commuting for all university members — connecting our campus with the city every day with care and punctuality.",
-  phone: "x",
-  email: "registrar@bu.ac.bd",
-  imageSrc: "/static/chief_uzzal_hossain.png",
+    'Our transport system ensures smooth, reliable and safe commuting for all university members — connecting our campus with the city every day with care and punctuality.',
+  phone: 'x',
+  email: 'registrar@bu.ac.bd',
+  imageSrc: '/static/chief_uzzal_hossain.png',
 };
 
 interface StaffInfo {
@@ -34,60 +26,60 @@ interface StaffInfo {
 
 const DRIVER_STAFF_INFO: StaffInfo[] = [
   {
-    name: "x",
-    duty: "Senior Bus Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["BRTC-04 (Joyonti)", "BRTC-05 (Chitra)"],
-    imageSrc: "/static/driver_placeholder_1.png",
+    name: 'x',
+    duty: 'Senior Bus Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['BRTC-04 (Joyonti)', 'BRTC-05 (Chitra)'],
+    imageSrc: '/static/driver_placeholder_1.png',
   },
   {
-    name: "x",
-    duty: "Bus Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["BRTC-06 (Boikali/Kirtonkhola)"],
-    imageSrc: "/static/driver_placeholder_2.png",
+    name: 'x',
+    duty: 'Bus Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['BRTC-06 (Boikali/Kirtonkhola)'],
+    imageSrc: '/static/driver_placeholder_2.png',
   },
   {
-    name: "x",
-    duty: "Bus Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["BRTC-11 (Double Decker)", "BRTC-07"],
-    imageSrc: "/static/driver_placeholder_3.png",
+    name: 'x',
+    duty: 'Bus Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['BRTC-11 (Double Decker)', 'BRTC-07'],
+    imageSrc: '/static/driver_placeholder_3.png',
   },
   {
-    name: "x",
-    duty: "Assistant Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["Andharmanik", "Sugondha"],
-    imageSrc: "/static/driver_placeholder_4.png",
+    name: 'x',
+    duty: 'Assistant Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['Andharmanik', 'Sugondha'],
+    imageSrc: '/static/driver_placeholder_4.png',
   },
   {
-    name: "x",
-    duty: "Bus Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["Sondha", "Agunmukha"],
-    imageSrc: "/static/driver_placeholder_5.png",
+    name: 'x',
+    duty: 'Bus Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['Sondha', 'Agunmukha'],
+    imageSrc: '/static/driver_placeholder_5.png',
   },
   {
-    name: "x",
-    duty: "Mechanic & Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["BRTC (Single Decker)"],
-    imageSrc: "/static/driver_placeholder_6.png",
+    name: 'x',
+    duty: 'Mechanic & Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['BRTC (Single Decker)'],
+    imageSrc: '/static/driver_placeholder_6.png',
   },
   {
-    name: "x",
-    duty: "Bus Driver",
-    phone: "x",
-    yearsOfService: "x",
-    busesDriven: ["Lata/Payra"],
-    imageSrc: "/static/driver_placeholder_7.png",
+    name: 'x',
+    duty: 'Bus Driver',
+    phone: 'x',
+    yearsOfService: 'x',
+    busesDriven: ['Lata/Payra'],
+    imageSrc: '/static/driver_placeholder_7.png',
   },
 ];
 
@@ -119,17 +111,13 @@ const StaffCard: React.FC<StaffCardProps> = ({ member }) => (
     </div>
 
     <div className="p-5">
-      <h3 className="text-lg font-extrabold text-red-800 mb-2 tracking-tight">
-        {member.name}
-      </h3>
+      <h3 className="text-lg font-extrabold text-red-800 mb-2 tracking-tight">{member.name}</h3>
 
       <div className="space-y-3 text-sm border-t pt-3 mt-3">
         <div className="flex items-center text-gray-700">
           <Calendar className="w-4 h-4 mr-2 text-red-500" />
           <span className="font-semibold">Service:</span>
-          <span className="ml-1 text-gray-900 font-bold">
-            {member.yearsOfService}
-          </span>
+          <span className="ml-1 text-gray-900 font-bold">{member.yearsOfService}</span>
         </div>
 
         <div className="flex items-center text-gray-700">
@@ -141,9 +129,7 @@ const StaffCard: React.FC<StaffCardProps> = ({ member }) => (
         <div className="text-gray-700 flex items-start mt-3">
           <Bus className="w-4 h-4 mr-2 mt-1 text-red-500 flex-shrink-0" />
           <span className="font-semibold flex-shrink-0">Buses:</span>
-          <span className="ml-1 text-gray-900 leading-tight">
-            {member.busesDriven.join(", ")}
-          </span>
+          <span className="ml-1 text-gray-900 leading-tight">{member.busesDriven.join(', ')}</span>
         </div>
       </div>
     </div>
@@ -188,7 +174,7 @@ export default function TransportPage() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mb-16 p-8 bg-white/80 backdrop-blur-md border border-red-200 shadow-xl rounded-3xl border-t-4 border-red-700"
+          className="mb-16 p-8 bg-white/80 backdrop-blur-md border  shadow-xl rounded-3xl border-t-4 border-red-700"
         >
           <h2 className="text-3xl font-extrabold text-red-800 mb-6 text-center">
             <Users className="inline w-6 h-6 mr-2 text-red-500" />
@@ -211,9 +197,7 @@ export default function TransportPage() {
             </motion.div>
 
             <div>
-              <p className="text-2xl font-bold text-red-700">
-                {CHIEF_INFO.name}
-              </p>
+              <p className="text-2xl font-bold text-red-700">{CHIEF_INFO.name}</p>
               <p className="text-lg text-gray-700 mb-4">{CHIEF_INFO.title}</p>
 
               <blockquote className="italic text-gray-600 border-l-4 border-red-500 pl-4 py-2 my-4">
@@ -222,12 +206,10 @@ export default function TransportPage() {
 
               <div className="flex flex-wrap gap-4 text-sm text-gray-700 font-medium">
                 <span className="flex items-center">
-                  <Phone className="w-4 h-4 mr-1 text-red-600" /> Phone:{" "}
-                  {CHIEF_INFO.phone}
+                  <Phone className="w-4 h-4 mr-1 text-red-600" /> Phone: {CHIEF_INFO.phone}
                 </span>
                 <span className="flex items-center">
-                  <Mail className="w-4 h-4 mr-1 text-red-600" /> Email:{" "}
-                  {CHIEF_INFO.email}
+                  <Mail className="w-4 h-4 mr-1 text-red-600" /> Email: {CHIEF_INFO.email}
                 </span>
               </div>
             </div>

@@ -1,0 +1,36 @@
+name: Branch Report
+
+on:
+  schedule:
+    # daily at 06:00 UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  branch-report:
+    name: Generate branch report
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure script is executable
+        run: chmod +x ./scripts/git-branch-report.sh
+
+      - name: Fetch all remote branches
+        run: |
+          git fetch --prune --all
+
+      - name: Run branch report
+        run: |
+          mkdir -p reports
+          ./scripts/git-branch-report.sh > "reports/branch-report-$(date -u +"%Y%m%dT%H%M%SZ").txt"
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: branch-report
+          path: reports/*.txt

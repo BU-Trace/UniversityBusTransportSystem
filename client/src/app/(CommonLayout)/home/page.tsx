@@ -1,17 +1,9 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
-import {
-  Bus,
-  Users,
-  MapPin,
-  Clock,
-  ArrowUpRight,
-  Waves,
-  RefreshCcw,
-} from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { Bus, Users, MapPin, Clock, ArrowUpRight, Waves, RefreshCcw } from 'lucide-react';
 
 interface RouteSchedule {
   route: string;
@@ -29,48 +21,54 @@ interface StatCardProps {
 }
 
 const schedules: RouteSchedule[] = [
-  { route: "Ichladi Toll Plaza", toUniversity: "8:00 AM (Sunday)", fromUniversity: "5:30 PM (Thursday)" },
-  { route: "Jhalokathi Sadar", toUniversity: "8:00 AM (Sunday)", fromUniversity: "5:30 PM (Thursday)" },
-  { route: "Nothullabad", toUniversity: "7:00 AM (Sunday)", fromUniversity: "4:00 PM (Thursday)" },
-  { route: "Notun Bazar", toUniversity: "7:30 AM (Sunday)", fromUniversity: "4:30 PM (Thursday)" },
-  { route: "Barishal Club", toUniversity: "7:45 AM (Sunday)", fromUniversity: "4:30 PM (Thursday)" },
-  { route: "Barishal Cantonment", toUniversity: "8:00 AM (Sunday)", fromUniversity: "5:30 PM (Thursday)" },
+  {
+    route: 'Ichladi Toll Plaza',
+    toUniversity: '8:00 AM (Sunday)',
+    fromUniversity: '5:30 PM (Thursday)',
+  },
+  {
+    route: 'Jhalokathi Sadar',
+    toUniversity: '8:00 AM (Sunday)',
+    fromUniversity: '5:30 PM (Thursday)',
+  },
+  { route: 'Nothullabad', toUniversity: '7:00 AM (Sunday)', fromUniversity: '4:00 PM (Thursday)' },
+  { route: 'Notun Bazar', toUniversity: '7:30 AM (Sunday)', fromUniversity: '4:30 PM (Thursday)' },
+  {
+    route: 'Barishal Club',
+    toUniversity: '7:45 AM (Sunday)',
+    fromUniversity: '4:30 PM (Thursday)',
+  },
+  {
+    route: 'Barishal Cantonment',
+    toUniversity: '8:00 AM (Sunday)',
+    fromUniversity: '5:30 PM (Thursday)',
+  },
 ];
 
 const parseTime = (timeStr: string) => {
-  const [time, meridian] = timeStr.split(" ");
-  const [hour, minute] = time.split(":").map(Number);
+  const [time, meridian] = timeStr.split(' ');
+  const [hour, minute] = time.split(':').map(Number);
   let h = hour;
-  if (meridian === "PM" && hour !== 12) h += 12;
-  if (meridian === "AM" && hour === 12) h = 0;
+  if (meridian === 'PM' && hour !== 12) h += 12;
+  if (meridian === 'AM' && hour === 12) h = 0;
   return h * 60 + (minute || 0);
 };
 
-const StatCard: React.FC<StatCardProps> = ({
-  title,
-  value,
-  icon,
-  footerText,
-  color,
-}) => (
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, footerText, color }) => (
   <motion.div
     whileHover={{ scale: 1.05 }}
-    transition={{ type: "spring", stiffness: 300 }}
+    transition={{ type: 'spring', stiffness: 300 }}
     className={`relative bg-white/30 backdrop-blur-xl shadow-lg rounded-2xl p-6 border border-${color}-300 overflow-hidden`}
   >
     {}
     <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent animate-pulse opacity-60 pointer-events-none"></div>
     <div className="flex items-center justify-between relative z-10">
-      <p className="text-gray-600 font-semibold text-sm uppercase">
-        {title}
-      </p>
+      <p className="text-gray-600 font-semibold text-sm uppercase">{title}</p>
       <div className={`p-3 rounded-full bg-${color}-100 text-${color}-600 shadow-inner`}>
         {icon}
       </div>
     </div>
-    <h2 className="text-4xl font-extrabold text-gray-900 mt-2 relative z-10">
-      {value}
-    </h2>
+    <h2 className="text-4xl font-extrabold text-gray-900 mt-2 relative z-10">{value}</h2>
     <div className={`font-medium text-sm mt-4 flex items-center text-${color}-600 relative z-10`}>
       {footerText}
     </div>
@@ -80,6 +78,7 @@ const StatCard: React.FC<StatCardProps> = ({
 const HomePage: React.FC = () => {
   const [nextBuses, setNextBuses] = useState<RouteSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  console.log(isLoading);
 
   useEffect(() => {
     const now = new Date();
@@ -87,14 +86,14 @@ const HomePage: React.FC = () => {
     const minutesNow = now.getHours() * 60 + now.getMinutes();
 
     const upcoming = schedules.map((s) => {
-      const toTime = parseTime(s.toUniversity.split(" ").slice(0, 2).join(" "));
-      const fromTime = parseTime(s.fromUniversity.split(" ").slice(0, 2).join(" "));
+      const toTime = parseTime(s.toUniversity.split(' ').slice(0, 2).join(' '));
+      const fromTime = parseTime(s.fromUniversity.split(' ').slice(0, 2).join(' '));
       const nextBus =
         day === 0 && minutesNow < toTime
           ? s.toUniversity
           : day === 4 && minutesNow < fromTime
-          ? s.fromUniversity
-          : "No bus today";
+            ? s.fromUniversity
+            : 'No bus today';
       return { ...s, nextBus };
     });
 
@@ -206,27 +205,27 @@ const HomePage: React.FC = () => {
               </thead>
               <tbody>
                 {nextBuses.map((bus, idx) => {
-                  const isActive = bus.nextBus !== "No bus today";
-                  const direction = bus.nextBus?.includes("University")
-                    ? "To Varsity"
-                    : "From Varsity";
+                  const isActive = bus.nextBus !== 'No bus today';
+                  const direction = bus.nextBus?.includes('University')
+                    ? 'To Varsity'
+                    : 'From Varsity';
 
                   return (
                     <motion.tr
                       key={bus.route}
-                      whileHover={{ scale: 1.02, backgroundColor: "#f0f9ff" }}
+                      whileHover={{ scale: 1.02, backgroundColor: '#f0f9ff' }}
                       transition={{ duration: 0.3 }}
                       className={`${
-                        idx % 2 === 0 ? "bg-white/80" : "bg-red-50/70"
+                        idx % 2 === 0 ? 'bg-white/80' : 'bg-red-50/70'
                       } border-b border-gray-100 backdrop-blur-sm`}
                     >
                       <td className="py-4 px-6 font-semibold text-gray-800 flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-red-500" /> {bus.route}
                       </td>
                       <td className="py-4 px-6 text-lg font-bold text-red-700">
-                        {bus.nextBus?.split(" ")[0] || "N/A"}
+                        {bus.nextBus?.split(' ')[0] || 'N/A'}
                         <span className="text-sm font-medium text-gray-500 ml-2">
-                          {bus.nextBus?.split(" ").slice(1).join(" ") || ""}
+                          {bus.nextBus?.split(' ').slice(1).join(' ') || ''}
                         </span>
                       </td>
                       <td className="py-4 px-6">
@@ -248,7 +247,7 @@ const HomePage: React.FC = () => {
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <RefreshCcw className="w-4 h-4" /> Timings are calculated for today,{" "}
+            <RefreshCcw className="w-4 h-4" /> Timings are calculated for today,{' '}
             {new Date().toDateString()}.
           </p>
         </motion.div>
