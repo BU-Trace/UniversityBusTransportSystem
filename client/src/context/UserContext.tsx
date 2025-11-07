@@ -1,13 +1,4 @@
-
-
-import {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
 import { getCurrentUser } from '@/services/AuthServices';
 import { IUser } from '@/type/User';
 
@@ -26,7 +17,6 @@ const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   const handleUser = async () => {
     const user = await getCurrentUser();
-
 
     setUser(user);
     setIsLoading(false);
@@ -47,7 +37,7 @@ export const useUser = () => {
   const context = useContext(UserContext);
 
   if (context == undefined) {
-    throw new Error("useUser must be used within the UserProvider context");
+    throw new Error('useUser must be used within the UserProvider context');
   }
   return context;
 };
