@@ -112,7 +112,7 @@ const ContactPage: React.FC = () => {
         primaryText="Send a Message"
         primaryHref="#contact-form"
         secondaryText="View Routes"
-        secondaryHref="#routes"
+        secondaryHref="/routes"
       />
 
       {}
