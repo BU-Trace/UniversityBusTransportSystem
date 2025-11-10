@@ -60,7 +60,9 @@
     "jiti": "^2.6.1",
     "lint-staged": "^15.5.2",
     "ora": "^8.2.0",
+    "postcss": "^8.5.6",
     "prettier": "^3.3.3",
+    "tailwindcss": "^4.1.17",
     "turbo": "^2.0.6",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.46.3"
@@ -72,6 +74,7 @@
     "framer-motion": "^12.23.24",
     "handlebars": "^4.7.8",
     "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.552.0",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
@@ -82,6 +85,7 @@
     "react-dom": "^19.2.0",
     "react-icons": "^5.5.0",
     "react-tabs": "^6.1.0",
+    "sonner": "^2.0.7",
     "ua-parser-js": "^2.0.6",
     "zod": "^4.1.12"
   }
