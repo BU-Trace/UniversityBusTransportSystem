@@ -37,31 +37,63 @@ const Footer = () => {
             </div>
           </div>
 
-                    {/* Quick Links */}
-                    <div className="mt-4 sm:mt-0">
-                        <h3 className="text-lg font-bold text-white mb-4 relative after:block after:w-1/3 after:h-0.5 after:bg-red-600 after:mt-1 after:mx-auto lg:after:mx-0">
-                            Quick Links
-                        </h3>
-                        <ul className="space-y-3 text-sm">
-                            <li><a href="#" className="hover:text-red-500">Bus Schedules</a></li>
-                            <li><a href="#" className="hover:text-red-500">Track the Bus</a></li>
-                            <li><a href="#" className="hover:text-red-500">Live Bus Updates</a></li>
-                            <li><a href="#" className="hover:text-red-500">Download App</a></li>
-                        </ul>
-                    </div>
+          {/* Quick Links */}
+          <div className="mt-4 sm:mt-0">
+            <h3 className="text-lg font-bold text-white mb-4 relative after:block after:w-1/3 after:h-0.5 after:bg-red-600 after:mt-1 after:mx-auto lg:after:mx-0">
+              Quick Links
+            </h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Bus Schedules
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Track the Bus
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Live Bus Updates
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Download App
+                </a>
+              </li>
+            </ul>
+          </div>
 
-                    {/* Support */}
-                    <div>
-                        <h3 className="text-lg font-bold text-white mb-4 relative after:block after:w-1/3 after:h-0.5 after:bg-red-600 after:mt-1 after:mx-auto lg:after:mx-0">
-                            Support
-                        </h3>
-                        <ul className="space-y-3 text-sm">
-                            <li><a href="#" className="hover:text-red-500">FAQs</a></li>
-                            <li><a href="#" className="hover:text-red-500">Report an Issue</a></li>
-                            <li><a href="#" className="hover:text-red-500">Contact Support</a></li>
-                            <li><a href="#" className="hover:text-red-500">Affiliates</a></li>
-                        </ul>
-                    </div>
+          {/* Support */}
+          <div>
+            <h3 className="text-lg font-bold text-white mb-4 relative after:block after:w-1/3 after:h-0.5 after:bg-red-600 after:mt-1 after:mx-auto lg:after:mx-0">
+              Support
+            </h3>
+            <ul className="space-y-3 text-sm">
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  FAQs
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Report an Issue
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Contact Support
+                </a>
+              </li>
+              <li>
+                <a href="#" className="hover:text-red-500">
+                  Affiliates
+                </a>
+              </li>
+            </ul>
+          </div>
 
           {/* Legal */}
           <div>
