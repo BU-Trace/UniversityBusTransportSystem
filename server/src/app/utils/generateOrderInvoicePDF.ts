@@ -35,13 +35,21 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
       doc.fontSize(10).text('Phone: +880 223 456 678', { align: 'center' });
       doc.moveDown(1);
 
-      doc.fontSize(15).font('Helvetica-Bold').fillColor('#003366').text('User Agreement & Contract', { align: 'center' });
+      doc
+        .fontSize(15)
+        .font('Helvetica-Bold')
+        .fillColor('#003366')
+        .text('User Agreement & Contract', { align: 'center' });
       doc.moveDown(0.5);
       doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
       doc.moveDown(1);
 
       // 4️⃣ User Information Section
-      doc.fontSize(12).font('Helvetica-Bold').fillColor('#003366').text('User Information:', { underline: true });
+      doc
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .fillColor('#003366')
+        .text('User Information:', { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(11).font('Helvetica').fillColor('#000000');
       doc.text(`Full Name: ${user.name}`);
@@ -53,7 +61,11 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
 
       // 5️⃣ Client Device/Browser Information
       if (user.clientITInfo) {
-        doc.fontSize(12).font('Helvetica-Bold').fillColor('#003366').text('Client Information:', { underline: true });
+        doc
+          .fontSize(12)
+          .font('Helvetica-Bold')
+          .fillColor('#003366')
+          .text('Client Information:', { underline: true });
         doc.moveDown(0.5);
         doc.fontSize(11).font('Helvetica').fillColor('#000000');
         doc.text(`Device: ${user.clientITInfo.device}`);
@@ -66,7 +78,11 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
       }
 
       // 6️⃣ Contract / Terms Section
-      doc.fontSize(12).font('Helvetica-Bold').fillColor('#003366').text('Agreement & Terms:', { underline: true });
+      doc
+        .fontSize(12)
+        .font('Helvetica-Bold')
+        .fillColor('#003366')
+        .text('Agreement & Terms:', { underline: true });
       doc.moveDown(0.5);
       doc.fontSize(11).font('Helvetica').fillColor('#000000');
       const terms = [
@@ -74,7 +90,7 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
         'The user agrees to comply with all applicable rules and regulations.',
         'The user agrees not to engage in fraudulent or unlawful activities.',
         'The company reserves the right to suspend or terminate accounts that violate terms.',
-        'All personal information will be handled according to the company\'s privacy policy.',
+        "All personal information will be handled according to the company's privacy policy.",
         'This agreement is legally binding and enforceable in accordance with local laws.',
       ];
       terms.forEach((term, index) => {
@@ -82,9 +98,16 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
       });
       doc.moveDown(2);
 
-      doc.fontSize(11).font('Helvetica-Bold').fillColor('#003366').text('User Signature: ______________________', { align: 'left' });
+      doc
+        .fontSize(11)
+        .font('Helvetica-Bold')
+        .fillColor('#003366')
+        .text('User Signature: ______________________', { align: 'left' });
       doc.moveDown(1);
-      doc.fontSize(9).fillColor('#555555').text(`Generated on: ${new Date().toLocaleString()}`, { align: 'right' });
+      doc
+        .fontSize(9)
+        .fillColor('#555555')
+        .text(`Generated on: ${new Date().toLocaleString()}`, { align: 'right' });
 
       // Finalize PDF
       doc.end();

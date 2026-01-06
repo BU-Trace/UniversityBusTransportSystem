@@ -14,12 +14,9 @@ const router = Router();
 //
 // router.get('/me', Auth(UserRole.ADMIN, UserRole.USER), UserController.myProfile);
 
-router.post(
-  '/',
-  clientInfoParser,
-  validateRequest(UserValidation.userValidationSchema),
-  UserController.registerUser
-);
+router.post('/', clientInfoParser, UserController.registerUser);
+
+router.post('/verfy-email', UserController.verifyEmail);
 // // update profile
 // router.patch(
 //   '/update-profile',

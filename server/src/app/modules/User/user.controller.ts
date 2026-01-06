@@ -6,7 +6,6 @@ import { StatusCodes } from 'http-status-codes';
 import { UserServices } from './user.service';
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
-  console.log('Req Body', req.body);
   await UserServices.registerUser(req.body);
 
   // const { refreshToken, accessToken } = result;
@@ -30,11 +29,22 @@ const registerUser = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: StatusCodes.CREATED,
     success: true,
-    message: "Registration completed successfully.",
+    message: 'Registration completed successfully.',
     data: null,
+  });
+});
+
+const verifyEmail = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserServices.verifyEmail(req.body);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Email verified successfully!',
+    data: result,
   });
 });
 
 export const UserController = {
   registerUser,
+  verifyEmail
 };
