@@ -1,20 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useIntro } from "@/context/IntroContext"; 
-import { useUser } from "@/context/UserContext";
-import { logOutUser } from "@/services/AuthServices";
-import { Menu, X } from "lucide-react";
+import { useState } from 'react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useIntro } from '@/context/IntroContext';
+import { useUser } from '@/context/UserContext';
+import { logOutUser } from '@/services/AuthServices';
+import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { isIntroActive } = useIntro();
   const { user, setIsLoading } = useUser();
   const pathName = usePathname();
-  const router = useRouter(); 
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-
 
   if (isIntroActive) {
     return null;
@@ -23,8 +22,8 @@ export default function Navbar() {
   const handleLogout = async () => {
     await logOutUser();
     setIsLoading(true);
-    if (pathName && pathName.startsWith("/dashboard")) {
-      router.push("/");
+    if (pathName && pathName.startsWith('/dashboard')) {
+      router.push('/');
     }
   };
 
@@ -32,23 +31,23 @@ export default function Navbar() {
 
   const getLinkClasses = (href: string): string => {
     const isActive = pathName === href;
-    const isHomeActive = href === "/home" && pathName === "/";
+    const isHomeActive = href === '/home' && pathName === '/';
 
     if (isActive || isHomeActive) {
-      return "text-red-600 font-bold transition border-b-2 border-red-600";
+      return 'text-red-600 font-bold transition border-b-2 border-red-600';
     } else {
-      return "text-gray-700 hover:text-red-600 font-medium transition";
+      return 'text-gray-700 hover:text-red-600 font-medium transition';
     }
   };
 
   const getMobileLinkClasses = (href: string): string => {
     const isActive = pathName === href;
-    const isHomeActive = href === "/home" && pathName === "/";
+    const isHomeActive = href === '/home' && pathName === '/';
 
     if (isActive || isHomeActive) {
-      return "text-red-600 font-bold border-l-4 border-red-600 pl-2 py-2";
+      return 'text-red-600 font-bold border-l-4 border-red-600 pl-2 py-2';
     } else {
-      return "text-gray-700 hover:text-red-600 py-2 pl-2";
+      return 'text-gray-700 hover:text-red-600 py-2 pl-2';
     }
   };
 
@@ -57,32 +56,30 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 h-16">
         {}
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-2xl font-bold text-red-600">
-            Campus Connect
-          </span>
+          <span className="text-2xl font-bold text-red-600">Campus Connect</span>
         </Link>
 
         {}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/home" className={getLinkClasses("/home")}>
+          <Link href="/home" className={getLinkClasses('/home')}>
             Home
           </Link>
-          <Link href="/routes" className={getLinkClasses("/routes")}>
+          <Link href="/routes" className={getLinkClasses('/routes')}>
             Routes
           </Link>
-          <Link href="/schedules" className={getLinkClasses("/schedules")}>
+          <Link href="/schedules" className={getLinkClasses('/schedules')}>
             Schedules
           </Link>
-          <Link href="/buses" className={getLinkClasses("/buses")}>
+          <Link href="/buses" className={getLinkClasses('/buses')}>
             Buses
           </Link>
-          <Link href="/transport" className={getLinkClasses("/transport")}>
+          <Link href="/transport" className={getLinkClasses('/transport')}>
             Transportation Pool
           </Link>
-          <Link href="/about" className={getLinkClasses("/about")}>
+          <Link href="/about" className={getLinkClasses('/about')}>
             About Us
           </Link>
-          <Link href="/contact" className={getLinkClasses("/contact")}>
+          <Link href="/contact" className={getLinkClasses('/contact')}>
             Contact Us
           </Link>
 
@@ -101,16 +98,10 @@ export default function Navbar() {
               </button>
               {}
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible invisible transition">
-                <Link
-                  href="/profile"
-                  className="block px-4 py-2 text-gray-700 hover:bg-red-50"
-                >
+                <Link href="/profile" className="block px-4 py-2 text-gray-700 hover:bg-red-50">
                   Profile
                 </Link>
-                <Link
-                  href="/dashboard"
-                  className="block px-4 py-2 text-gray-700 hover:bg-red-50"
-                >
+                <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:bg-red-50">
                   Dashboard
                 </Link>
                 <button
@@ -125,10 +116,7 @@ export default function Navbar() {
         </nav>
 
         {}
-        <button
-          className="md:hidden flex items-center text-red-600"
-          onClick={toggleMenu}
-        >
+        <button className="md:hidden flex items-center text-red-600" onClick={toggleMenu}>
           {menuOpen ? <X size={26} /> : <Menu size={26} />}
         </button>
       </div>
@@ -137,39 +125,23 @@ export default function Navbar() {
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-gray-200 flex flex-col space-y-1 px-4 py-3">
           {}
-          <Link
-            href="/home"
-            onClick={toggleMenu}
-            className={getMobileLinkClasses("/home")}
-          >
+          <Link href="/home" onClick={toggleMenu} className={getMobileLinkClasses('/home')}>
             Home
           </Link>
-          <Link
-            href="/routes"
-            onClick={toggleMenu}
-            className={getMobileLinkClasses("/routes")}
-          >
+          <Link href="/routes" onClick={toggleMenu} className={getMobileLinkClasses('/routes')}>
             Routes
           </Link>
           <Link
             href="/schedules"
             onClick={toggleMenu}
-            className={getMobileLinkClasses("/schedules")}
+            className={getMobileLinkClasses('/schedules')}
           >
             Schedules
           </Link>
-          <Link
-            href="/about"
-            onClick={toggleMenu}
-            className={getMobileLinkClasses("/about")}
-          >
+          <Link href="/about" onClick={toggleMenu} className={getMobileLinkClasses('/about')}>
             About Us
           </Link>
-          <Link
-            href="/contact"
-            onClick={toggleMenu}
-            className={getMobileLinkClasses("/contact")}
-          >
+          <Link href="/contact" onClick={toggleMenu} className={getMobileLinkClasses('/contact')}>
             Contact Us
           </Link>
 
@@ -187,14 +159,14 @@ export default function Navbar() {
               <Link
                 href="/profile"
                 onClick={toggleMenu}
-                className="text-gray-700 hover:text-red-600 py-2" 
+                className="text-gray-700 hover:text-red-600 py-2"
               >
                 Profile
               </Link>
               <Link
                 href="/dashboard"
                 onClick={toggleMenu}
-                className="text-gray-700 hover:text-red-600 py-2" 
+                className="text-gray-700 hover:text-red-600 py-2"
               >
                 Dashboard
               </Link>

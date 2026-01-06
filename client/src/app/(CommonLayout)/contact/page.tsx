@@ -137,7 +137,10 @@ const ContactPage: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <label className="block">
                       <span className="text-sm text-gray-700 inline-flex items-center gap-2">
-                        <span className="text-red-600"><FaUser /></span> Full name
+                        <span className="text-red-600">
+                          <FaUser />
+                        </span>{' '}
+                        Full name
                       </span>
                       <input
                         value={name}
@@ -150,7 +153,10 @@ const ContactPage: React.FC = () => {
 
                     <label className="block">
                       <span className="text-sm text-gray-700 inline-flex items-center gap-2">
-                        <span className="text-red-600"><FaEnvelope /></span> Email
+                        <span className="text-red-600">
+                          <FaEnvelope />
+                        </span>{' '}
+                        Email
                       </span>
                       <input
                         type="email"
@@ -165,7 +171,10 @@ const ContactPage: React.FC = () => {
 
                   <label className="block">
                     <span className="text-sm text-gray-700 inline-flex items-center gap-2">
-                      <span className="text-red-600"><FaBus /></span> Message
+                      <span className="text-red-600">
+                        <FaBus />
+                      </span>{' '}
+                      Message
                     </span>
                     <textarea
                       value={message}
@@ -239,16 +248,28 @@ const ContactPage: React.FC = () => {
               </h4>
               <p className="text-gray-700 mt-2">University of Barishal Campus</p>
               <div className="mt-4 grid gap-3">
-                <a href="mailto:support@ubts.edu.bd" className="text-[#9b111e] hover:underline flex gap-2 items-center">
+                <a
+                  href="mailto:support@ubts.edu.bd"
+                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
+                >
                   <FaEnvelope /> support@ubts.edu.bd
                 </a>
-                <a href="tel:+8801733570761" className="text-[#9b111e] hover:underline flex gap-2 items-center">
+                <a
+                  href="tel:+8801733570761"
+                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
+                >
                   <FaPhoneAlt /> +880 1733 570 761
                 </a>
-                <a href="tel:+8801977987420" className="text-[#9b111e] hover:underline flex gap-2 items-center">
+                <a
+                  href="tel:+8801977987420"
+                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
+                >
                   <FaPhoneAlt /> +880 1977 987 420
                 </a>
-                <a href="tel:+8801829494993" className="text-[#9b111e] hover:underline flex gap-2 items-center">
+                <a
+                  href="tel:+8801829494993"
+                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
+                >
                   <FaPhoneAlt /> +880 1829 494 993
                 </a>
               </div>
@@ -267,9 +288,15 @@ const ContactPage: React.FC = () => {
                 <FaQuestionCircle /> Quick Links
               </h4>
               <div className="mt-4 grid grid-cols-1 gap-2">
-                <a href="#routes" className="text-gray-700 hover:text-red-600">View Bus Routes</a>
-                <a href="#dashboard" className="text-gray-700 hover:text-red-600">Driver Dashboard</a>
-                <a href="#help" className="text-gray-700 hover:text-red-600">Help Center</a>
+                <a href="#routes" className="text-gray-700 hover:text-red-600">
+                  View Bus Routes
+                </a>
+                <a href="#dashboard" className="text-gray-700 hover:text-red-600">
+                  Driver Dashboard
+                </a>
+                <a href="#help" className="text-gray-700 hover:text-red-600">
+                  Help Center
+                </a>
               </div>
               <div className="mt-4 flex items-center gap-3">
                 <button className="p-2 rounded-md bg-[#9b111e] text-white hover:rotate-6 transition-transform">
@@ -305,10 +332,7 @@ const ContactPage: React.FC = () => {
 
         {}
         <section className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div
-            whileHover={{ scale: 1.01 }}
-            className="lg:col-span-2 space-y-6"
-          >
+          <motion.div whileHover={{ scale: 1.01 }} className="lg:col-span-2 space-y-6">
             <h3 className="text-2xl font-semibold text-[#8B0000]">Support Topics</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[
@@ -323,7 +347,9 @@ const ContactPage: React.FC = () => {
                   transition={{ type: 'spring', stiffness: 200 }}
                   className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100"
                 >
-                  <a href="#" className="text-gray-800 font-medium hover:text-red-600">{title}</a>
+                  <a href="#" className="text-gray-800 font-medium hover:text-red-600">
+                    {title}
+                  </a>
                   <p className="text-sm text-gray-600 mt-1">{desc}</p>
                 </motion.div>
               ))}

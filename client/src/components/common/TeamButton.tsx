@@ -193,12 +193,7 @@ const TeamButton: React.FC = () => {
                         className="bg-gradient-to-br from-red-50 to-white/70 border border-red-200 shadow-lg rounded-2xl p-5 backdrop-blur-sm"
                       >
                         <div className="relative w-28 h-28 mx-auto mb-4 rounded-full overflow-hidden border-4 border-red-500 shadow-md">
-                          <Image
-                            src={dev.imageSrc}
-                            alt={dev.name}
-                            fill
-                            className="object-cover"
-                          />
+                          <Image src={dev.imageSrc} alt={dev.name} fill className="object-cover" />
                         </div>
                         <h3 className="text-lg font-bold text-red-700 text-center">{dev.name}</h3>
                         <p className="text-sm text-gray-600 text-center mb-3">{dev.role}</p>

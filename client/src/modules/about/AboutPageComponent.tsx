@@ -10,7 +10,7 @@ const AboutPageComponent: React.FC = () => {
         primaryText="Explore Features"
         primaryHref="#features"
         secondaryText="Contact Us"
-        secondaryHref="#contact"
+        secondaryHref="/contact"
       />
       {/* main content */}
       <main className="max-w-7xl w-full px-6  py-12 ">
@@ -138,13 +138,13 @@ const AboutPageComponent: React.FC = () => {
           </div>
           <div className="flex gap-3">
             <a
-              href="#"
+              href="/start_trial"
               className="bg-white text-red-600 px-4 py-2 rounded-md font-semibold hover:scale-105 transform transition-transform duration-150"
             >
               Start Free Trial
             </a>
             <a
-              href="#contact"
+              href="/home"
               className="border border-white/30 px-4 py-2 rounded-md hover:bg-white/10 transition-colors duration-150"
             >
               Book Demo

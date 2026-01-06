@@ -1,30 +1,29 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import InputField from "@/components/shared/InputField";
-import Image from "next/image";
-import Link from "next/link";
-import { Home } from "lucide-react";
+import React, { useState } from 'react';
+import InputField from '@/components/shared/InputField';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 const ForgetPassword = () => {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      alert("Please enter your email address.");
+      alert('Please enter your email address.');
       return;
     }
     setSent(true);
-    console.log("Password reset link sent to:", email);
+    console.log('Password reset link sent to:', email);
   };
 
   return (
     <div className="flex items-center justify-center h-screen overflow-hidden">
       {/* ---------- MAIN CONTAINER ---------- */}
       <div className="flex flex-col lg:flex-row bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden w-full h-full">
-
         {/* ---------- LEFT SECTION (IMAGE PANEL) ---------- */}
         <div className="w-full lg:w-[70%] relative h-full">
           <Image
@@ -67,19 +66,14 @@ const ForgetPassword = () => {
               </button>
 
               <div className="text-center mt-4">
-                <a
-                  href="/login"
-                  className="text-gray-700 hover:text-red-500 font-medium text-sm"
-                >
+                <a href="/login" className="text-gray-700 hover:text-red-500 font-medium text-sm">
                   Back to Login
                 </a>
               </div>
             </form>
           ) : (
             <div className="text-center mt-10">
-              <h3 className="text-xl font-semibold text-black mb-4">
-                Check your email
-              </h3>
+              <h3 className="text-xl font-semibold text-black mb-4">Check your email</h3>
               <p className="text-gray-600 text-sm">
                 We’ve sent a password reset link to <br />
                 <span className="text-red-500 font-semibold">{email}</span>
@@ -90,19 +84,17 @@ const ForgetPassword = () => {
               >
                 Back to Login
               </Link>
-              
-              
             </div>
           )}
         </div>
       </div>
       {/*home btn*/}
       <Link
-                href="/"
-                title="Go to Home"
-                className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
-              >
-                <Home size={24} />
+        href="/"
+        title="Go to Home"
+        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
+      >
+        <Home size={24} />
       </Link>
     </div>
   );

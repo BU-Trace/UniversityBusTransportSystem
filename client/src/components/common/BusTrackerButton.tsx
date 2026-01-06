@@ -96,15 +96,9 @@ const BusTrackerButton: React.FC = () => {
       setRoutes((prev) =>
         prev.map((r) => ({
           ...r,
-          studentBus: ['Running', 'Waiting', 'Arrived'][
-            Math.floor(Math.random() * 3)
-          ] as BusStatus,
-          teacherBus: ['Running', 'Waiting', 'Arrived'][
-            Math.floor(Math.random() * 3)
-          ] as BusStatus,
-          staffBus: ['Running', 'Waiting', 'Arrived'][
-            Math.floor(Math.random() * 3)
-          ] as BusStatus,
+          studentBus: ['Running', 'Waiting', 'Arrived'][Math.floor(Math.random() * 3)] as BusStatus,
+          teacherBus: ['Running', 'Waiting', 'Arrived'][Math.floor(Math.random() * 3)] as BusStatus,
+          staffBus: ['Running', 'Waiting', 'Arrived'][Math.floor(Math.random() * 3)] as BusStatus,
         }))
       );
     }, 7000);
@@ -256,8 +250,7 @@ const BusTrackerButton: React.FC = () => {
                           <span className="font-semibold">To:</span> {bus.destination}
                         </p>
                         <p className="text-gray-700 text-sm mb-3 flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-red-600" /> Departure:{' '}
-                          {bus.departureTime}
+                          <Clock className="w-4 h-4 text-red-600" /> Departure: {bus.departureTime}
                         </p>
 
                         <div className="space-y-2">

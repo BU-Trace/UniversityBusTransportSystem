@@ -2,7 +2,6 @@ import cors from 'cors';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
 import os from 'os';
-import { StatusCodes } from 'http-status-codes';
 
 import globalErrorHandler from './app/middleware/globalErrorHandler';
 import notFound from './app/middleware/notFound';
@@ -18,34 +17,64 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ---------------- API Routes ----------------
+
+// Handle direct /api/v1 access
+app.get('/api/v1', (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'Welcome to the API v1 root. Please use a specific endpoint.',
+  });
+});
 app.use('/api/v1', router);
 
 // ---------------- Test Route ----------------
-app.get('/', (req: Request, res: Response, _next: NextFunction) => {
-  const currentDateTime = new Date().toISOString();
-  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-  const serverHostname = os.hostname();
-  const serverPlatform = os.platform();
-  const serverUptime = os.uptime();
+app.get('/', (req: Request, res: Response) => {
+  const now = new Date();
+  const clientIp =
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
 
-  res.status(StatusCodes.OK).json({
+  const uptimeSeconds = os.uptime();
+
+  res.status(200).json({
     success: true,
-    message: 'Welcome to the Next Mart',
+    message: '🎓 Barishal University Campus Connect API',
     version: '1.0.0',
-    clientDetails: {
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: now.toISOString(),
+
+    client: {
       ipAddress: clientIp,
-      accessedAt: currentDateTime,
+      userAgent: req.headers['user-agent'],
+      language: req.headers['accept-language'],
     },
-    serverDetails: {
-      hostname: serverHostname,
-      platform: serverPlatform,
-      uptime: `${Math.floor(serverUptime / 60 / 60)} hours ${Math.floor(
-        (serverUptime / 60) % 60
-      )} minutes`,
+
+    server: {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      architecture: os.arch(),
+      cpuCores: os.cpus().length,
+      memory: {
+        total: `${(os.totalmem() / 1024 / 1024 / 1024).toFixed(2)} GB`,
+        free: `${(os.freemem() / 1024 / 1024 / 1024).toFixed(2)} GB`,
+      },
+      uptime: {
+        seconds: uptimeSeconds,
+        readable: `${Math.floor(uptimeSeconds / 3600)}h ${Math.floor(
+          (uptimeSeconds % 3600) / 60
+        )}m`,
+      },
     },
-    developerContact: {
-      email: 'your-email@example.com',
-      github: 'mdimamhosen',
+
+    api: {
+      documentation: '/docs',
+      healthCheck: '/health',
+      status: '🟢 Operational',
+    },
+
+    developer: {
+      name: 'Md. Imam Hosen',
+      email: 'mimam22.cse@bu.ac.bd',
+      github: 'https://github.com/mdimamhosen',
     },
   });
 });

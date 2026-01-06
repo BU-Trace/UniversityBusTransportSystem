@@ -9,8 +9,8 @@ import AppError from '../../errors/appError';
 const userSchema = new Schema<IUser, UserModel>(
   {
     email: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true, select: false },
-    name: { type: String, required: true },
+    password: { type: String, required: true },
+    name: { type: String },
 
     role: {
       type: String,
@@ -19,9 +19,9 @@ const userSchema = new Schema<IUser, UserModel>(
     },
 
     clientITInfo: {
-      device: { type: String, enum: ['pc', 'mobile'], required: true },
-      browser: { type: String, required: true },
-      ipAddress: { type: String, required: true },
+      device: { type: String, enum: ['pc', 'mobile'] },
+      browser: { type: String },
+      ipAddress: { type: String },
       pcName: { type: String },
       os: { type: String },
       userAgent: { type: String },
@@ -29,17 +29,15 @@ const userSchema = new Schema<IUser, UserModel>(
 
     clientInfo: {
       bio: { type: String },
-
       // student-specific
       department: { type: String },
       rollNumber: { type: String },
-
       // driver-specific
       licenseNumber: { type: String },
     },
 
     lastLogin: { type: Date },
-    isActive: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: false },
 
     otpToken: { type: String, default: null },
     otpExpires: { type: Date, default: null },
@@ -73,18 +71,19 @@ userSchema.post('save', function (doc, next) {
 });
 
 // --- Transform toJSON (hide password) --------------------------
-userSchema.set('toJSON', {
-  transform: (_doc, ret: any) => {
-    delete ret.password;
-    return ret;
-  },
-});
+// userSchema.set('toJSON', {
+//   transform: (_doc, ret: any) => {
+//     delete ret.password;
+//     return ret;
+//   },
+// });
 
 // --- Statics ---------------------------------------------------
 userSchema.statics.isPasswordMatched = async function (
   plainTextPassword: string,
   hashedPassword: string
 ) {
+  console.log(plainTextPassword, hashedPassword);
   return await bcrypt.compare(plainTextPassword, hashedPassword);
 };
 

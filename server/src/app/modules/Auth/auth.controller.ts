@@ -36,9 +36,7 @@ const changePassword = catchAsync(async (req, res) => {
   });
 });
 
-
 const forgetPassword = catchAsync(async (req, res) => {
-
   const data = AuthService.forgetPassword(req.body);
   sendResponse(res, {
     statusCode: StatusCodes.NOT_IMPLEMENTED,
@@ -47,8 +45,6 @@ const forgetPassword = catchAsync(async (req, res) => {
     data: data,
   });
 });
-
-
 
 export const AuthController = {
   loginUser,

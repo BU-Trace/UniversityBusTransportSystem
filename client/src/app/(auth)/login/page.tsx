@@ -4,7 +4,7 @@ import React from 'react';
 const LogInPage = () => {
   return (
     <React.Fragment>
-     <LoginPageComponent  />
+      <LoginPageComponent />
     </React.Fragment>
   );
 };

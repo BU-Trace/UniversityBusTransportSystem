@@ -1,75 +1,75 @@
-"use client";
+'use client';
 
-import Image from "next/image";
-import { MapPin, Bus } from "lucide-react";
-import { motion } from "framer-motion";
+import Image from 'next/image';
+import { MapPin, Bus } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const routes = [
   {
-    name: "Ichladi Toll Plaza ➜ University of Barishal",
+    name: 'Ichladi Toll Plaza ➜ University of Barishal',
     description:
-      "The bus starts from Ichladi Toll Plaza, travels along N8 through Rupatali, and reaches the University of Barishal. This route serves students from Ichladi, Rupatali, and nearby areas.",
+      'The bus starts from Ichladi Toll Plaza, travels along N8 through Rupatali, and reaches the University of Barishal. This route serves students from Ichladi, Rupatali, and nearby areas.',
     schedule: {
-      toUniversity: "8:00 AM (Sunday)",
-      fromUniversity: "5:30 PM (Thursday)",
+      toUniversity: '8:00 AM (Sunday)',
+      fromUniversity: '5:30 PM (Thursday)',
     },
-    busType: "BRTC (Single Deck)",
-    map: "/static/ichladi_route.jpg",
+    busType: 'BRTC (Single Deck)',
+    map: '/static/ichladi_route.jpg',
   },
   {
-    name: "Jhalokathi Sadar ➜ University of Barishal",
+    name: 'Jhalokathi Sadar ➜ University of Barishal',
     description:
-      "Starting from Jhalokathi Sadar, the bus travels via N8 highway crossing Gabkhan Bridge and Rupatali before reaching the University. Ideal for students from Jhalokathi region.",
+      'Starting from Jhalokathi Sadar, the bus travels via N8 highway crossing Gabkhan Bridge and Rupatali before reaching the University. Ideal for students from Jhalokathi region.',
     schedule: {
-      toUniversity: "8:00 AM (Sunday)",
-      fromUniversity: "5:30 PM (Thursday)",
+      toUniversity: '8:00 AM (Sunday)',
+      fromUniversity: '5:30 PM (Thursday)',
     },
-    busType: "BRTC (Single Deck)",
-    map: "/static/jhalokathi_route.jpg",
+    busType: 'BRTC (Single Deck)',
+    map: '/static/jhalokathi_route.jpg',
   },
   {
-    name: "Nothullabad ➜ University of Barishal",
+    name: 'Nothullabad ➜ University of Barishal',
     description:
-      "Departs from Nothullabad Bus Terminal and follows the N8 highway, passing Rupatali and reaching the University campus. One of the most common and fastest routes.",
+      'Departs from Nothullabad Bus Terminal and follows the N8 highway, passing Rupatali and reaching the University campus. One of the most common and fastest routes.',
     schedule: {
-      toUniversity: "7:00 AM (Sunday)",
-      fromUniversity: "4:00 PM (Thursday)",
+      toUniversity: '7:00 AM (Sunday)',
+      fromUniversity: '4:00 PM (Thursday)',
     },
-    busType: "BRTC (Single Deck)",
-    map: "/static/nothullabad_route.jpg",
+    busType: 'BRTC (Single Deck)',
+    map: '/static/nothullabad_route.jpg',
   },
   {
-    name: "Notun Bazar ➜ University of Barishal",
+    name: 'Notun Bazar ➜ University of Barishal',
     description:
-      "Begins from Bogura Road Police Station moves through Munshi Garaj, Forester Bari, Choumatha and Rupatali before arriving at the University. This route covers Northan Barishal city areas.",
+      'Begins from Bogura Road Police Station moves through Munshi Garaj, Forester Bari, Choumatha and Rupatali before arriving at the University. This route covers Northan Barishal city areas.',
     schedule: {
-      toUniversity: "7:30 AM (Sunday)",
-      fromUniversity: "4:30 PM (Thursday)",
+      toUniversity: '7:30 AM (Sunday)',
+      fromUniversity: '4:30 PM (Thursday)',
     },
-    busType: "BRTC (Single Deck)",
-    map: "/static/notun_route.jpg",
+    busType: 'BRTC (Single Deck)',
+    map: '/static/notun_route.jpg',
   },
   {
-    name: "Barishal Club ➜ University of Barishal",
+    name: 'Barishal Club ➜ University of Barishal',
     description:
-      "Originates near Barishal Club and passes Bogra Road, Sadar Road, South Alekanda, and Rupatali before reaching the University campus.",
+      'Originates near Barishal Club and passes Bogra Road, Sadar Road, South Alekanda, and Rupatali before reaching the University campus.',
     schedule: {
-      toUniversity: "7:45 AM (Sunday)",
-      fromUniversity: "4:30 PM (Thursday)",
+      toUniversity: '7:45 AM (Sunday)',
+      fromUniversity: '4:30 PM (Thursday)',
     },
-    busType: "BRTC (Single Deck)",
-    map: "/static/barishalclub_route.jpg",
+    busType: 'BRTC (Single Deck)',
+    map: '/static/barishalclub_route.jpg',
   },
   {
-    name: "Barishal Cantonment ➜ University of Barishal",
+    name: 'Barishal Cantonment ➜ University of Barishal',
     description:
-      "Starts from contonmant area and travels along Payra bridge Toll Plaza road, PSTU connecting to the main N8 highway toward the University. Serves students from outer Barishal areas.",
+      'Starts from contonmant area and travels along Payra bridge Toll Plaza road, PSTU connecting to the main N8 highway toward the University. Serves students from outer Barishal areas.',
     schedule: {
-      toUniversity: "8:00 AM (Sunday)",
-      fromUniversity: "5:30 PM (Thursday)",
+      toUniversity: '8:00 AM (Sunday)',
+      fromUniversity: '5:30 PM (Thursday)',
     },
-    busType: "BRTC (Single Deck)",
-    map: "/static/PSTU_route.jpg",
+    busType: 'BRTC (Single Deck)',
+    map: '/static/PSTU_route.jpg',
   },
 ];
 
@@ -127,10 +127,9 @@ export default function RoutePage() {
           University Bus Routes
         </h1>
         <p className="text-gray-700 text-lg mb-12 max-w-3xl mx-auto leading-relaxed">
-          Explore all UBTS bus routes operating between different city locations
-          and the University of Barishal. Each route includes departure points,
-          major stops, timing schedules, and corresponding bus types for your
-          convenience.
+          Explore all UBTS bus routes operating between different city locations and the University
+          of Barishal. Each route includes departure points, major stops, timing schedules, and
+          corresponding bus types for your convenience.
         </p>
       </motion.div>
 
@@ -150,7 +149,7 @@ export default function RoutePage() {
             transition={{
               duration: 0.7,
               delay: index * 0.1,
-              ease: "easeInOut",
+              ease: 'easeInOut',
             }}
             viewport={{ once: true }}
             className="bg-white/60 backdrop-blur-lg border border-red-200 rounded-3xl shadow-xl hover:shadow-red-300/50 p-6 flex flex-col transform-gpu"
@@ -180,16 +179,12 @@ export default function RoutePage() {
               </div>
               <div className="text-base text-gray-700 space-y-1">
                 <p>
-                  <strong>To University:</strong>{" "}
-                  <span className="font-medium text-red-700">
-                    {route.schedule.toUniversity}
-                  </span>
+                  <strong>To University:</strong>{' '}
+                  <span className="font-medium text-red-700">{route.schedule.toUniversity}</span>
                 </p>
                 <p>
-                  <strong>From University:</strong>{" "}
-                  <span className="font-medium text-red-900">
-                    {route.schedule.fromUniversity}
-                  </span>
+                  <strong>From University:</strong>{' '}
+                  <span className="font-medium text-red-900">{route.schedule.fromUniversity}</span>
                 </p>
               </div>
             </div>
@@ -199,11 +194,11 @@ export default function RoutePage() {
 
       {}
       <p className="text-center mt-16 text-gray-600 text-sm italic relative z-10">
-        Last updated on{" "}
-        {new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
+        Last updated on{' '}
+        {new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
         })}
       </p>
     </div>
