@@ -5,6 +5,8 @@ import { execSync } from "child_process";
 
 const spinner = ora("Building server & client...").start();
 
+process.env.NEXT_FONT_DOWNLOAD_DISABLED ??= "1";
+
 try {
   execSync("npm --prefix server run build", { stdio: "inherit" });
   execSync("npm --prefix client run build", { stdio: "inherit" });

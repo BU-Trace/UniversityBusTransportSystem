@@ -25,6 +25,7 @@ export default {
   sender_email: process.env.SENDER_EMAIL,
   sender_app_password: process.env.SENDER_APP_PASS,
   client_url: process.env.CLIENT_PORT,
+  pdf_logo_url: process.env.PDF_LOGO_URL,
   ssl: {
     store_name: process.env.STORE_NAME,
     payment_api: process.env.PAYMENT_API,
