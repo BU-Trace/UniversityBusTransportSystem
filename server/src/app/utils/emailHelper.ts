@@ -6,12 +6,13 @@ import nodemailer from 'nodemailer';
 import config from '../config';
 
 const readFileAsync = promisify(fs.readFile);
+const DEFAULT_ATTACHMENT_ENCODING: BufferEncoding = 'base64';
 
 const sendEmail = async (
   email: string,
   html: string,
   subject: string,
-  attachment?: { filename: string; content: Buffer; encoding: BufferEncoding }
+  attachment?: { filename: string; content: Buffer; encoding?: BufferEncoding }
 ) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -36,11 +37,12 @@ const sendEmail = async (
     };
 
     if (attachment) {
+      const encoding = attachment.encoding ?? DEFAULT_ATTACHMENT_ENCODING;
       mailOptions.attachments = [
         {
           filename: attachment.filename,
           content: attachment.content,
-          encoding: attachment.encoding,
+          encoding,
         },
       ];
     }

@@ -81,7 +81,11 @@ const loginUser = async (payload: IAuth) => {
     };
   } catch (error) {
     if (session.inTransaction()) {
-      await session.abortTransaction();
+      try {
+        await session.abortTransaction();
+      } catch (abortError) {
+        console.error('Failed to abort transaction:', abortError);
+      }
     }
     throw error;
   } finally {
@@ -132,7 +136,11 @@ const changePassword = async (payload: {
     };
   } catch (error) {
     if (session.inTransaction()) {
-      await session.abortTransaction();
+      try {
+        await session.abortTransaction();
+      } catch (abortError) {
+        console.error('Failed to abort transaction:', abortError);
+      }
     }
     throw error;
   } finally {
@@ -236,7 +244,11 @@ const forgetPassword = async (payload: { email: string }) => {
     };
   } catch (error) {
     if (session.inTransaction()) {
-      await session.abortTransaction();
+      try {
+        await session.abortTransaction();
+      } catch (abortError) {
+        console.error('Failed to abort transaction:', abortError);
+      }
     }
     throw error;
   } finally {
