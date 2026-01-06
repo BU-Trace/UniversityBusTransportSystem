@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { ZodSchema, ZodError } from 'zod';
 import catchAsync from '../utils/catchAsync';
 
-const validateRequest = (schema: ZodSchema<any>) => {
+const validateRequest = (schema: ZodSchema<unknown>) => {
   if (!schema) throw new Error('Zod schema is undefined!'); // <-- Helpful debug
 
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
