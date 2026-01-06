@@ -1,16 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
-const Util = require('util');
-const ReadFile = Util.promisify(fs.readFile);
+import { promisify } from 'util';
 import Handlebars from 'handlebars';
 import nodemailer from 'nodemailer';
 import config from '../config';
+
+const readFileAsync = promisify(fs.readFile);
 
 const sendEmail = async (
   email: string,
   html: string,
   subject: string,
-  attachment?: { filename: string; content: Buffer; encoding: string }
+  attachment?: { filename: string; content: Buffer; encoding: BufferEncoding }
 ) => {
   try {
     const transporter = nodemailer.createTransport({
@@ -27,7 +28,7 @@ const sendEmail = async (
     });
 
     // Email configuration
-    const mailOptions: any = {
+    const mailOptions: nodemailer.SendMailOptions = {
       from: '"CampusConnect" <mimam22.cse@bu.ac.bd>',
       to: email,
       subject,
@@ -57,7 +58,7 @@ const sendEmail = async (
 const createEmailContent = async (data: object, templateType: string) => {
   try {
     const templatePath = path.join(process.cwd(), `/src/templates/${templateType}.template.hbs`);
-    const content = await ReadFile(templatePath, 'utf8');
+    const content = await readFileAsync(templatePath, 'utf8');
 
     const template = Handlebars.compile(content);
 

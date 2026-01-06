@@ -8,22 +8,21 @@ import { IUser } from '../modules/User/user.interface';
  * @returns Promise<Buffer> - PDF as Buffer
  */
 export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
-  return new Promise<Buffer>(async (resolve, reject) => {
-    try {
-      // 1️⃣ Load company logo
-      const logoUrl =
-        'https://res.cloudinary.com/dbgrq28js/image/upload/v1736763971/logoipsum-282_ilqjfb_paw4if.png';
-      const response = await axios.get(logoUrl, { responseType: 'arraybuffer' });
-      const logoBuffer = Buffer.from(response.data);
+  const logoUrl =
+    'https://res.cloudinary.com/dbgrq28js/image/upload/v1736763971/logoipsum-282_ilqjfb_paw4if.png';
+  const response = await axios.get(logoUrl, { responseType: 'arraybuffer' });
+  const logoBuffer = Buffer.from(response.data);
 
-      // 2️⃣ Initialize PDF document
+  return new Promise<Buffer>((resolve, reject) => {
+    try {
+      // Initialize PDF document
       const doc = new PDFDocument({ margin: 50 });
       const buffers: Buffer[] = [];
       doc.on('data', (chunk) => buffers.push(chunk));
       doc.on('end', () => resolve(Buffer.concat(buffers)));
       doc.on('error', (err) => reject(err));
 
-      // 3️⃣ Header - Logo & Company Info
+      // Header - Logo & Company Info
       const logoWidth = 70;
       const logoX = (doc.page.width - logoWidth) / 2;
       doc.image(logoBuffer, logoX, doc.y, { width: logoWidth });
@@ -44,7 +43,7 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
       doc.lineWidth(1).moveTo(50, doc.y).lineTo(550, doc.y).stroke();
       doc.moveDown(1);
 
-      // 4️⃣ User Information Section
+      // User Information Section
       doc
         .fontSize(12)
         .font('Helvetica-Bold')
@@ -59,7 +58,7 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
       doc.text(`Account Active: ${user.isActive ? 'Yes' : 'No'}`);
       doc.moveDown(1);
 
-      // 5️⃣ Client Device/Browser Information
+      // Client Device/Browser Information
       if (user.clientITInfo) {
         doc
           .fontSize(12)
@@ -77,7 +76,7 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
         doc.moveDown(1);
       }
 
-      // 6️⃣ Contract / Terms Section
+      // Contract / Terms Section
       doc
         .fontSize(12)
         .font('Helvetica-Bold')
@@ -90,7 +89,7 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
         'The user agrees to comply with all applicable rules and regulations.',
         'The user agrees not to engage in fraudulent or unlawful activities.',
         'The company reserves the right to suspend or terminate accounts that violate terms.',
-        "All personal information will be handled according to the company's privacy policy.",
+        'All personal information will be handled according to the company\'s privacy policy.',
         'This agreement is legally binding and enforceable in accordance with local laws.',
       ];
       terms.forEach((term, index) => {

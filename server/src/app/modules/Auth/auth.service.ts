@@ -235,6 +235,10 @@ const forgetPassword = async (payload: { email: string }) => {
       message: 'Reset password link has been sent to your email.',
     };
   } catch (error) {
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    throw error;
   } finally {
     await session.endSession();
   }
