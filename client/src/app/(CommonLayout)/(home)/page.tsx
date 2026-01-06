@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React from 'react';
 import IntroAnimation from '@/components/IntroAnimation';
@@ -6,15 +6,13 @@ import HomePage from '../home/page';
 import { useIntro } from '@/context/IntroContext';
 
 const Home = () => {
-    const { isIntroActive } = useIntro(); 
+  const { isIntroActive } = useIntro();
 
-    if (isIntroActive) {
-        
-        return <IntroAnimation />;
-    }
+  if (isIntroActive) {
+    return <IntroAnimation />;
+  }
 
-    
-    return <HomePage />;
+  return <HomePage />;
 };
 
 export default Home;

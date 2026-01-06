@@ -1,5 +1,3 @@
-
-
 // ---------------------- User Roles ----------------------
 export const USER_ROLES = ['superadmin', 'admin', 'student', 'driver'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
@@ -37,13 +35,13 @@ export type DriverClientInfo = BaseClientInfo & {
 
 // ---------------------- Frontend User Interface ----------------------
 export interface IUser {
-  id: string;                     // frontend-friendly id
+  id: string; // frontend-friendly id
   email: string;
   name: string;
   role: UserRole;
   clientITInfo: ClientITInfo;
 
-  lastLogin: string;              // ISO string
+  lastLogin: string; // ISO string
   isActive: boolean;
 
   profileImage?: string | null;
@@ -56,6 +54,6 @@ export interface IUser {
   driverInfo?: DriverClientInfo;
 
   // Timestamps
-  createdAt: string;              // ISO string
-  updatedAt: string;              // ISO string
+  createdAt: string; // ISO string
+  updatedAt: string; // ISO string
 }

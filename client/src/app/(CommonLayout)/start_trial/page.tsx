@@ -98,7 +98,6 @@ const StartTrialPage: React.FC = () => {
       />
 
       <main className="max-w-7xl mx-auto px-6 py-16 relative z-10">
-        
         {/* Pricing Plans Section */}
         <section id="trial-plans" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {plans.map((plan, i) => (
