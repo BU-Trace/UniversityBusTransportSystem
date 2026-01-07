@@ -19,21 +19,19 @@ const userSchema = new Schema<IUser, UserModel>(
     },
 
     clientITInfo: {
-      device: { type: String, enum: ['pc', 'mobile'] },
-      browser: { type: String },
-      ipAddress: { type: String },
-      pcName: { type: String },
-      os: { type: String },
-      userAgent: { type: String },
+      device: { type: String, enum: ['pc', 'mobile', 'tablet'], default: 'pc' },
+      browser: { type: String , default: null},
+      ipAddress: { type: String, default: null },
+      pcName: { type: String, default: null },
+      os: { type: String, default: null },
+      userAgent: { type: String, default: null },
     },
 
     clientInfo: {
-      bio: { type: String },
-      // student-specific
-      department: { type: String },
-      rollNumber: { type: String },
-      // driver-specific
-      licenseNumber: { type: String },
+      bio: { type: String, default: null },
+      department: { type: String , default: null},
+      rollNumber: { type: String, default: null },
+      licenseNumber: { type: String, default: null },
     },
 
     lastLogin: { type: Date },

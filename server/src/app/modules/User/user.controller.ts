@@ -44,7 +44,40 @@ const verifyEmail = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateAdminProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserServices.updateProfile(req.params.id, req.body, 'admin');
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Admin profile updated successfully',
+    data: result,
+  });
+});
+
+const updateStudentProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserServices.updateProfile(req.params.id, req.body, 'student');
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Student profile updated successfully',
+    data: result,
+  });
+});
+
+const updateDriverProfile = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserServices.updateProfile(req.params.id, req.body, 'driver');
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Driver profile updated successfully',
+    data: result,
+  });
+});
+
 export const UserController = {
   registerUser,
-  verifyEmail
+  verifyEmail,
+  updateAdminProfile,
+  updateStudentProfile,
+  updateDriverProfile,
 };

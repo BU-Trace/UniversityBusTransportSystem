@@ -3,11 +3,100 @@ import bcrypt from 'bcrypt';
 import AppError from '../../errors/appError';
 import { StatusCodes } from 'http-status-codes';
 import UserModel from './user.model';
-import { IUser } from './user.interface';
+import { IUser, UserRole } from './user.interface';
 
 import config from '../../config';
 import { AuthService } from '../Auth/auth.service';
 import { EmailHelper } from '../../utils/emailHelper';
+import User from './user.model';
+
+ 
+
+export const updateProfile = async (
+  userId: string,
+  data: Partial<IUser>,
+  role: UserRole
+) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  if (user.role !== role) {
+    throw new AppError(StatusCodes.FORBIDDEN, 'Role mismatch');
+  }
+
+  /* ----------------------------------------------------
+     Common fields (allowed for all roles)
+  ---------------------------------------------------- */
+  if (data.name !== undefined) {
+    user.name = data.name;
+  }
+
+  if (data.profileImage !== undefined) {
+    user.profileImage = data.profileImage;
+  }
+
+  /* ----------------------------------------------------
+     STUDENT → only student fields
+  ---------------------------------------------------- */
+  if (user.role === 'student') {
+    if (!user.clientInfo) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Student client info missing');
+    }
+
+    if (data.clientInfo?.bio !== undefined) {
+      user.clientInfo.bio = data.clientInfo.bio;
+    }
+
+    if (data.clientInfo?.department !== undefined) {
+      user.clientInfo.department = data.clientInfo.department;
+    }
+
+    if (data.clientInfo?.rollNumber !== undefined) {
+      user.clientInfo.rollNumber = data.clientInfo.rollNumber;
+    }
+  }
+
+  /* ----------------------------------------------------
+     DRIVER → only driver fields
+  ---------------------------------------------------- */
+  if (user.role === 'driver') {
+    if (!user.clientInfo) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Driver client info missing');
+    }
+
+    if (data.clientInfo?.bio !== undefined) {
+      user.clientInfo.bio = data.clientInfo.bio;
+    }
+
+    if (data.clientInfo?.licenseNumber !== undefined) {
+      user.clientInfo.licenseNumber = data.clientInfo.licenseNumber;
+    }
+  }
+
+  /* ----------------------------------------------------
+     ADMIN / SUPERADMIN → update driver info
+  ---------------------------------------------------- */
+  if (user.role === 'admin' || user.role === 'superadmin') {
+    if (!user.clientInfo) {
+      user.clientInfo = {};
+    }
+
+    if (data.clientInfo?.bio !== undefined) {
+      user.clientInfo.bio = data.clientInfo.bio;
+    }
+
+    if (data.clientInfo?.licenseNumber !== undefined) {
+      user.clientInfo.licenseNumber = data.clientInfo.licenseNumber;
+    }
+  }
+
+  await user.save();
+  return user;
+};
+
 
 const registerUser = async (userData: Partial<IUser>) => {
   const session = await mongoose.startSession();
@@ -153,5 +242,6 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) => {
 
 export const UserServices = {
   registerUser,
-  verifyEmail
+  verifyEmail,
+  updateProfile,
 };
