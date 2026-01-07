@@ -1,0 +1,27 @@
+import mongoose, { Schema } from 'mongoose';
+
+const RouteSchema = new Schema({
+  route_id: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  stopages: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Stopage',
+    required: true,
+  }],
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+}, {
+  timestamps: true,
+});
+
+export const Route = mongoose.model('Route', RouteSchema);
