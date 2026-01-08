@@ -14,14 +14,14 @@ import {
 const AdminDashboardPage: React.FC = () => {
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* ================= SIDEBAR ================= */}
+      {}
       <aside className="w-64 bg-gradient-to-b from-red-800 to-maroon-900 text-white flex flex-col">
         {/* Logo */}
         <div className="px-6 py-6 text-2xl font-bold tracking-wide border-b border-white/20">
           UBTS Admin
         </div>
 
-        {/* Nav */}
+        {/* Side */}
         <nav className="flex-1 px-4 py-6 space-y-2">
           <SidebarItem icon={<LayoutDashboard size={20} />} label="Dashboard" active />
           <SidebarItem icon={<Bus size={20} />} label="Buses" />
@@ -40,15 +40,15 @@ const AdminDashboardPage: React.FC = () => {
         </div>
       </aside>
 
-      {/* ================= MAIN CONTENT ================= */}
+      {}
       <main className="flex-1 p-8">
-        {/* Title */}
+        {}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">At a Glance</h1>
           <p className="text-gray-500">University Bus Transport Overview</p>
         </div>
 
-        {/* ================= STATS CARDS ================= */}
+        {}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           <StatCard
             title="Total Trips Today"
@@ -79,7 +79,7 @@ const AdminDashboardPage: React.FC = () => {
           />
         </div>
 
-        {/* ================= PLACEHOLDER SECTIONS ================= */}
+        {}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl shadow-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-2">Recent Activity</h3>
@@ -101,8 +101,6 @@ const AdminDashboardPage: React.FC = () => {
 };
 
 export default AdminDashboardPage;
-
-/* ================= COMPONENTS ================= */
 
 interface SidebarItemProps {
   icon: React.ReactNode;
