@@ -1,6 +1,8 @@
+'use client';
+
 import { createContext, Dispatch, SetStateAction, useContext, useEffect, useState } from 'react';
-import { getCurrentUser } from '@/services/AuthServices';
-import { IUser } from '@/type/User';
+import { useSession } from 'next-auth/react';
+import { IUser, UserRole } from '@/type/User';
 
 interface IUserProviderValues {
   user: IUser | null;
@@ -12,22 +14,43 @@ interface IUserProviderValues {
 const UserContext = createContext<IUserProviderValues | undefined>(undefined);
 
 const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const { data: session, status } = useSession();
   const [user, setUser] = useState<IUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const handleUser = async () => {
-    const user = await getCurrentUser();
-
-    setUser(user);
-    setIsLoading(false);
-  };
+  const [manualLoading, setManualLoading] = useState(false);
 
   useEffect(() => {
-    handleUser();
-  }, [isLoading]);
+    if (session?.user) {
+      const role = (session.user.role as UserRole | undefined) ?? 'student';
+      setUser({
+        id: session.user.id ?? '',
+        email: session.user.email ?? '',
+        name: session.user.name ?? '',
+        role,
+        clientITInfo: {
+          device: 'pc',
+          browser: 'unknown',
+          ipAddress: 'unknown',
+          userAgent: '',
+        },
+        lastLogin: '',
+        isActive: true,
+        createdAt: '',
+        updatedAt: '',
+      });
+    } else {
+      setUser(null);
+    }
+  }, [session]);
 
   return (
-    <UserContext.Provider value={{ user, setUser, isLoading, setIsLoading }}>
+    <UserContext.Provider
+      value={{
+        user,
+        setUser,
+        isLoading: status === 'loading' || manualLoading,
+        setIsLoading: setManualLoading,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
