@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import React from "react";
-import Image from "next/image";
-import { BusFront, User, Phone, MapPin } from "lucide-react";
+import React from 'react';
+import Image from 'next/image';
+import { BusFront, User, Phone, MapPin } from 'lucide-react';
 
 interface BusInfo {
   name: string;
   routes: string[];
-  status: "Running" | "Repairing" | "Offline" | "x";
+  status: 'Running' | 'Repairing' | 'Offline' | 'x';
   driverName: string;
   phone: string;
   imageSrc: string;
@@ -15,152 +15,152 @@ interface BusInfo {
 
 const ALL_BUSES_INFO: BusInfo[] = [
   {
-    name: "BRTC-04 (Joyonti)",
-    routes: ["Barishal Club", "Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc04.png",
+    name: 'BRTC-04 (Joyonti)',
+    routes: ['Barishal Club', 'Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc04.png',
   },
   {
-    name: "BRTC-05 (Chitra)",
-    routes: ["Barishal Club", "Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc05.png",
+    name: 'BRTC-05 (Chitra)',
+    routes: ['Barishal Club', 'Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc05.png',
   },
   {
-    name: "BRTC-06 (Boikali/Kirtonkhola)",
-    routes: ["Barishal Club"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc06.png",
+    name: 'BRTC-06 (Boikali/Kirtonkhola)',
+    routes: ['Barishal Club'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc06.png',
   },
   {
-    name: "BRTC-07",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc07.png",
+    name: 'BRTC-07',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc07.png',
   },
   {
-    name: "BRTC-08",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc08.png",
+    name: 'BRTC-08',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc08.png',
   },
   {
-    name: "BRTC-09",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc09.png",
+    name: 'BRTC-09',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc09.png',
   },
   {
-    name: "BRTC-10",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc10.png",
+    name: 'BRTC-10',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc10.png',
   },
   {
-    name: "BRTC-11 (Double Decker)",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc11.png",
+    name: 'BRTC-11 (Double Decker)',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc11.png',
   },
   {
-    name: "BRTC-12",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc12.png",
+    name: 'BRTC-12',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc12.png',
   },
   {
-    name: "BRTC-13",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc13.png",
+    name: 'BRTC-13',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc13.png',
   },
   {
-    name: "BRTC-14",
-    routes: ["Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_brtc14.png",
+    name: 'BRTC-14',
+    routes: ['Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_brtc14.png',
   },
   {
-    name: "Andharmanik",
-    routes: ["Natun Bazar"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_andharmanik.png",
+    name: 'Andharmanik',
+    routes: ['Natun Bazar'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_andharmanik.png',
   },
   {
-    name: "Sugondha",
-    routes: ["Natun Bazar"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_sugondha.png",
+    name: 'Sugondha',
+    routes: ['Natun Bazar'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_sugondha.png',
   },
   {
-    name: "Sondha",
-    routes: ["Natun Bazar"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_sondha.png",
+    name: 'Sondha',
+    routes: ['Natun Bazar'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_sondha.png',
   },
   {
-    name: "Agunmukha",
-    routes: ["Natun Bazar"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_agunmukha.png",
+    name: 'Agunmukha',
+    routes: ['Natun Bazar'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_agunmukha.png',
   },
   {
-    name: "BRTC (Single Decker)",
-    routes: ["Barishal Cantonment", "Ichladi Toll Plaza", "Jhalokathi Sadar"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_singlesecker.png",
+    name: 'BRTC (Single Decker)',
+    routes: ['Barishal Cantonment', 'Ichladi Toll Plaza', 'Jhalokathi Sadar'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_singlesecker.png',
   },
   {
-    name: "Lata/Payra",
-    routes: ["Barishal Club", "Nothullabad"],
-    status: "x",
-    driverName: "x",
-    phone: "x",
-    imageSrc: "/static/bus_lata.png",
+    name: 'Lata/Payra',
+    routes: ['Barishal Club', 'Nothullabad'],
+    status: 'x',
+    driverName: 'x',
+    phone: 'x',
+    imageSrc: '/static/bus_lata.png',
   },
 ];
 
 const BusCard: React.FC<{ info: BusInfo }> = ({ info }) => {
   const statusColor =
-    info.status === "Running"
-      ? "bg-green-100 text-green-700"
-      : info.status === "Repairing"
-      ? "bg-yellow-100 text-yellow-700"
-      : info.status === "Offline"
-      ? "bg-red-100 text-red-700"
-      : "bg-gray-200 text-gray-700";
+    info.status === 'Running'
+      ? 'bg-green-100 text-green-700'
+      : info.status === 'Repairing'
+        ? 'bg-yellow-100 text-yellow-700'
+        : info.status === 'Offline'
+          ? 'bg-red-100 text-red-700'
+          : 'bg-gray-200 text-gray-700';
 
   return (
     <div className="relative bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-lg hover:shadow-red-300 transition-all duration-500 hover:-translate-y-2 group">
@@ -182,10 +182,8 @@ const BusCard: React.FC<{ info: BusInfo }> = ({ info }) => {
           <h3 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
             <BusFront className="text-red-600 w-6 h-6" /> {info.name}
           </h3>
-          <span
-            className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${statusColor}`}
-          >
-            {info.status === "x" ? "Status N/A" : info.status}
+          <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${statusColor}`}>
+            {info.status === 'x' ? 'Status N/A' : info.status}
           </span>
         </div>
 
@@ -202,8 +200,7 @@ const BusCard: React.FC<{ info: BusInfo }> = ({ info }) => {
 
           <div className="flex items-start">
             <MapPin className="w-4 h-4 mr-2 mt-1 text-maroon-600" />
-            <span className="font-semibold mr-1">Routes:</span>{" "}
-            {info.routes.join(", ")}
+            <span className="font-semibold mr-1">Routes:</span> {info.routes.join(', ')}
           </div>
         </div>
 
@@ -235,8 +232,7 @@ export default function BusesPage() {
             Meet Our Fleet
           </h1>
           <p className="text-lg text-red-100 max-w-3xl mx-auto">
-            Discover our 17 buses that connect the University campus with various
-            destinations.
+            Discover our 17 buses that connect the University campus with various destinations.
           </p>
         </header>
 
@@ -250,7 +246,8 @@ export default function BusesPage() {
         {}
         <div className="mt-16 text-center text-sm text-red-200 border-t border-red-300/20 pt-6">
           <p>
-            Note: Bus driver names, routes and statuses can be updated any time so stay connected to be informed.
+            Note: Bus driver names, routes and statuses can be updated any time so stay connected to
+            be informed.
           </p>
         </div>
       </div>

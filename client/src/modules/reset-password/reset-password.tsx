@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import React, { useState, Suspense } from "react";
-import InputField from "@/components/shared/InputField";
-import Image from "next/image";
-import { useSearchParams } from "next/navigation";
-import { Home } from "lucide-react";
-import Link from "next/link";
+import React, { useState, Suspense } from 'react';
+import InputField from '@/components/shared/InputField';
+import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
+import { Home } from 'lucide-react';
+import Link from 'next/link';
 
 // ---- Component that actually uses useSearchParams ----
 const ResetPasswordForm = () => {
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get('token');
 
   const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
+    password: '',
+    confirmPassword: '',
   });
 
   const [submitted, setSubmitted] = useState(false);
@@ -27,22 +27,22 @@ const ResetPasswordForm = () => {
     e.preventDefault();
 
     if (!formData.password || !formData.confirmPassword) {
-      alert("Please fill out all fields");
+      alert('Please fill out all fields');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      alert('Passwords do not match!');
       return;
     }
 
     if (!token) {
-      alert("Invalid or missing token.");
+      alert('Invalid or missing token.');
       return;
     }
 
-    console.log("Resetting password with token:", token);
-    console.log("New Password:", formData.password);
+    console.log('Resetting password with token:', token);
+    console.log('New Password:', formData.password);
 
     setSubmitted(true);
   };
@@ -55,10 +55,7 @@ const ResetPasswordForm = () => {
       <div className="h-1 w-16 bg-red-500 mx-auto mb-6 rounded-full"></div>
 
       {!submitted ? (
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col space-y-4 w-full max-w-md mx-auto"
-        >
+        <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full max-w-md mx-auto">
           <InputField
             label="New Password"
             type="password"
@@ -82,22 +79,15 @@ const ResetPasswordForm = () => {
           </button>
 
           <div className="text-center mt-4">
-            <a
-              href="/login"
-              className="text-gray-700 hover:text-red-500 font-medium text-sm"
-            >
+            <a href="/login" className="text-gray-700 hover:text-red-500 font-medium text-sm">
               Back to Login
             </a>
           </div>
         </form>
       ) : (
         <div className="text-center mt-10">
-          <h3 className="text-xl font-semibold text-black mb-4">
-            Password Reset Successful 🎉
-          </h3>
-          <p className="text-gray-600 text-sm mb-6">
-            You can now sign in with your new password.
-          </p>
+          <h3 className="text-xl font-semibold text-black mb-4">Password Reset Successful 🎉</h3>
+          <p className="text-gray-600 text-sm mb-6">You can now sign in with your new password.</p>
           <a
             href="/login"
             className="inline-block bg-red-500 hover:bg-red-600 text-white py-2 px-6 rounded-md font-semibold transition-all"
@@ -130,7 +120,13 @@ const ResetPasswordPage = () => {
         </div>
 
         {/* RIGHT SIDE FORM WRAPPED IN SUSPENSE */}
-        <Suspense fallback={<div className="w-full lg:w-[30%] flex items-center justify-center"><p>Loading...</p></div>}>
+        <Suspense
+          fallback={
+            <div className="w-full lg:w-[30%] flex items-center justify-center">
+              <p>Loading...</p>
+            </div>
+          }
+        >
           <ResetPasswordForm />
         </Suspense>
       </div>

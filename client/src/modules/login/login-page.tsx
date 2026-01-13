@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import InputField from "@/components/shared/InputField";
-import Image from "next/image";
-import Link from "next/link";
-import { Home } from "lucide-react";
+import React, { useState } from 'react';
+import InputField from '@/components/shared/InputField';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 const LoginPageComponent = () => {
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -18,14 +18,13 @@ const LoginPageComponent = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Logging in:", formData);
+    console.log('Logging in:', formData);
   };
 
   return (
     <div className="flex items-center justify-center h-screen overflow-hidden">
       {/* ---------- MAIN CONTAINER ---------- */}
       <div className="flex flex-col lg:flex-row bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden w-full h-full">
-
         {/* ---------- LEFT SECTION (IMAGE PANEL) ---------- */}
         <div className="w-full lg:w-[70%] relative h-full">
           <Image
@@ -46,10 +45,7 @@ const LoginPageComponent = () => {
             Login
           </h2>
           <div className="h-1 w-16 bg-red-500 mx-auto rounded-full"></div>
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col space-y-4 w-full max-w-md mx-auto"
-          >
+          <form onSubmit={handleSubmit} className="flex flex-col space-y-4 w-full max-w-md mx-auto">
             <InputField
               label="Email"
               type="email"

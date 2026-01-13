@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import Image from "next/image";
+import React from 'react';
+import Image from 'next/image';
 
 type HeaderProps = {
   title?: React.ReactNode;
@@ -16,11 +16,11 @@ type HeaderProps = {
 const Header: React.FC<HeaderProps> = ({
   title,
   subtitle,
-  imageSrc = "/static/loginpagebanner.png",
-  primaryText = "Get Started",
-  primaryHref = "#features",
-  secondaryText = "Contact Sales",
-  secondaryHref = "#contact",
+  imageSrc = '/static/loginpagebanner.png',
+  primaryText = 'Get Started',
+  primaryHref = '#features',
+  secondaryText = 'Contact Sales',
+  secondaryHref = '#contact',
 }) => {
   return (
     <header className="w-full relative h-[320px] sm:h-[380px] md:h-[420px] lg:h-[480px]">
@@ -39,7 +39,9 @@ const Header: React.FC<HeaderProps> = ({
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white uppercase tracking-tight mb-4">
             {title}
           </h1>
-          {subtitle && <p className="text-sm sm:text-base md:text-lg text-white/90 mb-6">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-sm sm:text-base md:text-lg text-white/90 mb-6">{subtitle}</p>
+          )}
           <div className="flex items-center justify-center gap-3">
             <a
               href={primaryHref}

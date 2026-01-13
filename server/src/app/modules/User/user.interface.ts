@@ -24,15 +24,18 @@ export type ClientITInfo = {
 // --- Role-specific client info --------------------------------
 type BaseClientInfo = {
   bio?: string;
+  department?: string;
+  rollNumber?: string;
+  licenseNumber?: string;
 };
 
 type StudentClientInfo = BaseClientInfo & {
-  department: string;
-  rollNumber: string;
+  department?: string;
+  rollNumber?: string;
 };
 
 type DriverClientInfo = BaseClientInfo & {
-  licenseNumber: string;
+  licenseNumber?: string;
 };
 
 // --- Core fields shared by all users ---------------------------

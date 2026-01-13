@@ -1,5 +1,5 @@
-import AboutPageComponent from "@/modules/about/AboutPageComponent";
+import AboutPageComponent from '@/modules/about/AboutPageComponent';
 
 export default function AboutPage() {
-    return <AboutPageComponent />;
+  return <AboutPageComponent />;
 }

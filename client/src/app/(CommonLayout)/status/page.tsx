@@ -1,16 +1,15 @@
-
 'use client';
 
-import React, { useState } from "react";
+import React, { useState } from 'react';
 
 export default function StatusPage() {
   const [isActive, setIsActive] = useState(false);
-  const [name, setName] = useState("");
-  const [route, setRoute] = useState("");
+  const [name, setName] = useState('');
+  const [route, setRoute] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Status: ${isActive ? "Active" : "Inactive"}\nName: ${name}\nRoute: ${route}`);
+    alert(`Status: ${isActive ? 'Active' : 'Inactive'}\nName: ${name}\nRoute: ${route}`);
   };
 
   return (
@@ -22,12 +21,12 @@ export default function StatusPage() {
           <div
             onClick={() => setIsActive(!isActive)}
             className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-              isActive ? "bg-green-400" : "bg-pink-300"
+              isActive ? 'bg-green-400' : 'bg-pink-300'
             }`}
           >
             <div
               className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
-                isActive ? "translate-x-6" : ""
+                isActive ? 'translate-x-6' : ''
               }`}
             ></div>
           </div>

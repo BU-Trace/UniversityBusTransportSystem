@@ -29,7 +29,7 @@
     ]
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^9.39.2",
     "@types/axios": "^0.9.36",
     "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
@@ -66,7 +66,7 @@
     "tailwindcss": "^4.1.17",
     "turbo": "^2.0.6",
     "typescript": "^5.5.4",
-    "typescript-eslint": "^8.46.3"
+    "typescript-eslint": "^8.52.0"
   },
   "dependencies": {
     "axios": "^1.13.2",
