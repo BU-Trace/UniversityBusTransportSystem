@@ -13,9 +13,9 @@ import {
 
 const AdminDashboardPage: React.FC = () => {
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100">
       {}
-      <aside className="w-64 bg-gradient-to-b from-red-800 to-maroon-900 text-white flex flex-col">
+      <aside className="w-full lg:w-64 bg-gradient-to-b from-red-800 to-maroon-900 text-white flex flex-col shrink-0">
         {/* Logo */}
         <div className="px-6 py-6 text-2xl font-bold tracking-wide border-b border-white/20">
           UBTS Admin
@@ -41,7 +41,7 @@ const AdminDashboardPage: React.FC = () => {
       </aside>
 
       {}
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-6 sm:p-8 w-full">
         {}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-800">At a Glance</h1>

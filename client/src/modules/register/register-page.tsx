@@ -257,11 +257,11 @@ const RegisterPageComponent = () => {
   );
 
   return (
-    <div className="flex items-center justify-center h-screen overflow-hidden">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 md:p-8">
       {/* Main Container */}
-      <div className="flex flex-col lg:flex-row bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden w-full h-full">
+      <div className="flex flex-col lg:flex-row bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden w-full max-w-6xl min-h-[80vh]">
         {/* ---------- LEFT SECTION (FORM AREA) ---------- */}
-        <div className="w-full lg:w-[30%] p-8 md:p-10 flex flex-col justify-center h-full overflow-y-auto">
+        <div className="w-full lg:w-[30%] p-8 md:p-10 flex flex-col justify-center overflow-y-auto">
           <h2 className="text-3xl font-bold text-black text-center uppercase tracking-wide">
             Register
           </h2>
@@ -324,7 +324,7 @@ const RegisterPageComponent = () => {
         </div>
 
         {/* ---------- RIGHT SECTION (IMAGE PANEL) ---------- */}
-        <div className="w-full lg:w-[70%] relative h-full">
+        <div className="w-full lg:w-[70%] relative min-h-[240px]">
           <Image
             width={500}
             height={500}
