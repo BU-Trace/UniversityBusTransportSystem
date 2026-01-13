@@ -4,9 +4,10 @@ import sendResponse from '../../utils/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 import { UserServices } from './user.service';
 import { UserRole } from './user.utils';
+import type { UserRole as UserRoleType } from './user.interface';
 
 const createProfileUpdater = (
-  role: (typeof UserRole)[keyof typeof UserRole],
+  role: UserRoleType,
   successMessage: string
 ) =>
   catchAsync(async (req: Request, res: Response) => {
