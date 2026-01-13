@@ -3,6 +3,7 @@ import { UserRoutes } from '../modules/User/user.routes';
 import { AuthRoutes } from '../modules/Auth/auth.routes';
 import StopageRoutes from '../modules/Stopage/stopage.routes';
 import RouteRoutes from '../modules/Route/route.routes';
+import NotificationRoutes from '../modules/Notification/notification.routes';
 
 const router = Router();
 
@@ -23,6 +24,10 @@ const moduleRoutes = [
   {
     path: '/route',
     route: RouteRoutes,
+  },
+  {
+    path: '/notifications',
+    route: NotificationRoutes,
   },
 ];
 

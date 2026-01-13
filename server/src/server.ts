@@ -1,9 +1,10 @@
-import { Server } from 'http';
+import { Server, createServer } from 'http';
 import mongoose from 'mongoose';
 
 import config from './app/config';
 import seedAdmin from './app/DB/seed';
 import app from './app';
+import { initSocket } from './app/socket';
 
 let server: Server | null = null;
 
@@ -38,7 +39,10 @@ async function bootstrap() {
     await connectToDatabase();
     //await seed();
 
-    server = app.listen(config.port, () => {
+    const httpServer = createServer(app);
+    initSocket(httpServer);
+
+    server = httpServer.listen(config.port, () => {
       console.log(`Application is running on port ${config.port}`);
     });
 
