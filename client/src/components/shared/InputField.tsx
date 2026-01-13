@@ -7,6 +7,7 @@ interface InputFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
+  error?: string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -16,6 +17,7 @@ const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
   placeholder,
+  error,
 }) => {
   return (
     <div className="flex flex-col">
@@ -26,9 +28,18 @@ const InputField: React.FC<InputFieldProps> = ({
         value={value}
         placeholder={placeholder}
         onChange={onChange}
-        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 transition-all text-black"
+        className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 transition-all text-black ${
+          error ? 'border-red-500' : 'border-gray-300'
+        }`}
+        aria-invalid={!!error}
+        aria-describedby={error ? `${name}-error` : undefined}
         required
       />
+      {error ? (
+        <span id={`${name}-error`} className="text-red-600 text-xs mt-1">
+          {error}
+        </span>
+      ) : null}
     </div>
   );
 };
