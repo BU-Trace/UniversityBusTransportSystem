@@ -13,8 +13,8 @@ export default function StatusPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#e9f5f9]">
-      <div className="bg-red-500 text-white p-8 rounded-3xl shadow-2xl w-[400px] flex flex-col">
+    <div className="min-h-screen flex items-center justify-center bg-[#e9f5f9] px-4">
+      <div className="bg-red-500 text-white p-8 rounded-3xl shadow-2xl w-full max-w-md flex flex-col">
         {/* Toggle Status */}
         <div className="flex justify-end items-center mb-6">
           <label className="mr-2 text-sm">Status</label>
