@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import mongoose, { Schema } from 'mongoose';
+import mongoose from 'mongoose';
 import config from '../config';
 import { UserRole } from '../modules/User/user.utils';
 import { IUser, UserModel } from '../modules/User/user.interface';

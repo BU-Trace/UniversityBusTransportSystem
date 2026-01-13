@@ -1,23 +1,54 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
 import AppError from '../../errors/appError';
 import { StatusCodes } from 'http-status-codes';
 import UserModel from './user.model';
 import { IUser, UserRole } from './user.interface';
 
-import config from '../../config';
-import { AuthService } from '../Auth/auth.service';
 import { EmailHelper } from '../../utils/emailHelper';
-import User from './user.model';
+import { runWithTransaction } from '../../utils/transaction';
 
- 
+type ClientInfo = NonNullable<IUser['clientInfo']>;
+
+const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
+  student: ['bio', 'department', 'rollNumber'],
+  driver: ['bio', 'licenseNumber'],
+  admin: ['bio', 'licenseNumber'],
+  superadmin: ['bio', 'licenseNumber'],
+};
+
+const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
+  if (!user.clientInfo) {
+    if (role === 'student') {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Student client info missing');
+    }
+    if (role === 'driver') {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Driver client info missing');
+    }
+    user.clientInfo = {} as ClientInfo;
+  }
+
+  return user.clientInfo as ClientInfo;
+};
+
+const applyClientInfoUpdates = (
+  clientInfo: ClientInfo,
+  updates: Partial<ClientInfo> | undefined,
+  allowedFields: (keyof ClientInfo)[]
+) => {
+  if (!updates) return;
+
+  allowedFields.forEach((field) => {
+    if (updates[field] !== undefined) {
+      clientInfo[field] = updates[field];
+    }
+  });
+};
 
 export const updateProfile = async (
   userId: string,
   data: Partial<IUser>,
   role: UserRole
 ) => {
-  const user = await User.findById(userId);
+  const user = await UserModel.findById(userId);
 
   if (!user) {
     throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
@@ -38,72 +69,20 @@ export const updateProfile = async (
     user.profileImage = data.profileImage;
   }
 
-  /* ----------------------------------------------------
-     STUDENT → only student fields
-  ---------------------------------------------------- */
-  if (user.role === 'student') {
-    if (!user.clientInfo) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Student client info missing');
-    }
-
-    if (data.clientInfo?.bio !== undefined) {
-      user.clientInfo.bio = data.clientInfo.bio;
-    }
-
-    if (data.clientInfo?.department !== undefined) {
-      user.clientInfo.department = data.clientInfo.department;
-    }
-
-    if (data.clientInfo?.rollNumber !== undefined) {
-      user.clientInfo.rollNumber = data.clientInfo.rollNumber;
-    }
-  }
-
-  /* ----------------------------------------------------
-     DRIVER → only driver fields
-  ---------------------------------------------------- */
-  if (user.role === 'driver') {
-    if (!user.clientInfo) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Driver client info missing');
-    }
-
-    if (data.clientInfo?.bio !== undefined) {
-      user.clientInfo.bio = data.clientInfo.bio;
-    }
-
-    if (data.clientInfo?.licenseNumber !== undefined) {
-      user.clientInfo.licenseNumber = data.clientInfo.licenseNumber;
-    }
-  }
-
-  /* ----------------------------------------------------
-     ADMIN / SUPERADMIN → update driver info
-  ---------------------------------------------------- */
-  if (user.role === 'admin' || user.role === 'superadmin') {
-    if (!user.clientInfo) {
-      user.clientInfo = {};
-    }
-
-    if (data.clientInfo?.bio !== undefined) {
-      user.clientInfo.bio = data.clientInfo.bio;
-    }
-
-    if (data.clientInfo?.licenseNumber !== undefined) {
-      user.clientInfo.licenseNumber = data.clientInfo.licenseNumber;
-    }
-  }
+  const clientInfo = getClientInfoForUpdate(user, user.role);
+  applyClientInfoUpdates(
+    clientInfo,
+    data.clientInfo as Partial<ClientInfo>,
+    ROLE_CLIENT_FIELDS[user.role]
+  );
 
   await user.save();
   return user;
 };
 
 
-const registerUser = async (userData: Partial<IUser>) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+const registerUser = async (userData: Partial<IUser>) =>
+  runWithTransaction(async (session) => {
     const existingUser = await UserModel.findOne({ email: userData.email }).session(session);
     if (existingUser) {
       throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
@@ -179,8 +158,6 @@ const registerUser = async (userData: Partial<IUser>) => {
 
     await user.save({ session });
 
-    await session.commitTransaction();
-
     // const loginResponse = await AuthService.loginUser({
     //   email: createdUser.email,
     //   password: userData.password,
@@ -189,22 +166,10 @@ const registerUser = async (userData: Partial<IUser>) => {
     //
     // return loginResponse;
     return null;
-  } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
-};
+  });
 
-const verifyEmail = async (payload: { email: string; otpToken: string }) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+const verifyEmail = async (payload: { email: string; otpToken: string }) =>
+  runWithTransaction(async (session) => {
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
@@ -225,20 +190,10 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) => {
 
     await user.save({ session });
 
-    await session.commitTransaction();
-
     return {
       message: 'Email verified successfully',
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      await session.abortTransaction();
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
-};
+  });
 
 export const UserServices = {
   registerUser,
