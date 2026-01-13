@@ -1,5 +1,4 @@
 import { StatusCodes } from 'http-status-codes';
-import mongoose from 'mongoose';
 import AppError from '../../errors/appError';
 import config from '../../config';
 
@@ -9,15 +8,10 @@ import { UserRole } from '../User/user.utils';
 import { createToken } from './auth.util';
 import bcrypt from 'bcrypt';
 import { EmailHelper } from '../../utils/emailHelper';
+import { runWithTransaction } from '../../utils/transaction';
 
 const loginUser = async (payload: IAuth) => {
-  const session = await mongoose.startSession();
-
-  console.log(payload);
-
-  try {
-    session.startTransaction();
-
+  return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
@@ -29,7 +23,6 @@ const loginUser = async (payload: IAuth) => {
     }
 
     // ---------------------- Check Password ----------------------
-
     const isMatch = await UserModel.isPasswordMatched(payload.password.trim(), user.password);
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
@@ -67,8 +60,6 @@ const loginUser = async (payload: IAuth) => {
       );
     }
 
-    await session.commitTransaction();
-
     return {
       accessToken,
       refreshToken,
@@ -79,18 +70,7 @@ const loginUser = async (payload: IAuth) => {
         role: user.role,
       },
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      try {
-        await session.abortTransaction();
-      } catch (abortError) {
-        console.error('Failed to abort transaction:', abortError);
-      }
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
+  });
 };
 
 const changePassword = async (payload: {
@@ -98,11 +78,7 @@ const changePassword = async (payload: {
   oldPassword: string;
   newPassword: string;
 }) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
@@ -129,29 +105,14 @@ const changePassword = async (payload: {
 
     await user.save({ session });
 
-    await session.commitTransaction();
-
     return {
       message: 'Password changed successfully',
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      try {
-        await session.abortTransaction();
-      } catch (abortError) {
-        console.error('Failed to abort transaction:', abortError);
-      }
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
+  });
 };
 
 const forgetPassword = async (payload: { email: string }) => {
-  const session = await mongoose.startSession();
-  try {
-    await session.startTransaction();
+  return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
@@ -238,22 +199,10 @@ const forgetPassword = async (payload: { email: string }) => {
       'Password Reset Request'
     );
 
-    await session.commitTransaction();
     return {
       message: 'Reset password link has been sent to your email.',
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      try {
-        await session.abortTransaction();
-      } catch (abortError) {
-        console.error('Failed to abort transaction:', abortError);
-      }
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
+  });
 };
 
 export const AuthService = {
