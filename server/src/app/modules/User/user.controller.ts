@@ -3,6 +3,21 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 import { UserServices } from './user.service';
+import { UserRole } from './user.utils';
+
+const createProfileUpdater = (
+  role: (typeof UserRole)[keyof typeof UserRole],
+  successMessage: string
+) =>
+  catchAsync(async (req: Request, res: Response) => {
+    const result = await UserServices.updateProfile(req.params.id, req.body, role);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: successMessage,
+      data: result,
+    });
+  });
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   await UserServices.registerUser(req.body);
@@ -43,35 +58,20 @@ const verifyEmail = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updateAdminProfile = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserServices.updateProfile(req.params.id, req.body, 'admin');
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Admin profile updated successfully',
-    data: result,
-  });
-});
+const updateAdminProfile = createProfileUpdater(
+  UserRole.ADMIN,
+  'Admin profile updated successfully'
+);
 
-const updateStudentProfile = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserServices.updateProfile(req.params.id, req.body, 'student');
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Student profile updated successfully',
-    data: result,
-  });
-});
+const updateStudentProfile = createProfileUpdater(
+  UserRole.STUDENT,
+  'Student profile updated successfully'
+);
 
-const updateDriverProfile = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserServices.updateProfile(req.params.id, req.body, 'driver');
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Driver profile updated successfully',
-    data: result,
-  });
-});
+const updateDriverProfile = createProfileUpdater(
+  UserRole.DRIVER,
+  'Driver profile updated successfully'
+);
 
 export const UserController = {
   registerUser,
