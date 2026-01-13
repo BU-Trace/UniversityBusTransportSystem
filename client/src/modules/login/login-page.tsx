@@ -5,20 +5,61 @@ import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
+import { signIn } from 'next-auth/react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 
 const LoginPageComponent = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors((prev) => ({ ...prev, [e.target.name]: undefined, form: undefined }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Logging in:', formData);
+    const validationErrors: { email?: string; password?: string } = {};
+    if (!formData.email) {
+      validationErrors.email = 'Email is required';
+    }
+    if (!formData.password) {
+      validationErrors.password = 'Password is required';
+    }
+
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    const result = await signIn('credentials', {
+      email: formData.email,
+      password: formData.password,
+      redirect: false,
+      callbackUrl,
+    });
+
+    if (result?.error) {
+      const message = result.error || 'Unable to sign in.';
+      setErrors({ form: message });
+      toast.error(message);
+    } else {
+      toast.success('Signed in successfully');
+      router.push(result?.url || callbackUrl);
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -52,6 +93,7 @@ const LoginPageComponent = () => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              error={errors.email}
             />
 
             <InputField
@@ -60,13 +102,17 @@ const LoginPageComponent = () => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              error={errors.password}
             />
+
+            {errors.form ? <p className="text-red-600 text-sm">{errors.form}</p> : null}
 
             <button
               type="submit"
-              className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-md font-semibold transition-all"
+              disabled={isSubmitting}
+              className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-md font-semibold transition-all"
             >
-              Sign In
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </button>
 
             <div className="flex items-center justify-between text-sm mt-2">

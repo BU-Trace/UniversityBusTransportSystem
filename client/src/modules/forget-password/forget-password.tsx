@@ -5,19 +5,36 @@ import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
+import { requestPasswordReset } from '@/services/auth-client';
+import { toast } from 'sonner';
 
 const ForgetPassword = () => {
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) {
-      alert('Please enter your email address.');
+      setError('Please enter your email address.');
       return;
     }
-    setSent(true);
-    console.log('Password reset link sent to:', email);
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      const response = await requestPasswordReset(email);
+      setSent(true);
+      toast.success(response.message || 'Reset instructions sent.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to process request';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -55,14 +72,19 @@ const ForgetPassword = () => {
                 type="email"
                 name="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError(null);
+                }}
+                error={error || undefined}
               />
 
               <button
                 type="submit"
-                className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-md font-semibold transition-all"
+                disabled={isSubmitting}
+                className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-md font-semibold transition-all"
               >
-                Send Reset Link
+                {isSubmitting ? 'Sending...' : 'Send Reset Link'}
               </button>
 
               <div className="text-center mt-4">

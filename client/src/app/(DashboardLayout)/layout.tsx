@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
 
 // React Icons
 import {
@@ -141,7 +142,10 @@ const menuItems = [
 
             {/* Logout */}
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
-              <button className="flex items-center gap-4 w-full px-4 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors">
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="flex items-center gap-4 w-full px-4 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
+              >
                 <MdLogout size={20} />
                 <span className="text-sm">Log Out</span>
               </button>

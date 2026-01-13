@@ -3,9 +3,11 @@
 import React, { useState, Suspense } from 'react';
 import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Home } from 'lucide-react';
 import Link from 'next/link';
+import { resetPassword } from '@/services/auth-client';
+import { toast } from 'sonner';
 
 // ---- Component that actually uses useSearchParams ----
 const ResetPasswordForm = () => {
@@ -18,33 +20,53 @@ const ResetPasswordForm = () => {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.password || !formData.confirmPassword) {
-      alert('Please fill out all fields');
+      setError('Please fill out all fields');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
+      setError('Passwords do not match!');
       return;
     }
 
     if (!token) {
-      alert('Invalid or missing token.');
+      setError('Invalid or missing token.');
       return;
     }
 
-    console.log('Resetting password with token:', token);
-    console.log('New Password:', formData.password);
+    setIsSubmitting(true);
+    setError(null);
 
-    setSubmitted(true);
+    try {
+      await resetPassword(token, formData.password);
+      setSubmitted(true);
+      toast.success('Password reset successfully. You can now sign in.');
+      router.push('/login');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unable to reset password';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -71,11 +93,14 @@ const ResetPasswordForm = () => {
             onChange={handleChange}
           />
 
+          {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+
           <button
             type="submit"
-            className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-md font-semibold transition-all"
+            disabled={isSubmitting}
+            className="w-full bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 rounded-md font-semibold transition-all"
           >
-            Reset Password
+            {isSubmitting ? 'Resetting...' : 'Reset Password'}
           </button>
 
           <div className="text-center mt-4">

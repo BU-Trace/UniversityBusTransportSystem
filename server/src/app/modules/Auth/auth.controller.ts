@@ -37,12 +37,22 @@ const changePassword = catchAsync(async (req, res) => {
 });
 
 const forgetPassword = catchAsync(async (req, res) => {
-  const data = AuthService.forgetPassword(req.body);
+  const data = await AuthService.forgetPassword(req.body);
   sendResponse(res, {
-    statusCode: StatusCodes.NOT_IMPLEMENTED,
-    success: false,
-    message: 'Reset password has been sent to you email.',
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Reset password link has been sent to your email.',
     data: data,
+  });
+});
+
+const resetPassword = catchAsync(async (req, res) => {
+  const data = await AuthService.resetPassword(req.body);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Password reset successfully!',
+    data,
   });
 });
 
@@ -50,4 +60,5 @@ export const AuthController = {
   loginUser,
   changePassword,
   forgetPassword,
+  resetPassword,
 };

@@ -5,7 +5,7 @@ import config from '../../config';
 import { IAuth, IJwtPayload } from './auth.interface';
 import UserModel from '../User/user.model';
 import { UserRole } from '../User/user.utils';
-import { createToken } from './auth.util';
+import { createToken, verifyToken } from './auth.util';
 import bcrypt from 'bcrypt';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
@@ -124,6 +124,9 @@ const forgetPassword = async (payload: { email: string }) => {
     }
 
     // ---------------------- Generate Reset Token ----------------------
+    const resetSecret = (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret';
+    const resetExpiry =
+      (config.jwt_pass_reset_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`) || '15m';
     const token = createToken(
       {
         userId: user._id.toString(),
@@ -133,11 +136,12 @@ const forgetPassword = async (payload: { email: string }) => {
         isActive: user.isActive,
         iat: Math.floor(Date.now() / 1000),
       },
-      'resetPasswordSecret' as string,
-      '15m'
+      resetSecret,
+      resetExpiry
     );
 
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    const clientBase = config.client_url || 'http://localhost:3000';
+    const resetLink = `${clientBase}/reset-password?token=${token}`;
 
     await EmailHelper.sendEmail(
       user.email,
@@ -205,8 +209,37 @@ const forgetPassword = async (payload: { email: string }) => {
   });
 };
 
+const resetPassword = async (payload: { token: string; newPassword: string }) => {
+  return runWithTransaction(async (session) => {
+    if (!payload.token) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Reset token is required');
+    }
+
+    const decoded = verifyToken(
+      payload.token,
+      (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret'
+    ) as { userId: string } & { email?: string };
+
+    const user = await UserModel.findById(decoded.userId).session(session);
+    if (!user) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'User is not found!');
+    }
+
+    user.password = payload.newPassword.trim();
+    user.resetPasswordExpires = null;
+    user.resetPasswordToken = null;
+
+    await user.save({ session });
+
+    return {
+      message: 'Password reset successfully',
+    };
+  });
+};
+
 export const AuthService = {
   loginUser,
   changePassword,
   forgetPassword,
+  resetPassword,
 };
