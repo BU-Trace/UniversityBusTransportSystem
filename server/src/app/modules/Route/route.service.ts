@@ -38,7 +38,9 @@ export const getAllRoutes = async () => {
 };
 
 // Placeholder for Google Distance Matrix API integration
-export const getDistanceAndDuration = async (stopageIds: string[]): Promise<{ distance: number, duration: number }> => {
+export const getDistanceAndDuration = async (
+  _stopageIds: string[]
+): Promise<{ distance: number; duration: number }> => {
   // TODO: Fetch stopage coordinates from DB, call Google API, return total distance/duration
   return { distance: 0, duration: 0 };
 };
