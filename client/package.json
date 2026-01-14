@@ -17,6 +17,7 @@
     "framer-motion": "^12.23.24",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.544.0",
+    "next-auth": "^4.24.13",
     "next": "15.5.2",
     "next-auth": "^4.24.13",
     "react": "^19.1.0",
