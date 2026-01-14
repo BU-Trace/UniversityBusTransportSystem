@@ -3,14 +3,13 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 import { useIntro } from '@/context/IntroContext';
-import { useUser } from '@/context/UserContext';
-import { logOutUser } from '@/services/AuthServices';
 import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
   const { isIntroActive } = useIntro();
-  const { user, setIsLoading } = useUser();
+  const { data: session, status } = useSession();
   const pathName = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,8 +19,7 @@ export default function Navbar() {
   }
 
   const handleLogout = async () => {
-    await logOutUser();
-    setIsLoading(true);
+    await signOut({ callbackUrl: '/' });
     if (pathName && pathName.startsWith('/dashboard')) {
       router.push('/');
     }
@@ -84,7 +82,7 @@ export default function Navbar() {
           </Link>
 
           {}
-          {!user ? (
+          {status === 'loading' ? null : !session?.user ? (
             <Link
               href="/login"
               className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition"
@@ -94,7 +92,7 @@ export default function Navbar() {
           ) : (
             <div className="relative group">
               <button className="flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-full hover:bg-red-100 transition">
-                <span className="text-red-700 font-medium">{user.name}</span>
+                <span className="text-red-700 font-medium">{session?.user?.name}</span>
               </button>
               {}
               <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg opacity-0 group-hover:opacity-100 group-hover:visible invisible transition">
@@ -146,7 +144,7 @@ export default function Navbar() {
           </Link>
 
           {}
-          {!user ? (
+          {status === 'loading' ? null : !session?.user ? (
             <Link
               href="/login"
               onClick={toggleMenu}

@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint 'src/**/*.{ts,tsx,js,jsx}' --fix",
     "format": "prettier --write 'src/**/*.{ts,tsx,js,jsx,css,scss,md}'",
@@ -16,6 +16,7 @@
     "framer-motion": "^12.23.24",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.544.0",
+    "next-auth": "^4.24.13",
     "next": "15.5.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
