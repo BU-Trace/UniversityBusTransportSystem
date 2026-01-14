@@ -7,6 +7,7 @@ import { IntroProvider } from '@/context/IntroContext';
 import CallUsButton from '@/components/common/CallUsButton';
 import TeamButton from '@/components/common/TeamButton';
 import BusTrackerButton from '@/components/common/BusTrackerButton';
+import NotificationListener from '@/components/notifications/NotificationListener';
 
 export const metadata: Metadata = {
   title: 'UBTS',
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body className="antialiased flex flex-col min-h-screen">
         <Providers>
           <Toaster richColors position="top-center" />
+          <NotificationListener />
 
           <main className="flex-1 overflow-y-auto">{children}</main>
 
