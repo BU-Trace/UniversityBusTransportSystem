@@ -44,7 +44,7 @@ export default function DashboardLayout({
 
   if (!mounted) return null;
 
-  const admin = {
+  const role = {
     name: "Admin 1",
     role: "Admin",
   };
@@ -110,7 +110,7 @@ const menuItems = [
               </div>
 
               <h2 className="font-bold text-base uppercase tracking-widest">
-                {admin.name}
+                {role.name}
               </h2>
               <button className="text-[10px] opacity-70 underline mt-0.5 hover:opacity-100">
                 Edit Profile
@@ -141,7 +141,7 @@ const menuItems = [
 
             {/* Logout */}
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
-              <button className="flex items-center gap-4 w-full px-4 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors">
+              <button className="flex items-center gap-4 w-full px-18 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors">
                 <MdLogout size={20} />
                 <span className="text-sm">Log Out</span>
               </button>
