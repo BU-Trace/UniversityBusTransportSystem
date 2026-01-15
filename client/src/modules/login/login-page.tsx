@@ -64,9 +64,9 @@ const LoginPageComponent = () => {
 
   return (
     <div className="flex items-center justify-center h-screen overflow-hidden">
-      {/* ---------- MAIN CONTAINER ---------- */}
+      {}
       <div className="flex flex-col lg:flex-row bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden w-full h-full">
-        {/* ---------- LEFT SECTION (IMAGE PANEL) ---------- */}
+        {}
         <div className="w-full lg:w-[70%] relative h-full">
           <Image
             width={500}
@@ -80,7 +80,7 @@ const LoginPageComponent = () => {
           </div>
         </div>
 
-        {/* ---------- RIGHT SECTION (FORM AREA) ---------- */}
+        {}
         <div className="w-full lg:w-[30%] p-8 md:p-10 flex flex-col justify-center h-full">
           <h2 className="text-3xl font-bold text-black text-center uppercase tracking-wide">
             Login

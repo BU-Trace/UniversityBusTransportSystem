@@ -2,10 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Home } from 'lucide-react';
+import Link from 'next/link';
 
 import {
   MdDashboard,
@@ -22,6 +22,7 @@ import {
 } from "react-icons/md";
 
 export default function MergedDashboard() {
+
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -90,7 +91,7 @@ export default function MergedDashboard() {
               w-full lg:w-72 h-screen overflow-hidden
             "
           >
-            {/*MobileButton*/}
+            {/*closeButton*/}
             <button
               onClick={() => setIsOpen(false)}
               className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
@@ -123,7 +124,7 @@ export default function MergedDashboard() {
               </button>
             </div>
 
-            {/*Navigation*/}
+            {/*Nav*/}
             <nav className="flex-1 mt-4 px-4 space-y-1">
               {menuItems.map((item) => (
                 <Link
@@ -145,7 +146,7 @@ export default function MergedDashboard() {
               ))}
             </nav>
 
-            {/*Logout*/}
+            {/* Logout */}
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
@@ -159,7 +160,7 @@ export default function MergedDashboard() {
         )}
       </AnimatePresence>
 
-      {/*Main Content*/}
+      {}
       <main className="flex-1 flex flex-col min-w-0">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full">
           

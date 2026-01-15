@@ -46,7 +46,7 @@ export const registerUser = async (payload: RegisterUserPayload) => {
 };
 
 export const verifyEmail = async (payload: { email: string; otpToken: string }) => {
-  const response = await fetch(`${API_BASE}/user/verfy-email`, {
+  const response = await fetch(`${API_BASE}/user/verify-email`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
