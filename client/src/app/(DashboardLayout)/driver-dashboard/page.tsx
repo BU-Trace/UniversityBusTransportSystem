@@ -2,15 +2,13 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
 import { Home } from 'lucide-react';
 import Link from "next/link";
 
-
 import {
-  MdDashboard,
   MdLogout,
   MdMenu,
   MdClose,
@@ -22,21 +20,18 @@ import {
 } from "react-icons/md";
 
 export default function DriverDashboard() {
-  const router = useRouter();
   const { data: session } = useSession();
-  const pathname = usePathname();
 
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const driverInfo = {
-    name: session?.user?.name || "John Doe",
-    role: "Driver",
-    busNumber: "81",
-    registration: "UK07PA7498",
-    contact: "9917360253",
-  };
+  const [driverName, setDriverName] = useState(session?.user?.name || "John Doe");
+  const [activeRoute, setActiveRoute] = useState<string | null>(null);
+  
+  const [formName, setFormName] = useState(driverName);
+  const [formStatus, setFormStatus] = useState(false);
+  const [formRoute, setFormRoute] = useState("");
 
   const destinations = [
     "University",
@@ -45,20 +40,29 @@ export default function DriverDashboard() {
     "Nothullabad",
   ];
 
+  const driverInfo = {
+    name: driverName,
+    role: "Driver",
+    busNumber: "81",
+    registration: "UK07PA7498",
+    contact: "9917360253",
+  };
+
   useEffect(() => {
     setMounted(true);
-    if (isOpen) 
-      {
-        document.body.style.overflow = "hidden";
-      }
-    else {
+    if (isOpen || isModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
       document.body.style.overflow = "auto";
     }
-    return () => {document.body.style.overflow = "auto";};
-  }, [isOpen]);
+    return () => { document.body.style.overflow = "auto"; };
+  }, [isOpen, isModalOpen]);
 
-  const handleStatusClick = () => {
-    router.push("driver-dashboard/status");
+  const handleModalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setDriverName(formName);
+    setActiveRoute(formRoute);
+    setIsModalOpen(false);
   };
 
   if (!mounted) return null;
@@ -66,17 +70,17 @@ export default function DriverDashboard() {
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative">
       
-      {/*Mobile Menu*/}
+      {}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-[#E31E24] text-white rounded-lg shadow-lg"
+          className="lg:hidden fixed top-4 left-4 z-[50] p-2 bg-[#E31E24] text-white rounded-lg shadow-lg"
         >
           <MdMenu size={24} />
         </button>
       )}
 
-      {/*Sidebar*/}
+      {}
       <AnimatePresence>
         {(isOpen ||
           (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
@@ -86,12 +90,11 @@ export default function DriverDashboard() {
             exit={{ x: "-100%" }}
             transition={{ type: "tween", duration: 0.3 }}
             className="
-              fixed lg:sticky top-0 left-0 z-50
+              fixed lg:sticky top-0 left-0 z-[60]
               bg-[#E31E24] text-white flex flex-col shadow-2xl
               w-full lg:w-80 h-screen overflow-y-auto scrollbar-hide
             "
           >
-            {/*close button */}
             <button
               onClick={() => setIsOpen(false)}
               className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
@@ -99,7 +102,7 @@ export default function DriverDashboard() {
               <MdClose size={24} />
             </button>
 
-            {/* Brand*/}
+            {}
             <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
               <h1 className="text-xl font-black mb-6 tracking-tight italic">
                 CAMPUS<span className="text-white/70">CONNECT</span>
@@ -130,40 +133,22 @@ export default function DriverDashboard() {
                 <p className="text-xs font-bold text-white/50 uppercase tracking-widest border-b border-white/10 pb-2">
                   Vehicle Details
                 </p>
-                
                 <div className="flex items-center gap-4 text-white/90">
-                  <div className="p-2 bg-white/10 rounded-lg">
-                    <MdDirectionsBus size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs opacity-70">Bus Number</p>
-                    <p className="font-bold text-lg">{driverInfo.busNumber}</p>
-                  </div>
+                  <div className="p-2 bg-white/10 rounded-lg"><MdDirectionsBus size={20} /></div>
+                  <div><p className="text-xs opacity-70">Bus Number</p><p className="font-bold text-lg">{driverInfo.busNumber}</p></div>
                 </div>
-
                 <div className="flex items-center gap-4 text-white/90">
-                  <div className="p-2 bg-white/10 rounded-lg">
-                    <MdBadge size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs opacity-70">Registration</p>
-                    <p className="font-bold tracking-wider">{driverInfo.registration}</p>
-                  </div>
+                  <div className="p-2 bg-white/10 rounded-lg"><MdBadge size={20} /></div>
+                  <div><p className="text-xs opacity-70">Registration</p><p className="font-bold tracking-wider">{driverInfo.registration}</p></div>
                 </div>
-
                 <div className="flex items-center gap-4 text-white/90">
-                  <div className="p-2 bg-white/10 rounded-lg">
-                    <MdPhone size={20} />
-                  </div>
-                  <div>
-                    <p className="text-xs opacity-70">Contact</p>
-                    <p className="font-bold">{driverInfo.contact}</p>
-                  </div>
+                  <div className="p-2 bg-white/10 rounded-lg"><MdPhone size={20} /></div>
+                  <div><p className="text-xs opacity-70">Contact</p><p className="font-bold">{driverInfo.contact}</p></div>
                 </div>
               </div>
             </div>
 
-            {/*Logout*/}
+            {}
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
@@ -177,11 +162,11 @@ export default function DriverDashboard() {
         )}
       </AnimatePresence>
 
-      {/*Main Content*/}
+      {}
       <main className="flex-1 flex flex-col min-w-0">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-6xl mx-auto space-y-8">
           
-          {/* Header */}
+          {}
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -196,8 +181,9 @@ export default function DriverDashboard() {
               </p>
             </div>
             
+            {}
             <button
-              onClick={handleStatusClick}
+              onClick={() => setIsModalOpen(true)}
               className="bg-[#E31E24] text-white px-6 py-3 rounded-xl shadow-lg font-bold hover:bg-red-700 transition-all flex items-center gap-2 transform active:scale-95"
             >
               <MdEdit size={20} />
@@ -209,33 +195,30 @@ export default function DriverDashboard() {
           <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
               <MdLocationOn className="text-[#E31E24]" />
-              Select Destination
+              Selected Destination
             </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {destinations.map((dest) => (
-                <button
+                <div
                   key={dest}
-                  onClick={() => setSelectedDestination(dest)}
                   className={`
-                    p-4 rounded-xl font-bold text-sm transition-all border-2
+                    p-4 rounded-xl font-bold text-sm transition-all border-2 text-center cursor-default
                     ${
-                      selectedDestination === dest
-                        ? "border-[#E31E24] bg-red-50 text-[#E31E24]"
-                        : "border-gray-100 bg-gray-50 text-gray-600 hover:border-red-200 hover:bg-white"
+                      activeRoute === dest
+                        ? "border-green-500 bg-green-500 text-white shadow-md transform scale-105"
+                        : "border-gray-100 bg-gray-50 text-gray-400 opacity-60"
                     }
                   `}
                 >
                   {dest}
-                </button>
+                </div>
               ))}
             </div>
           </section>
 
-          {}
+          {/*Map*/}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            
-            {}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -252,12 +235,11 @@ export default function DriverDashboard() {
                 allowFullScreen
                 className="grayscale group-hover:grayscale-0 transition-all duration-500"
               ></iframe>
-              <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold shadow-sm pointer-events-none">
+              <div className="absolute top-6 left-90 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold shadow-sm pointer-events-none">
                 📍 Live Location
               </div>
             </motion.div>
 
-            {}
             <motion.div 
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
@@ -280,7 +262,6 @@ export default function DriverDashboard() {
                 </div>
               </div>
             </motion.div>
-
           </div>
         </div>
       </main>
@@ -288,10 +269,95 @@ export default function DriverDashboard() {
       <Link
         href="/"
         title="Go to Home"
-        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
+        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-40"
       >
         <Home size={24} />
       </Link>
+
+      {/*statusBar*/}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-red-600/90 backdrop-blur-xl text-white p-8 rounded-3xl shadow-2xl w-full max-w-[400px] flex flex-col border border-white/20 relative"
+            >
+                {}
+                <button 
+                    onClick={() => setIsModalOpen(false)}
+                    className="absolute top-4 right-4 p-2 bg-white/20 rounded-full hover:bg-white/40 transition"
+                >
+                    <MdClose size={20} />
+                </button>
+
+                <h2 className="text-2xl font-bold mb-6 text-center">Update Status</h2>
+
+                {}
+                <div className="flex justify-between items-center mb-6 bg-black/20 p-4 rounded-xl">
+                    <label className="text-sm font-semibold uppercase tracking-wider">Active Status</label>
+                    <div
+                        onClick={() => setFormStatus(!formStatus)}
+                        className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
+                            formStatus ? 'bg-green-400' : 'bg-pink-300'
+                        }`}
+                    >
+                        <div
+                            className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                                formStatus ? 'translate-x-6' : ''
+                            }`}
+                        ></div>
+                    </div>
+                </div>
+
+                {}
+                <form onSubmit={handleModalSubmit} className="flex flex-col space-y-5">
+                    {}
+                    <div>
+                        <label className="text-xs ml-2 opacity-80 mb-1 block">Driver Name</label>
+                        <input
+                            type="text"
+                            placeholder="Name"
+                            value={formName}
+                            onChange={(e) => setFormName(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl text-gray-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-red-300 font-semibold"
+                        />
+                    </div>
+
+                    {}
+                    <div>
+                        <label className="text-xs ml-2 opacity-80 mb-1 block">Select Route</label>
+                        <select
+                            value={formRoute}
+                            onChange={(e) => setFormRoute(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl text-gray-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-red-300 font-semibold appearance-none"
+                        >
+                            <option value="">-- Choose Destination --</option>
+                            {destinations.map(d => (
+                                <option key={d} value={d}>{d}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {}
+                    <button
+                        type="submit"
+                        className="mt-4 bg-white text-red-600 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition transform active:scale-95"
+                    >
+                        Save Updates
+                    </button>
+                </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }
