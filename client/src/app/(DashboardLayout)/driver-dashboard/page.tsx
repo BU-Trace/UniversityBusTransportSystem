@@ -1,74 +1,289 @@
-'use client';
+"use client";
 
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
-import React from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
+import { signOut, useSession } from "next-auth/react";
 
-export default function BusDetailsPage() {
+// React Icons
+import {
+  MdDashboard,
+  MdLogout,
+  MdMenu,
+  MdClose,
+  MdEdit,
+  MdLocationOn,
+  MdDirectionsBus,
+  MdPhone,
+  MdBadge,
+} from "react-icons/md";
+
+export default function DriverDashboard() {
   const router = useRouter();
+  const { data: session } = useSession();
+  const pathname = usePathname();
 
-  const handleStatusClick = () => {
-    router.push("/status"); 
+  const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
+
+  // ---------------- Configuration ----------------
+  const driverInfo = {
+    name: session?.user?.name || "John Doe",
+    role: "Driver",
+    busNumber: "81",
+    registration: "UK07PA7498",
+    contact: "9917360253",
   };
 
+  const destinations = [
+    "University",
+    "Notun Bazar",
+    "Barishal Club",
+    "Nothullabad",
+  ];
+
+  // ---------------- Effects ----------------
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) 
+      {
+        document.body.style.overflow = "hidden";
+      }
+    else {
+      document.body.style.overflow = "auto";
+    }
+    return () => {document.body.style.overflow = "auto";};
+  }, [isOpen]);
+
+  const handleStatusClick = () => {
+    router.push("/status");
+  };
+
+  if (!mounted) return null;
+
   return (
-    <div className="relative min-h-screen bg-gray-100 flex flex-col md:flex-row items-stretch">
-      {/* Left Red Section */}
-      <div className="bg-red-800 text-white w-full md:w-1/3 p-10 flex flex-col justify-center shadow-2xl">
-        <h2 className="text-2xl font-semibold mb-4">Name:</h2>
-        <h1 className="text-4xl font-extrabold mb-8">John Doe</h1>
+    <div className="flex min-h-screen bg-[#F8F9FA] relative">
+      
+      {/* ---------------- Mobile Menu Toggle ---------------- */}
+      {!isOpen && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-[#E31E24] text-white rounded-lg shadow-lg"
+        >
+          <MdMenu size={24} />
+        </button>
+      )}
 
-        <h2 className="text-2xl font-semibold mb-4">Bus:</h2>
-        <h1 className="text-4xl font-extrabold mb-8">81</h1>
+      {/* ---------------- Sidebar Section ---------------- */}
+      <AnimatePresence>
+        {(isOpen ||
+          (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
+          <motion.aside
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="
+              fixed lg:sticky top-0 left-0 z-50
+              bg-[#E31E24] text-white flex flex-col shadow-2xl
+              w-full lg:w-80 h-screen overflow-y-auto scrollbar-hide
+            "
+          >
+            {/* Mobile close button */}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
+            >
+              <MdClose size={24} />
+            </button>
 
-        <h2 className="text-2xl font-semibold mb-4">Registration:</h2>
-        <h1 className="text-3xl font-bold mb-8 tracking-wider">UK07PA7498</h1>
+            {/* Brand & Profile */}
+            <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
+              <h1 className="text-xl font-black mb-6 tracking-tight italic">
+                CAMPUS<span className="text-white/70">CONNECT</span>
+              </h1>
 
-        <h2 className="text-2xl font-semibold mb-4">Contact:</h2>
-        <h1 className="text-3xl font-bold">9917360253</h1>
-      </div>
+              <div className="relative mb-3">
+                <div className="w-24 h-24 rounded-full border-4 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
+                  <span className="text-2xl font-bold italic opacity-50">
+                    {driverInfo.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <button className="absolute bottom-0 right-0 p-2 bg-white text-[#E31E24] rounded-full shadow-md">
+                  <MdEdit size={14} />
+                </button>
+              </div>
 
-      {/* Right Section */}
-      <div className="flex-1 bg-white p-10 overflow-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Bus Documents:</h2>
-          <div className="w-5 h-5 bg-red-600 rounded-full"></div>
+              <h2 className="font-bold text-lg uppercase tracking-widest mt-2">
+                {driverInfo.name}
+              </h2>
+              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mt-2 uppercase tracking-wide">
+                {driverInfo.role}
+              </span>
+            </div>
+
+            {/* Driver Specific Info Section (Replaces Nav Menu) */}
+            <div className="flex-1 px-6 py-6 space-y-6">
+              <div className="space-y-4">
+                <p className="text-xs font-bold text-white/50 uppercase tracking-widest border-b border-white/10 pb-2">
+                  Vehicle Details
+                </p>
+                
+                <div className="flex items-center gap-4 text-white/90">
+                  <div className="p-2 bg-white/10 rounded-lg">
+                    <MdDirectionsBus size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-70">Bus Number</p>
+                    <p className="font-bold text-lg">{driverInfo.busNumber}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-white/90">
+                  <div className="p-2 bg-white/10 rounded-lg">
+                    <MdBadge size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-70">Registration</p>
+                    <p className="font-bold tracking-wider">{driverInfo.registration}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-white/90">
+                  <div className="p-2 bg-white/10 rounded-lg">
+                    <MdPhone size={20} />
+                  </div>
+                  <div>
+                    <p className="text-xs opacity-70">Contact</p>
+                    <p className="font-bold">{driverInfo.contact}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Logout */}
+            <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="flex items-center gap-4 w-full px-19 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
+              >
+                <MdLogout size={20} />
+                <span className="text-sm">Log Out</span>
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* ---------------- Main Content Section ---------------- */}
+      <main className="flex-1 flex flex-col min-w-0">
+        <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-6xl mx-auto space-y-8">
+          
+          {/* Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
+          >
+            <div>
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
+                Trip Control
+              </h1>
+              <p className="text-gray-500 text-sm font-medium">
+                Manage your current route and status
+              </p>
+            </div>
+            
+            <button
+              onClick={handleStatusClick}
+              className="bg-[#E31E24] text-white px-6 py-3 rounded-xl shadow-lg font-bold hover:bg-red-700 transition-all flex items-center gap-2 transform active:scale-95"
+            >
+              <MdEdit size={20} />
+              Update Status
+            </button>
+          </motion.div>
+
+          {/* 1. Destination Selector Grid */}
+          <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
+              <MdLocationOn className="text-[#E31E24]" />
+              Select Destination
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {destinations.map((dest) => (
+                <button
+                  key={dest}
+                  onClick={() => setSelectedDestination(dest)}
+                  className={`
+                    p-4 rounded-xl font-bold text-sm transition-all border-2
+                    ${
+                      selectedDestination === dest
+                        ? "border-[#E31E24] bg-red-50 text-[#E31E24]"
+                        : "border-gray-100 bg-gray-50 text-gray-600 hover:border-red-200 hover:bg-white"
+                    }
+                  `}
+                >
+                  {dest}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          {/* 2. Map & Documents Grid */}
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            
+            {/* Map Section */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white p-2 rounded-[2rem] shadow-sm border border-gray-100 h-96 overflow-hidden relative group"
+            >
+              <iframe
+                title="Bus Location"
+                src="https://maps.google.com/maps?q=Barishal,Bangladesh&t=&z=13&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0, borderRadius: '1.5rem' }}
+                loading="lazy"
+                allowFullScreen
+                className="grayscale group-hover:grayscale-0 transition-all duration-500"
+              ></iframe>
+              <div className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold shadow-sm pointer-events-none">
+                📍 Live Location
+              </div>
+            </motion.div>
+
+            {/* Documents Section */}
+            <motion.div 
+               initial={{ opacity: 0, scale: 0.95 }}
+               animate={{ opacity: 1, scale: 1 }}
+               transition={{ delay: 0.2 }}
+               className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-800">Bus Documents</h2>
+                <div className={`w-3 h-3 rounded-full ${true ? 'bg-green-500' : 'bg-red-500'} ring-4 ring-green-100`}></div>
+              </div>
+
+              <div className="flex-1 bg-blue-50 rounded-2xl flex items-center justify-center p-6 border-2 border-dashed border-blue-100 hover:border-blue-300 transition-colors cursor-pointer">
+                <div className="relative w-full h-full min-h-[200px]">
+                  <Image
+                    src="/f1.png"
+                    alt="Bus Document"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              </div>
+            </motion.div>
+
+          </div>
         </div>
-
-        {/* Bus Document Image */}
-        <div className="bg-blue-50 p-4 rounded-lg mb-8 flex justify-center">
-          <Image
-            src="/f1.png"
-            alt="Bus Document"
-            width={500}
-            height={300}
-            className="rounded-md border shadow-md max-h-56 object-contain"
-          />
-        </div>
-
-        {/* Map — Barishal, Bangladesh */}
-        <div className="border rounded-lg overflow-hidden shadow">
-          <iframe
-            title="Bus Location - Barishal, Bangladesh"
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3684.633146921759!2d90.34719377502718!3d22.701002379403474!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30aaba6e9cfb47f5%3A0xf48fa4de0337319c!2sBarishal%2C%20Bangladesh!5e0!3m2!1sen!2sbd!4v1730737330000!5m2!1sen!2sbd"
-            width="100%"
-            height="450"
-            style={{ border: 0 }}
-            loading="lazy"
-            allowFullScreen
-          ></iframe>
-        </div>
-      </div>
-
-      {/* Floating Status Update Button */}
-      <button
-  onClick={handleStatusClick}
-  className="fixed top-6 right-6 z-50 bg-red-600 text-white px-6 py-3 rounded-full shadow-lg font-semibold 
-  hover:bg-red-700 transition-all transform hover:scale-105 active:scale-95"
->
-  Status Update
-</button>
-
+      </main>
     </div>
   );
 }

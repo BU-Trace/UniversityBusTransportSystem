@@ -148,7 +148,7 @@ export default function MergedDashboard() {
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center gap-4 w-full px-4 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
+                className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
               >
                 <MdLogout size={20} />
                 <span className="text-sm">Log Out</span>
