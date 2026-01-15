@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { Home } from 'lucide-react';
 
 import {
   MdDashboard,
@@ -240,6 +241,15 @@ export default function MergedDashboard() {
 
         </div>
       </main>
+
+      {/*home btn*/}
+      <Link
+        href="/"
+        title="Go to Home"
+        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
+      >
+        <Home size={24} />
+      </Link>
     </div>
   );
 }

@@ -5,8 +5,10 @@ import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
+import { Home } from 'lucide-react';
+import Link from "next/link";
 
-// React Icons
+
 import {
   MdDashboard,
   MdLogout,
@@ -28,7 +30,6 @@ export default function DriverDashboard() {
   const [mounted, setMounted] = useState(false);
   const [selectedDestination, setSelectedDestination] = useState<string | null>(null);
 
-  // ---------------- Configuration ----------------
   const driverInfo = {
     name: session?.user?.name || "John Doe",
     role: "Driver",
@@ -44,7 +45,6 @@ export default function DriverDashboard() {
     "Nothullabad",
   ];
 
-  // ---------------- Effects ----------------
   useEffect(() => {
     setMounted(true);
     if (isOpen) 
@@ -58,7 +58,7 @@ export default function DriverDashboard() {
   }, [isOpen]);
 
   const handleStatusClick = () => {
-    router.push("/status");
+    router.push("driver-dashboard/status");
   };
 
   if (!mounted) return null;
@@ -66,7 +66,7 @@ export default function DriverDashboard() {
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative">
       
-      {/* ---------------- Mobile Menu Toggle ---------------- */}
+      {/*Mobile Menu*/}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -76,7 +76,7 @@ export default function DriverDashboard() {
         </button>
       )}
 
-      {/* ---------------- Sidebar Section ---------------- */}
+      {/*Sidebar*/}
       <AnimatePresence>
         {(isOpen ||
           (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
@@ -91,7 +91,7 @@ export default function DriverDashboard() {
               w-full lg:w-80 h-screen overflow-y-auto scrollbar-hide
             "
           >
-            {/* Mobile close button */}
+            {/*close button */}
             <button
               onClick={() => setIsOpen(false)}
               className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
@@ -99,7 +99,7 @@ export default function DriverDashboard() {
               <MdClose size={24} />
             </button>
 
-            {/* Brand & Profile */}
+            {/* Brand*/}
             <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
               <h1 className="text-xl font-black mb-6 tracking-tight italic">
                 CAMPUS<span className="text-white/70">CONNECT</span>
@@ -124,7 +124,7 @@ export default function DriverDashboard() {
               </span>
             </div>
 
-            {/* Driver Specific Info Section (Replaces Nav Menu) */}
+            {}
             <div className="flex-1 px-6 py-6 space-y-6">
               <div className="space-y-4">
                 <p className="text-xs font-bold text-white/50 uppercase tracking-widest border-b border-white/10 pb-2">
@@ -163,7 +163,7 @@ export default function DriverDashboard() {
               </div>
             </div>
 
-            {/* Logout */}
+            {/*Logout*/}
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
                 onClick={() => signOut({ callbackUrl: "/" })}
@@ -177,7 +177,7 @@ export default function DriverDashboard() {
         )}
       </AnimatePresence>
 
-      {/* ---------------- Main Content Section ---------------- */}
+      {/*Main Content*/}
       <main className="flex-1 flex flex-col min-w-0">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-6xl mx-auto space-y-8">
           
@@ -205,7 +205,7 @@ export default function DriverDashboard() {
             </button>
           </motion.div>
 
-          {/* 1. Destination Selector Grid */}
+          {}
           <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
               <MdLocationOn className="text-[#E31E24]" />
@@ -232,10 +232,10 @@ export default function DriverDashboard() {
             </div>
           </section>
 
-          {/* 2. Map & Documents Grid */}
+          {}
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             
-            {/* Map Section */}
+            {}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -257,7 +257,7 @@ export default function DriverDashboard() {
               </div>
             </motion.div>
 
-            {/* Documents Section */}
+            {}
             <motion.div 
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
@@ -284,6 +284,14 @@ export default function DriverDashboard() {
           </div>
         </div>
       </main>
+
+      <Link
+        href="/"
+        title="Go to Home"
+        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
+      >
+        <Home size={24} />
+      </Link>
     </div>
   );
 }

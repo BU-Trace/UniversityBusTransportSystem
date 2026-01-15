@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { ChevronsRight } from 'lucide-react';
+import Link from "next/link";
 
 export default function StatusPage() {
   const [isActive, setIsActive] = useState(false);
@@ -68,6 +70,14 @@ export default function StatusPage() {
           </button>
         </form>
       </div>
+
+      <Link
+        href="/driver-dashboard"
+        title="Go to Dashboard"
+        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
+      >
+        <ChevronsRight size={24} />
+      </Link>
     </div>
   );
 }
