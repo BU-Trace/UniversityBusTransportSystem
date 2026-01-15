@@ -1,363 +1,176 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { signOut, useSession } from "next-auth/react";
-import { Home } from 'lucide-react';
-import Link from "next/link";
+import { useState, useRef } from "react";
+import dynamic from "next/dynamic";
 
-import {
-  MdLogout,
-  MdMenu,
-  MdClose,
-  MdEdit,
-  MdLocationOn,
-  MdDirectionsBus,
-  MdPhone,
-  MdBadge,
-} from "react-icons/md";
+const BusMap = dynamic(() => import("./Map"), { 
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest">Loading Map...</div>
+});
 
 export default function DriverDashboard() {
-  const { data: session } = useSession();
+  const [driver] = useState({
+    name: "John Doe",
+    id: "DRV-2024-001",
+    busNo: "DHK-103",
+    reg: "UK07PA7498",
+    route: "Mirpur 10 - Motijheel",
+    profilePic: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  });
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [status, setStatus] = useState<'idle' | 'sharing' | 'paused'>('idle');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const watchId = useRef<number | null>(null);
 
-  const [driverName, setDriverName] = useState(session?.user?.name || "John Doe");
-  const [activeRoute, setActiveRoute] = useState<string | null>(null);
-  
-  const [formName, setFormName] = useState(driverName);
-  const [formStatus, setFormStatus] = useState(false);
-  const [formRoute, setFormRoute] = useState("");
+const initTracking = () => {
+  if (!navigator.geolocation) return alert("GPS not supported");
 
-  const destinations = [
-    "University",
-    "Notun Bazar",
-    "Barishal Club",
-    "Nothullabad",
-  ];
+  watchId.current = navigator.geolocation.watchPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
 
-  const driverInfo = {
-    name: driverName,
-    role: "Driver",
-    busNumber: "81",
-    registration: "UK07PA7498",
-    contact: "9917360253",
+      setLocation({ lat, lng });
+
+      // MongoDB Update
+      await fetch("/api/bus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          busId: driver.busNo,   // DHK-102
+          lat,
+          lng,
+        }),
+      });
+    },
+    (err) => console.error("GPS Error:", err),
+    { enableHighAccuracy: true }
+  );
+};
+
+
+  const handleStart = () => {
+    setStatus('sharing');
+    setSidebarOpen(false);
+    initTracking();
   };
 
-  useEffect(() => {
-    setMounted(true);
-    if (isOpen || isModalOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "auto";
+  const handlePause = () => {
+    if (watchId.current) {
+      navigator.geolocation.clearWatch(watchId.current);
+      watchId.current = null;
     }
-    return () => { document.body.style.overflow = "auto"; };
-  }, [isOpen, isModalOpen]);
-
-  const handleModalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setDriverName(formName);
-    setActiveRoute(formRoute);
-    setIsModalOpen(false);
+    setStatus('paused');
   };
 
-  if (!mounted) return null;
+  const handleResume = () => {
+    setStatus('sharing');
+    initTracking();
+  };
+
+  const handleStop = () => {
+    if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
+    setStatus('idle');
+    setLocation(null);
+    setSidebarOpen(true);
+  };
 
   return (
-    <div className="flex min-h-screen bg-[#F8F9FA] relative">
+    <div className="flex h-screen w-full overflow-hidden bg-gray-50 font-sans">
       
-      {}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-[50] p-2 bg-[#E31E24] text-white rounded-lg shadow-lg"
+      {/* SIDEBAR - CampusConnect Style */}
+      <aside className={`
+        fixed inset-y-0 left-0 z-[1002] w-72 
+        bg-gradient-to-b from-[#EF4444] to-[#8B0000] 
+        text-white p-6 transition-transform duration-500 ease-in-out shadow-2xl
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
+        {/* Close Button (X) at Upper Right Corner */}
+        <button 
+          onClick={() => setSidebarOpen(false)}
+          className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl font-light transition-colors"
         >
-          <MdMenu size={24} />
+          ✕
         </button>
-      )}
 
-      {}
-      <AnimatePresence>
-        {(isOpen ||
-          (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
-          <motion.aside
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="
-              fixed lg:sticky top-0 left-0 z-[60]
-              bg-[#E31E24] text-white flex flex-col shadow-2xl
-              w-full lg:w-80 h-screen overflow-y-auto scrollbar-hide
-            "
-          >
-            <button
-              onClick={() => setIsOpen(false)}
-              className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
-            >
-              <MdClose size={24} />
-            </button>
+        <div className="flex flex-col h-full overflow-hidden">
+          {/* Logo Section */}
+          <div className="mb-8 border-b border-white/20 pb-6">
+            <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none">CampusConnect</h1>
+          </div>
 
-            {}
-            <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
-              <h1 className="text-xl font-black mb-6 tracking-tight italic">
-                CAMPUS<span className="text-white/70">CONNECT</span>
-              </h1>
-
-              <div className="relative mb-3">
-                <div className="w-24 h-24 rounded-full border-4 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-2xl font-bold italic opacity-50">
-                    {driverInfo.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <button className="absolute bottom-0 right-0 p-2 bg-white text-[#E31E24] rounded-full shadow-md">
-                  <MdEdit size={14} />
-                </button>
+          {/* Profile Section */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden bg-white/20 shadow-xl">
+                <img src={driver.profilePic} alt="Profile" className="w-full h-full object-cover" />
               </div>
-
-              <h2 className="font-bold text-lg uppercase tracking-widest mt-2">
-                {driverInfo.name}
-              </h2>
-              <span className="bg-white/20 px-3 py-1 rounded-full text-xs font-semibold mt-2 uppercase tracking-wide">
-                {driverInfo.role}
-              </span>
+              <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
             </div>
+            <h2 className="mt-4 text-xl font-bold uppercase tracking-tight leading-tight">{driver.name}</h2>
+            <p className="text-red-200 text-[10px] font-medium uppercase tracking-widest mt-1 opacity-80">ID: {driver.id}</p>
+          </div>
 
-            {}
-            <div className="flex-1 px-6 py-6 space-y-6">
-              <div className="space-y-4">
-                <p className="text-xs font-bold text-white/50 uppercase tracking-widest border-b border-white/10 pb-2">
-                  Vehicle Details
-                </p>
-                <div className="flex items-center gap-4 text-white/90">
-                  <div className="p-2 bg-white/10 rounded-lg"><MdDirectionsBus size={20} /></div>
-                  <div><p className="text-xs opacity-70">Bus Number</p><p className="font-bold text-lg">{driverInfo.busNumber}</p></div>
-                </div>
-                <div className="flex items-center gap-4 text-white/90">
-                  <div className="p-2 bg-white/10 rounded-lg"><MdBadge size={20} /></div>
-                  <div><p className="text-xs opacity-70">Registration</p><p className="font-bold tracking-wider">{driverInfo.registration}</p></div>
-                </div>
-                <div className="flex items-center gap-4 text-white/90">
-                  <div className="p-2 bg-white/10 rounded-lg"><MdPhone size={20} /></div>
-                  <div><p className="text-xs opacity-70">Contact</p><p className="font-bold">{driverInfo.contact}</p></div>
-                </div>
-              </div>
+          {/* Info Section - No Scrollbar */}
+          <div className="flex-1 space-y-4 overflow-hidden">
+            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/10">
+              <span className="text-[10px] uppercase font-black text-red-200 block mb-1">Bus Unit</span>
+              <p className="text-base font-bold">{driver.busNo}</p>
             </div>
-
-            {}
-            <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
-              <button
-                onClick={() => signOut({ callbackUrl: "/" })}
-                className="flex items-center gap-4 w-full px-19 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
-              >
-                <MdLogout size={20} />
-                <span className="text-sm">Log Out</span>
-              </button>
+            <div className="bg-white/10 p-4 rounded-2xl backdrop-blur-md border border-white/10">
+              <span className="text-[10px] uppercase font-black text-red-200 block mb-1">Route</span>
+              <p className="text-sm font-semibold leading-tight">{driver.route}</p>
             </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      {}
-      <main className="flex-1 flex flex-col min-w-0">
-        <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-6xl mx-auto space-y-8">
-          
-          {}
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6"
-          >
-            <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
-                Trip Control
-              </h1>
-              <p className="text-gray-500 text-sm font-medium">
-                Manage your current route and status
-              </p>
+            <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
+              <span className="text-[10px] uppercase font-black text-red-200 block mb-1">Status</span>
+              <p className="text-xs font-bold uppercase tracking-widest text-green-300">{status}</p>
             </div>
-            
-            {}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-[#E31E24] text-white px-6 py-3 rounded-xl shadow-lg font-bold hover:bg-red-700 transition-all flex items-center gap-2 transform active:scale-95"
-            >
-              <MdEdit size={20} />
-              Update Status
-            </button>
-          </motion.div>
-
-          {}
-          <section className="bg-white rounded-[2rem] p-8 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-              <MdLocationOn className="text-[#E31E24]" />
-              Selected Destination
-            </h3>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {destinations.map((dest) => (
-                <div
-                  key={dest}
-                  className={`
-                    p-4 rounded-xl font-bold text-sm transition-all border-2 text-center cursor-default
-                    ${
-                      activeRoute === dest
-                        ? "border-green-500 bg-green-500 text-white shadow-md transform scale-105"
-                        : "border-gray-100 bg-gray-50 text-gray-400 opacity-60"
-                    }
-                  `}
-                >
-                  {dest}
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/*Map*/}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white p-2 rounded-[2rem] shadow-sm border border-gray-100 h-96 overflow-hidden relative group"
-            >
-              <iframe
-                title="Bus Location"
-                src="https://maps.google.com/maps?q=Barishal,Bangladesh&t=&z=13&ie=UTF8&iwloc=&output=embed"
-                width="100%"
-                height="100%"
-                style={{ border: 0, borderRadius: '1.5rem' }}
-                loading="lazy"
-                allowFullScreen
-                className="grayscale group-hover:grayscale-0 transition-all duration-500"
-              ></iframe>
-              <div className="absolute top-6 left-90 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold shadow-sm pointer-events-none">
-                📍 Live Location
-              </div>
-            </motion.div>
-
-            <motion.div 
-               initial={{ opacity: 0, scale: 0.95 }}
-               animate={{ opacity: 1, scale: 1 }}
-               transition={{ delay: 0.2 }}
-               className="bg-white p-8 rounded-[2rem] shadow-sm border border-gray-100 flex flex-col"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800">Bus Documents</h2>
-                <div className={`w-3 h-3 rounded-full ${true ? 'bg-green-500' : 'bg-red-500'} ring-4 ring-green-100`}></div>
-              </div>
-
-              <div className="flex-1 bg-blue-50 rounded-2xl flex items-center justify-center p-6 border-2 border-dashed border-blue-100 hover:border-blue-300 transition-colors cursor-pointer">
-                <div className="relative w-full h-full min-h-[200px]">
-                  <Image
-                    src="/f1.png"
-                    alt="Bus Document"
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
-      </main>
+      </aside>
 
-      <Link
-        href="/"
-        title="Go to Home"
-        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-40"
-      >
-        <Home size={24} />
-      </Link>
-
-      {/*statusBar*/}
-      <AnimatePresence>
-        {isModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      {/* MAIN CONTENT AREA */}
+      <main className="relative flex-1 h-full w-full">
+        
+        {/* Floating Menu Toggle */}
+        {!sidebarOpen && (
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="fixed top-6 left-6 z-[1001] bg-white text-red-600 p-4 rounded-2xl shadow-2xl hover:scale-110 transition-all border border-red-100"
           >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-red-600/90 backdrop-blur-xl text-white p-8 rounded-3xl shadow-2xl w-full max-w-[400px] flex flex-col border border-white/20 relative"
-            >
-                {}
-                <button 
-                    onClick={() => setIsModalOpen(false)}
-                    className="absolute top-4 right-4 p-2 bg-white/20 rounded-full hover:bg-white/40 transition"
-                >
-                    <MdClose size={20} />
-                </button>
-
-                <h2 className="text-2xl font-bold mb-6 text-center">Update Status</h2>
-
-                {}
-                <div className="flex justify-between items-center mb-6 bg-black/20 p-4 rounded-xl">
-                    <label className="text-sm font-semibold uppercase tracking-wider">Active Status</label>
-                    <div
-                        onClick={() => setFormStatus(!formStatus)}
-                        className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-all duration-300 ${
-                            formStatus ? 'bg-green-400' : 'bg-pink-300'
-                        }`}
-                    >
-                        <div
-                            className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
-                                formStatus ? 'translate-x-6' : ''
-                            }`}
-                        ></div>
-                    </div>
-                </div>
-
-                {}
-                <form onSubmit={handleModalSubmit} className="flex flex-col space-y-5">
-                    {}
-                    <div>
-                        <label className="text-xs ml-2 opacity-80 mb-1 block">Driver Name</label>
-                        <input
-                            type="text"
-                            placeholder="Name"
-                            value={formName}
-                            onChange={(e) => setFormName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl text-gray-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-red-300 font-semibold"
-                        />
-                    </div>
-
-                    {}
-                    <div>
-                        <label className="text-xs ml-2 opacity-80 mb-1 block">Select Route</label>
-                        <select
-                            value={formRoute}
-                            onChange={(e) => setFormRoute(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl text-gray-800 bg-white/90 focus:outline-none focus:ring-4 focus:ring-red-300 font-semibold appearance-none"
-                        >
-                            <option value="">-- Choose Destination --</option>
-                            {destinations.map(d => (
-                                <option key={d} value={d}>{d}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {}
-                    <button
-                        type="submit"
-                        className="mt-4 bg-white text-red-600 py-3 rounded-full font-bold shadow-lg hover:bg-gray-100 transition transform active:scale-95"
-                    >
-                        Save Updates
-                    </button>
-                </form>
-            </motion.div>
-          </motion.div>
+            <span className="text-xl">☰</span>
+          </button>
         )}
-      </AnimatePresence>
 
+        {/* Map Display */}
+        <div className="absolute inset-0 z-0">
+          {location ? (
+            <BusMap location={location} />
+          ) : (
+            <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50">
+               <div className="p-10 rounded-full bg-white shadow-2xl text-red-500 text-5xl mb-6 animate-pulse">📍</div>
+               <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Standby Mode</h3>
+            </div>
+          )}
+        </div>
+
+        {/* FLOATING ACTION BUTTONS */}
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-[1001] w-[92%] max-w-md">
+          {status === 'idle' ? (
+            <button onClick={handleStart} className="w-full bg-green-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-2xl">Start Shift</button>
+          ) : (
+            <>
+              {status === 'paused' ? (
+                <button onClick={handleResume} className="flex-1 bg-amber-500 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl animate-pulse">Resume</button>
+              ) : (
+                <button onClick={handlePause} className="flex-1 bg-white text-amber-600 border-2 border-amber-500 py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl">Pause</button>
+              )}
+              <button onClick={handleStop} className="flex-1 bg-red-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl">End Shift</button>
+            </>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
