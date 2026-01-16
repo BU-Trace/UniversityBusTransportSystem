@@ -10,11 +10,11 @@ const BusMap = dynamic(() => import("./Map"), {
 
 export default function DriverDashboard() {
   const [driver] = useState({
-    name: "John Doe",
+    name: "Driver 1",
     id: "DRV-2024-001",
-    busNo: "DHK-103",
+    busNo: "BRTC 10",
     reg: "UK07PA7498",
-    route: "Mirpur 10 - Motijheel",
+    route: "Route 1",
     profilePic: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
   });
 
@@ -81,8 +81,8 @@ const initTracking = () => {
       
       {/* SIDEBAR - CampusConnect Style */}
       <aside className={`
-        fixed inset-y-0 left-0 z-[1002] w-72 
-        bg-gradient-to-b from-[#EF4444] to-[#8B0000] 
+        fixed inset-y-0 left-0 z-1002 w-72 
+        bg-linear-to-b from-[#EF4444] to-[#8B0000] 
         text-white p-6 transition-transform duration-500 ease-in-out shadow-2xl
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
       `}>
@@ -137,36 +137,52 @@ const initTracking = () => {
         {!sidebarOpen && (
           <button 
             onClick={() => setSidebarOpen(true)}
-            className="fixed top-6 left-6 z-[1001] bg-white text-red-600 p-4 rounded-2xl shadow-2xl hover:scale-110 transition-all border border-red-100"
+            className="fixed top-6 left-6 z-1001 bg-white text-red-600 p-4 rounded-2xl shadow-2xl hover:scale-110 transition-all border border-red-100"
           >
             <span className="text-xl">☰</span>
           </button>
         )}
 
-        {/* Map Display */}
-        <div className="absolute inset-0 z-0">
-          {location ? (
-            <BusMap location={location} />
-          ) : (
-            <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50">
-               <div className="p-10 rounded-full bg-white shadow-2xl text-red-500 text-5xl mb-6 animate-pulse">📍</div>
-               <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">Standby Mode</h3>
-            </div>
-          )}
+{/* Map Display */}
+<div className="absolute inset-0 z-0">
+  {location ? (
+    <BusMap location={location} />
+  ) : (
+    <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50">
+      {/* Location Pointer Icon */}
+      <div className="relative mb-6">
+        <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
+        <div className="relative p-8 rounded-full bg-white shadow-2xl flex items-center justify-center">
+          <svg 
+            viewBox="0 0 24 24" 
+            className="w-16 h-16 text-red-600 fill-current"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
         </div>
+      </div>
+      
+<h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">
+  Ready to Start Shift
+</h3>
+<p className="text-slate-500 font-medium -mt-1">Press the green button to begin tracking</p>
+    </div>
+  )}
+</div>
 
         {/* FLOATING ACTION BUTTONS */}
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-[1001] w-[92%] max-w-md">
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-1001 w-[92%] max-w-md">
           {status === 'idle' ? (
-            <button onClick={handleStart} className="w-full bg-green-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-2xl">Start Shift</button>
+            <button onClick={handleStart} className="w-full bg-green-600 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-2xl">Start Shift</button>
           ) : (
             <>
               {status === 'paused' ? (
-                <button onClick={handleResume} className="flex-1 bg-amber-500 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl animate-pulse">Resume</button>
+                <button onClick={handleResume} className="flex-1 bg-amber-500 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl animate-pulse">Resume</button>
               ) : (
-                <button onClick={handlePause} className="flex-1 bg-white text-amber-600 border-2 border-amber-500 py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl">Pause</button>
+                <button onClick={handlePause} className="flex-1 bg-white text-amber-600 border-2 border-amber-500 py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl">Pause</button>
               )}
-              <button onClick={handleStop} className="flex-1 bg-red-600 text-white py-5 rounded-[2rem] font-black uppercase tracking-widest shadow-xl">End Shift</button>
+              <button onClick={handleStop} className="flex-1 bg-red-600 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl">End Shift</button>
             </>
           )}
         </div>
