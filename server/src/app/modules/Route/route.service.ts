@@ -6,6 +6,8 @@ export const createRoute = async (payload: IRoute) => {
   // and assign to payload.distance and payload.duration
   // Example: const { distance, duration } = await getDistanceAndDuration(payload.stopages)
   // payload.distance = distance; payload.duration = duration;
+  // Ensure bus field is present (default to empty array if not provided)
+  if (!payload.bus) payload.bus = [];
   const route = await Route.create(payload);
   return route;
 };
@@ -24,6 +26,9 @@ export const updateRoute = async (id: string, payload: Partial<IRoute>) => {
   // Update other fields if provided
   if (payload.name !== undefined) route.name = payload.name;
   if (payload.isActive !== undefined) route.isActive = payload.isActive;
+
+  // Update bus field if provided
+  if (payload.bus) route.bus = payload.bus;
 
   await route.save();
   return route;
