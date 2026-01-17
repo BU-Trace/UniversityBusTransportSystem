@@ -8,7 +8,7 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 - **User**
   - `email` (unique, required), `password` (hashed), `name`
   - `role` (enum of `USER_ROLES`, required)
-  - `clientITInfo` (device: `pc` | `mobile` | `tablet`, browser, ipAddress, pcName, os, userAgent)
+  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; TypeScript interface currently narrows to `pc` | `mobile`; plus browser, ipAddress, pcName, os, userAgent)
   - `clientInfo` (bio, department, rollNumber, licenseNumber)
   - `lastLogin`, `isActive`, `otpToken`, `otpExpires`, `needPasswordChange`, `resetPasswordExpires`, `resetPasswordToken`, `profileImage`
   - Automatic `createdAt`/`updatedAt`
@@ -35,7 +35,7 @@ erDiagram
   User {
     ObjectId _id
     string email
-    string password
+    string password (hashed)
     string role
   }
   Stopage {
@@ -60,3 +60,5 @@ erDiagram
   Route ||--o{ Stopage : "stopages[]"
   Route ||--o{ Bus : "bus[]"
 ```
+
+Passwords are hashed by a Mongoose pre-save hook before persisting.
