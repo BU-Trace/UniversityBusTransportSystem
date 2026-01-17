@@ -8,7 +8,7 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 - **User**
   - `email` (unique, required), `password` (hashed), `name`
   - `role` (required enum: `superadmin` | `admin` | `student` | `driver`)
-  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; TypeScript interface currently only allows `pc` | `mobile`—a discrepancy to fix), plus browser, ipAddress, pcName, os, userAgent
+  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; TypeScript interface currently restricts to `pc` | `mobile` and should be widened), plus browser, ipAddress, pcName, os, userAgent
   - `clientInfo` (bio, department, rollNumber, licenseNumber)
   - `lastLogin`, `isActive`, `otpToken`, `otpExpires`, `needPasswordChange`, `resetPasswordExpires`, `resetPasswordToken`, `profileImage`
   - Automatic `createdAt`/`updatedAt`
@@ -23,8 +23,8 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 
 - **Route**
   - `route_id` (unique, required), `name` (required)
-  - `stopages`: array of `ObjectId` references to **Stopage** (required)
-  - `bus`: array of `ObjectId` references to **Bus** (required)
+  - `stopages`: array of `ObjectId` references to **Stopage** (field required; schema does not enforce non-empty arrays)
+  - `bus`: array of `ObjectId` references to **Bus** (field required; schema does not enforce non-empty arrays)
   - `isActive` (default `true`)
   - Automatic `createdAt`/`updatedAt`
 
