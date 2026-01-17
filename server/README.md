@@ -18,7 +18,8 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
   - Automatic `createdAt`/`updatedAt`
 
 - **Bus**
-  - `name` (required), `type` (enum: `single-decker` | `double-decker`)
+  - `name` (required), `type` (required; enum: `single-decker` | `double-decker`)
+  - No `isActive` flag; availability is handled through Route associations.
   - Automatic `createdAt`/`updatedAt`
 
 - **Route**
@@ -32,21 +33,26 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 ```mermaid
 erDiagram
   User {
+    ObjectId _id
     string email
     string password
     string role
   }
   Stopage {
+    ObjectId _id
     string stopage_id
     string name
     number latitude
     number longitude
+    bool isActive
   }
   Bus {
+    ObjectId _id
     string name
     string type
   }
   Route {
+    ObjectId _id
     string route_id
     string name
     bool isActive
