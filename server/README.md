@@ -8,7 +8,7 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 - **User**
   - `email` (unique, required), `password` (hashed), `name`
   - `role` (enum of `USER_ROLES`, required)
-  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; TypeScript interface currently narrows to `pc` | `mobile`; plus browser, ipAddress, pcName, os, userAgent)
+  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; TypeScript interface currently omits the `tablet` option), plus browser, ipAddress, pcName, os, userAgent
   - `clientInfo` (bio, department, rollNumber, licenseNumber)
   - `lastLogin`, `isActive`, `otpToken`, `otpExpires`, `needPasswordChange`, `resetPasswordExpires`, `resetPasswordToken`, `profileImage`
   - Automatic `createdAt`/`updatedAt`
@@ -19,7 +19,7 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 
 - **Bus**
   - `name` (required), `type` (required; enum: `single-decker` | `double-decker`)
-  - No `isActive` flag; the model only stores identity/type and is referenced by Route documents for assignment.
+  - No `isActive` flag.
   - Automatic `createdAt`/`updatedAt`
 
 - **Route**
