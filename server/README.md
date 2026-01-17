@@ -7,8 +7,8 @@ The server uses four Mongoose models. Route documents link buses and stopages; o
 ### Collections and fields
 - **User**
   - `email` (unique, required), `password` (hashed), `name`
-  - `role` (enum of `USER_ROLES`, required)
-  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; the TypeScript interface should be aligned to include `tablet`), plus browser, ipAddress, pcName, os, userAgent
+  - `role` (required enum: `superadmin` | `admin` | `student` | `driver`)
+  - `clientITInfo` (device stored as `pc` | `mobile` | `tablet` in Mongo; TypeScript interface currently only allows `pc` | `mobile`—a discrepancy to fix), plus browser, ipAddress, pcName, os, userAgent
   - `clientInfo` (bio, department, rollNumber, licenseNumber)
   - `lastLogin`, `isActive`, `otpToken`, `otpExpires`, `needPasswordChange`, `resetPasswordExpires`, `resetPasswordToken`, `profileImage`
   - Automatic `createdAt`/`updatedAt`
@@ -43,7 +43,7 @@ erDiagram
     string name
     number latitude
     number longitude
-    bool isActive
+    boolean isActive
   }
   Bus {
     ObjectId _id
@@ -54,7 +54,7 @@ erDiagram
     ObjectId _id
     string route_id
     string name
-    bool isActive
+    boolean isActive
   }
   Route ||--o{ Stopage : "stopages[]"
   Route ||--o{ Bus : "bus[]"
