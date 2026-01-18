@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import InputField from '@/components/shared/InputField';
 import { Tab, Tabs, TabList, TabPanel } from 'react-tabs';
 import 'react-tabs/style/react-tabs.css';
-import { Home, Loader2, ShieldCheck, User, Truck, Shield } from 'lucide-react'; // Added icons
+import { Home, Loader2, ShieldCheck, User, Truck, Shield } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { toast } from 'sonner';
