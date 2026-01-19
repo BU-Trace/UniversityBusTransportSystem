@@ -49,7 +49,7 @@ export default function MergedDashboard() {
   const menuItems = [
     { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
     { label: "Bus Management", href: "/dashboard/busManage", icon: MdDirectionsBus },
-    { label: "Driver Management", href: "/dashboard/driverManage", icon: MdPeople },
+    { label: "User Management", href: "/dashboard/userManage", icon: MdPeople },
     { label: "Route Management", href: "/dashboard/routeManage", icon: MdMap },
     { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
   ];
