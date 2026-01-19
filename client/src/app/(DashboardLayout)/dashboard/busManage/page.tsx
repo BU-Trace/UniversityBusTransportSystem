@@ -33,23 +33,25 @@ import {
 } from "react-icons/md";
 
 interface Route {
-  id: string;
+   id: string;
   name: string;
   startPoint: string;
   endPoint: string;
-  activeHoursComing: string;
-  activeHoursGoing: string;
+  activeHoursComing: string[];
+  activeHoursGoing: string[];
 }
 
 interface BusData {
-  id: string;
+   id: string;
   name: string;
   plateNumber: string;
   routeId: string;
   routeName: string;
-  activeHoursComing: string;
-  activeHoursGoing: string;
-  photo: string; // ✅ keep required in data model
+
+  activeHoursComing: string[];
+  activeHoursGoing: string[];
+
+  photo: string;
 }
 
 const initialRoutes: Route[] = [
@@ -58,8 +60,8 @@ const initialRoutes: Route[] = [
     name: "Route 1 (Nothullabad)",
     startPoint: "Campus",
     endPoint: "Nothullabad",
-    activeHoursComing: "08:00 AM - 10:00 AM",
-    activeHoursGoing: "02:00 PM - 04:00 PM",
+    activeHoursComing: ["08:00 AM - 10:00 AM"],
+    activeHoursGoing: ["02:00 PM - 04:00 PM"],
   },
 ];
 
@@ -70,14 +72,13 @@ const initialBuses: BusData[] = [
     plateNumber: "DHK-METRO-KA-1234",
     routeId: "1",
     routeName: "Route 1 (Nothullabad)",
-    activeHoursComing: "08:00 AM - 10:00 AM",
-    activeHoursGoing: "02:00 PM - 04:00 PM",
+    activeHoursComing: ["08:00 AM - 10:00 AM"],
+    activeHoursGoing: ["02:00 PM - 04:00 PM"],
     photo:
       "https://th.bing.com/th/id/R.ffa99e6ef783e2154e18cc2aa9f3e873?rik=6Ic5jyNHg4Ht1w&pid=ImgRaw&r=0",
   },
 ];
 
-// ✅ Cloudinary config (set these)
 const CLOUD_NAME = "dpiofecgs";
 const UPLOAD_PRESET = "butrace";
 
@@ -92,7 +93,6 @@ async function uploadToCloudinary(file: File): Promise<string> {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    // ✅ This will show the exact Cloudinary error in console + toast
     console.error("Cloudinary error:", data);
     throw new Error(data?.error?.message || "Cloudinary upload failed");
   }
@@ -105,14 +105,11 @@ export default function BusManagementOnlyPage() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
-  // sidebar
   const [isOpen, setIsOpen] = useState(false);
 
-  // data
   const [routes] = useState<Route[]>(initialRoutes);
   const [buses, setBuses] = useState<BusData[]>(initialBuses);
 
-  // ui
   const [query, setQuery] = useState("");
   const filteredBuses = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -126,7 +123,6 @@ export default function BusManagementOnlyPage() {
     });
   }, [buses, query]);
 
-  // modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"add" | "edit" | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -160,18 +156,66 @@ export default function BusManagementOnlyPage() {
   ];
 
   const openAdd = () => {
-    setModalType("add");
-    setSelectedId(null);
-    setBusForm({ name: "", plateNumber: "", routeId: "", photo: "" });
-    setIsModalOpen(true);
-  };
+  setModalType("add");
+  setSelectedId(null);
+
+  setBusForm({ name: "", plateNumber: "", routeId: "", photo: "" });
+
+  setActiveHoursCount(1);
+  setComingSlots([""]);
+  setGoingSlots([""]);
+
+  setIsModalOpen(true);
+};
+
 
   const openEdit = (bus: BusData) => {
-    setModalType("edit");
-    setSelectedId(bus.id);
-    setBusForm({ ...bus });
-    setIsModalOpen(true);
-  };
+  setModalType("edit");
+  setSelectedId(bus.id);
+  setBusForm({ ...bus });
+
+  const count = Math.max(bus.activeHoursComing?.length || 1, bus.activeHoursGoing?.length || 1);
+  setActiveHoursCount(count);
+  setComingSlots(bus.activeHoursComing?.length ? bus.activeHoursComing : Array(count).fill(""));
+  setGoingSlots(bus.activeHoursGoing?.length ? bus.activeHoursGoing : Array(count).fill(""));
+
+  setIsModalOpen(true);
+};
+
+  const handleActiveHoursCountChange = (count: number) => {
+  const safeCount = Math.max(0, Math.min(20, Number.isFinite(count) ? count : 0));
+  setActiveHoursCount(safeCount);
+
+  setComingSlots((prev) => {
+    const next = [...prev];
+    while (next.length < safeCount) next.push("");
+    return next.slice(0, safeCount);
+  });
+
+  setGoingSlots((prev) => {
+    const next = [...prev];
+    while (next.length < safeCount) next.push("");
+    return next.slice(0, safeCount);
+  });
+};
+
+const updateComingSlot = (idx: number, val: string) => {
+  setComingSlots((prev) => {
+    const next = [...prev];
+    next[idx] = val;
+    return next;
+  });
+};
+
+const updateGoingSlot = (idx: number, val: string) => {
+  setGoingSlots((prev) => {
+    const next = [...prev];
+    next[idx] = val;
+    return next;
+  });
+};
+
+
 
   const handleDelete = (id: string) => {
     if (window.confirm("Are you sure you want to delete this bus permanently?")) {
@@ -180,21 +224,25 @@ export default function BusManagementOnlyPage() {
     }
   };
 
-  const handleBusRouteChange = (routeId: string) => {
-    const selectedRoute = routes.find((r) => r.id === routeId);
-    if (!selectedRoute) {
-      setBusForm((p) => ({ ...p, routeId: "", routeName: "", activeHoursComing: "", activeHoursGoing: "" }));
-      return;
-    }
+  const [activeHoursCount, setActiveHoursCount] = useState<number>(1);
+  const [comingSlots, setComingSlots] = useState<string[]>([""]);
+  const [goingSlots, setGoingSlots] = useState<string[]>([""]);
 
-    setBusForm((p) => ({
-      ...p,
-      routeId,
-      routeName: selectedRoute.name,
-      activeHoursComing: selectedRoute.activeHoursComing,
-      activeHoursGoing: selectedRoute.activeHoursGoing,
-    }));
-  };
+
+  const handleBusRouteChange = (routeId: string) => {
+  const selectedRoute = routes.find((r) => r.id === routeId);
+  if (!selectedRoute) {
+    setBusForm((p) => ({ ...p, routeId: "", routeName: "" }));
+    return;
+  }
+
+  setBusForm((p) => ({
+    ...p,
+    routeId,
+    routeName: selectedRoute.name,
+  }));
+};
+
 
   const handlePickFile = () => fileRef.current?.click();
 
@@ -217,52 +265,83 @@ export default function BusManagementOnlyPage() {
     }
   };
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    // basic validation
-    if (!busForm.name?.trim()) return toast.error("Bus name is required.");
-    if (!busForm.plateNumber?.trim()) return toast.error("Number plate is required.");
-    if (!busForm.routeId) return toast.error("Please assign a route.");
+  if (!busForm.name?.trim()) return toast.error("Bus name is required.");
+  if (!busForm.plateNumber?.trim()) return toast.error("Number plate is required.");
+  if (!busForm.routeId) return toast.error("Please assign a route.");
 
-    // ✅ mandatory photo ONLY for adding
-    if (modalType === "add" && !busForm.photo) {
-      return toast.error("Bus photo is mandatory for new registration.");
+  if (modalType === "add" && !busForm.photo) {
+    return toast.error("Bus photo is mandatory for new registration.");
+  }
+
+  if (uploading) return toast.error("Please wait, photo is uploading...");
+
+ 
+  const finalComing = comingSlots.map((x) => x.trim()).filter(Boolean);
+  const finalGoing = goingSlots.map((x) => x.trim()).filter(Boolean);
+
+  if (activeHoursCount > 0) {
+    if (finalComing.length !== activeHoursCount || finalGoing.length !== activeHoursCount) {
+      return toast.error("Please fill all active hour fields.");
     }
+  }
 
-    if (uploading) return toast.error("Please wait, photo is uploading...");
+  const payload = {
+    name: busForm.name.trim(),
+    plateNumber: busForm.plateNumber.trim(),
+    routeId: busForm.routeId,
+    photo: busForm.photo, 
+
+    activeHoursComing: finalComing,
+    activeHoursGoing: finalGoing,
+  };
+
+  try {
+    toast.message("Saving to server...");
 
     if (modalType === "edit") {
       if (!window.confirm("Update bus details?")) return;
-      setBuses((prev) =>
-        prev.map((b) => (b.id === selectedId ? ({ ...b, ...busForm } as BusData) : b))
-      );
+
+      const res = await fetch(`/api/buses/${selectedId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "Update failed");
+
+     
+      setBuses((prev) => prev.map((b) => (b.id === selectedId ? data.bus : b)));
       toast.success("Bus updated successfully.");
     } else {
-      setBuses((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          name: busForm.name!.trim(),
-          plateNumber: busForm.plateNumber!.trim(),
-          routeId: busForm.routeId!,
-          routeName: busForm.routeName || routes.find((r) => r.id === busForm.routeId)?.name || "",
-          activeHoursComing: busForm.activeHoursComing || "",
-          activeHoursGoing: busForm.activeHoursGoing || "",
-          photo: busForm.photo!, // ✅ required on add
-        },
-      ]);
+      const res = await fetch(`/api/buses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "Create failed");
+
+      setBuses((prev) => [...prev, data.bus]);
       toast.success("Bus added successfully.");
     }
 
     setIsModalOpen(false);
-  };
+  } catch (err: any) {
+    toast.error(err?.message || "Server save failed.");
+  }
+};
+
 
   if (!mounted) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative font-sans text-gray-800">
-      {/* Mobile open */}
+      {}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -272,7 +351,7 @@ export default function BusManagementOnlyPage() {
         </button>
       )}
 
-      {/* Sidebar */}
+      {}
       <AnimatePresence>
         {(isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
           <motion.aside
@@ -333,10 +412,10 @@ export default function BusManagementOnlyPage() {
         )}
       </AnimatePresence>
 
-      {/* Main */}
+      {}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-7xl mx-auto">
-          {/* Header */}
+          {}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
@@ -367,7 +446,7 @@ export default function BusManagementOnlyPage() {
             </div>
           </div>
 
-          {/* Fleet card */}
+          {}
           <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2 uppercase tracking-wide">
@@ -417,7 +496,7 @@ export default function BusManagementOnlyPage() {
                         <td className="py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              {}
                               <img
                                 src={bus.photo}
                                 alt={bus.name}
@@ -481,7 +560,7 @@ export default function BusManagementOnlyPage() {
         </div>
       </main>
 
-      {/* Modal */}
+      {}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -495,7 +574,7 @@ export default function BusManagementOnlyPage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
               transition={{ type: "spring", stiffness: 260, damping: 22 }}
-              className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100"
+              className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100 scrollbar-hide"
             >
               <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
@@ -510,7 +589,7 @@ export default function BusManagementOnlyPage() {
               </div>
 
               <form onSubmit={handleSave} className="p-8 space-y-6">
-                {/* top fields */}
+                {}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold uppercase text-gray-500 mb-1 block">
@@ -539,7 +618,64 @@ export default function BusManagementOnlyPage() {
                   </div>
                 </div>
 
-                {/* Photo uploader */}
+                {}
+                <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <div className="text-xs font-black uppercase text-gray-600">No of Active Hours</div>
+                      <div className="text-[11px] text-gray-500 mt-1">
+                        Number of trips a day.
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min={0}
+                      max={20}
+                      value={activeHoursCount}
+                      onChange={(e) => handleActiveHoursCountChange(parseInt(e.target.value || "0"))}
+                      className="w-28 p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white font-black text-center"
+                    />
+                  </div>
+
+                  {activeHoursCount > 0 && (
+                    <div className="mt-4 space-y-3">
+                      {Array.from({ length: activeHoursCount }).map((_, idx) => (
+                        <div key={idx} className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-[11px] font-black uppercase text-gray-500 block mb-1">
+                              From Uni (Coming) #{idx + 1}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 08:00 AM - 10:00 AM"
+                              value={comingSlots[idx] || ""}
+                              onChange={(e) => updateComingSlot(idx, e.target.value)}
+                              className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white"
+                              required
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-[11px] font-black uppercase text-gray-500 block mb-1">
+                              To Uni (Going) #{idx + 1}
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="e.g. 02:00 PM - 04:00 PM"
+                              value={goingSlots[idx] || ""}
+                              onChange={(e) => updateGoingSlot(idx, e.target.value)}
+                              className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white"
+                              required
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+
+                {}
                 <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                   <div className="p-4 bg-gray-50 flex items-center justify-between">
                     <div>
@@ -547,7 +683,7 @@ export default function BusManagementOnlyPage() {
                         Bus Photo {modalType === "add" ? "(Mandatory)" : "(Optional)"}
                       </div>
                       <div className="text-[11px] text-gray-500 mt-1">
-                        Upload via Cloudinary. Clear front-side view recommended.
+                        Recheck before upload.
                       </div>
                     </div>
 
@@ -578,7 +714,7 @@ export default function BusManagementOnlyPage() {
                     {busForm.photo ? (
                       <div className="flex items-center gap-4">
                         <div className="w-24 h-20 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          {}
                           <img
                             src={busForm.photo}
                             alt="Bus preview"
@@ -601,7 +737,7 @@ export default function BusManagementOnlyPage() {
                   </div>
                 </div>
 
-                {/* Assign route */}
+                {}
                 <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
                   <label className="text-xs font-bold uppercase text-blue-600 mb-2 block">
                     Assign Route
@@ -641,7 +777,7 @@ export default function BusManagementOnlyPage() {
                   )}
                 </div>
 
-                {/* Actions */}
+                {}
                 <div className="pt-2 flex gap-3">
                   <button
                     type="button"
