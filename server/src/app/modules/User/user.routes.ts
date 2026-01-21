@@ -10,47 +10,70 @@ import { UserRole } from './user.utils';
 
 const router = Router();
 
-// router.get('/', Auth(UserRole.ADMIN), UserController.getAllUser);
-//
-// router.get('/me', Auth(UserRole.ADMIN, UserRole.USER), UserController.myProfile);
-
+// Registration (from your public registration page)
 router.post('/', clientInfoParser, UserController.registerUser);
 
+// Verify email
 router.post('/verfy-email', UserController.verifyEmail);
+
+// Get all users
+router.get(
+  '/get-all-users',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.getAllUsers
+);
+
+// Admin adds a user (dashboard add)
+router.post(
+  '/add-user',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  validateRequest(UserValidation.adminCreateUserSchema),
+  UserController.adminCreateUser
+);
+
+// Admin updates a user (dashboard edit)
+router.put(
+  '/update-user/:id',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  validateRequest(UserValidation.adminUpdateUserSchema),
+  UserController.adminUpdateUser
+);
+
+// Admin deletes a user
+router.delete(
+  '/delete-user/:id',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.adminDeleteUser
+);
+
 // Update admin profile
 router.patch(
-	'/admin/:id',
-	auth(UserRole.ADMIN),
-	multerUpload.single('profileImage'),
-	parseBody,
-	validateRequest(UserValidation.adminProfileValidationSchema),
-	UserController.updateAdminProfile
+  '/admin/:id',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  multerUpload.single('profileImage'),
+  parseBody,
+  validateRequest(UserValidation.adminProfileValidationSchema),
+  UserController.updateAdminProfile
 );
 
 // Update student profile
 router.patch(
-	'/student/:id',
-	auth(UserRole.STUDENT),
-	multerUpload.single('profileImage'),
-	parseBody,
-	validateRequest(UserValidation.studentProfileValidationSchema),
-	UserController.updateStudentProfile
+  '/student/:id',
+  auth(UserRole.STUDENT),
+  multerUpload.single('profileImage'),
+  parseBody,
+  validateRequest(UserValidation.studentProfileValidationSchema),
+  UserController.updateStudentProfile
 );
 
 // Update driver profile
 router.patch(
-	'/driver/:id',
-	auth(UserRole.DRIVER),
-	multerUpload.single('profileImage'),
-	parseBody,
-	validateRequest(UserValidation.driverProfileValidationSchema),
-	UserController.updateDriverProfile
+  '/driver/:id',
+  auth(UserRole.DRIVER),
+  multerUpload.single('profileImage'),
+  parseBody,
+  validateRequest(UserValidation.driverProfileValidationSchema),
+  UserController.updateDriverProfile
 );
-//
-// router.patch(
-//   '/:id/status',
-//   Auth(UserRole.ADMIN),
-//   UserController.updateUserStatus
-// );
 
 export const UserRoutes = router;
