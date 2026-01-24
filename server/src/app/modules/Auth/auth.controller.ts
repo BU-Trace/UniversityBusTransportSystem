@@ -5,9 +5,6 @@ import { StatusCodes } from 'http-status-codes';
 import config from '../../config';
 import { AuthService } from './auth.service';
 
-/* =========================================================
-   Auth - Core
-========================================================= */
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
   const { refreshToken, accessToken } = result;
@@ -63,9 +60,6 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-/* =========================================================
-   Pending Registration - Admin Dashboard
-========================================================= */
 const getPendingRegistrations = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.getPendingRegistrations();
 

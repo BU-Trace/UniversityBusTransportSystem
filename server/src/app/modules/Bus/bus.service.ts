@@ -95,7 +95,7 @@ export const updateBus = async (id: string, payload: Partial<IBus>) => {
 
   return updated;
 };
-
+// Delete bus by ID
 export const deleteBus = async (id: string) => {
   return await Bus.findByIdAndDelete(id);
 };

@@ -156,7 +156,7 @@ const registerUser = async (userData: Partial<IUser>) =>
   `,
       'Your Campus Connect OTP'
     );
-
+// create user with inactive status
     const user = new UserModel({
       password: userData.password.trim(),
       isActive: false,

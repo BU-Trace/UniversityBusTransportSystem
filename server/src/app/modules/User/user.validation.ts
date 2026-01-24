@@ -9,7 +9,7 @@ const adminProfileValidationSchema = z.object({
     })
     .optional(),
 });
-
+//student profile validation
 const studentProfileValidationSchema = z.object({
   name: z.string().optional(),
   profileImage: z.string().optional(),

@@ -11,10 +11,6 @@ import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
 import {Bus as BusModel} from '../Bus/bus.model';
 
-/* =========================================================
-   Pending Registration Requests (Admin Dashboard)
-   - Pending = isActive === true (email verified) AND isApproved === false
-========================================================= */
 const getPendingRegistrations = async () => {
   const pending = await UserModel.find({ isApproved: false, isActive: true })
     .select('-password')
@@ -39,7 +35,6 @@ const approveRegistration = async (
       throw new AppError(StatusCodes.BAD_REQUEST, 'User already approved');
     }
 
-    // If approving a driver, bus assignment is mandatory
     if (user.role === 'driver') {
       const assignedBusId = payload?.assignedBusId;
       if (!assignedBusId) {
@@ -52,7 +47,6 @@ const approveRegistration = async (
       const bus = await BusModel.findById(assignedBusId).session(session);
       if (!bus) throw new AppError(StatusCodes.NOT_FOUND, 'Bus not found');
 
-      // Optional: ensure bus is not already assigned to another driver
       const alreadyAssigned = await UserModel.findOne({
         role: 'driver',
         assignedBus: bus._id,
@@ -70,7 +64,6 @@ const approveRegistration = async (
       user.assignedBusName = `${bus.name} (${bus.plateNumber})`;
     }
 
-    // Approve user
     user.isApproved = true;
 
     await user.save({ session });
@@ -96,31 +89,25 @@ const rejectRegistration = async (userId: string) =>
     return { message: 'Rejected and removed' };
   });
 
-/* =========================================================
-   Login
-========================================================= */
 const loginUser = async (payload: IAuth) => {
   return runWithTransaction(async (session) => {
-    // ---------------------- Find User ----------------------
+
     const user = await UserModel.findOne({ email: payload.email })
-      .select('+password') // ✅ ensure password is available for compare
+      .select('+password')
       .session(session);
 
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     }
 
-    // must verify email first
     if (!user.isActive) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
     }
 
-    // must be approved by admin
     if (!user.isApproved) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
-    // ---------------------- Check Password ----------------------
     const isMatch = await UserModel.isPasswordMatched(
       payload.password.trim(),
       user.password
@@ -129,7 +116,6 @@ const loginUser = async (payload: IAuth) => {
       throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
     }
 
-    // ---------------------- Prepare JWT Payload ----------------------
     const jwtPayload: IJwtPayload = {
       userId: user._id.toString(),
       name: user.name,
@@ -139,7 +125,6 @@ const loginUser = async (payload: IAuth) => {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    // ---------------------- Generate Tokens ----------------------
     const accessToken = createToken(
       jwtPayload,
       config.jwt_access_secret as string,
@@ -152,7 +137,6 @@ const loginUser = async (payload: IAuth) => {
       config.jwt_refresh_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`
     );
 
-    // ---------------------- Update lastLogin & clientInfo ----------------------
     if (payload.clientInfo) {
       await UserModel.findByIdAndUpdate(
         user._id,
@@ -180,16 +164,12 @@ const loginUser = async (payload: IAuth) => {
   });
 };
 
-/* =========================================================
-   Change Password
-========================================================= */
 const changePassword = async (payload: {
   email: string;
   oldPassword: string;
   newPassword: string;
 }) => {
   return runWithTransaction(async (session) => {
-    // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email })
       .select('+password')
       .session(session);
@@ -205,14 +185,11 @@ const changePassword = async (payload: {
     if (!user.isApproved) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
-
-    // ---------------------- Check Old Password ----------------------
     const isMatch = await UserModel.isPasswordMatched(payload.oldPassword, user.password);
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Old password does not match');
     }
 
-    // ---------------------- Hash New Password ----------------------
     const hashedPassword = await bcrypt.hash(
       payload.newPassword,
       Number(config.bcrypt_salt_rounds)
@@ -225,12 +202,9 @@ const changePassword = async (payload: {
   });
 };
 
-/* =========================================================
-   Forgot Password
-========================================================= */
 const forgetPassword = async (payload: { email: string }) => {
   return runWithTransaction(async (session) => {
-    // ---------------------- Find User ----------------------
+
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
@@ -244,7 +218,6 @@ const forgetPassword = async (payload: { email: string }) => {
       throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
-    // ---------------------- Generate Reset Token ----------------------
     const resetSecret = (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret';
     const resetExpiry =
       (config.jwt_pass_reset_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`) || '15m';
@@ -329,9 +302,6 @@ const forgetPassword = async (payload: { email: string }) => {
   });
 };
 
-/* =========================================================
-   Reset Password
-========================================================= */
 const resetPassword = async (payload: { token: string; newPassword: string }) => {
   return runWithTransaction(async (session) => {
     if (!payload.token) {
@@ -348,7 +318,6 @@ const resetPassword = async (payload: { token: string; newPassword: string }) =>
       throw new AppError(StatusCodes.NOT_FOUND, 'User is not found!');
     }
 
-    // do not allow reset for unverified/unapproved accounts
     if (!user.isActive) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
     }
@@ -371,8 +340,6 @@ export const AuthService = {
   changePassword,
   forgetPassword,
   resetPassword,
-
-  // ✅ pending registration
   getPendingRegistrations,
   approveRegistration,
   rejectRegistration,

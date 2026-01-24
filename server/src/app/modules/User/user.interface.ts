@@ -38,7 +38,6 @@ type DriverClientInfo = BaseClientInfo & {
   licenseNumber?: string;
 };
 
-// --- Core fields shared by all users ---------------------------
 interface UserCommon {
   _id: Types.ObjectId;
   email: string;
@@ -68,8 +67,6 @@ interface UserCommon {
 
 }
 
-// --- Discriminated union by role -------------------------------
-// Admins don’t require extra clientInfo, students & drivers do.
 export type UserDoc =
   | (UserCommon & {
       role: 'student';
@@ -84,10 +81,8 @@ export type UserDoc =
       clientInfo?: BaseClientInfo; // optional for admins
     });
 
-// If you prefer interface form that extends mongoose Document:
 export interface IUser extends Document<Types.ObjectId>, Omit<UserDoc, '_id'> {}
 
-// --- Model (statics) -------------------------------------------
 export interface UserModel extends Model<IUser> {
   // statics (these are better as statics than instance methods)
   isPasswordMatched(plainTextPassword: string, hashedPassword: string): Promise<boolean>;

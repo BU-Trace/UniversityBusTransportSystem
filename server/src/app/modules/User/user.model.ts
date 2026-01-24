@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import config from '../../config';
 import { IUser, USER_ROLES, UserModel } from './user.interface';
 import AppError from '../../errors/appError';
-
+// import { ClientITInfo } from '../Auth/auth.interface';
 const userSchema = new Schema<IUser, UserModel>(
   {
     email: { type: String, required: true, unique: true, trim: true },
