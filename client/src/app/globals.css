@@ -91,6 +91,17 @@
     transform: translateY(-30px) translateX(30px) scale(1.05);
   }
 }
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
 .animate-blob-1 {
   animation: blob1 12s infinite ease-in-out;
 }

@@ -1,23 +1,17 @@
 import { StatusCodes } from 'http-status-codes';
-import mongoose from 'mongoose';
 import AppError from '../../errors/appError';
 import config from '../../config';
 
 import { IAuth, IJwtPayload } from './auth.interface';
 import UserModel from '../User/user.model';
 import { UserRole } from '../User/user.utils';
-import { createToken } from './auth.util';
+import { createToken, verifyToken } from './auth.util';
 import bcrypt from 'bcrypt';
 import { EmailHelper } from '../../utils/emailHelper';
+import { runWithTransaction } from '../../utils/transaction';
 
 const loginUser = async (payload: IAuth) => {
-  const session = await mongoose.startSession();
-
-  console.log(payload);
-
-  try {
-    session.startTransaction();
-
+  return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
@@ -29,7 +23,6 @@ const loginUser = async (payload: IAuth) => {
     }
 
     // ---------------------- Check Password ----------------------
-
     const isMatch = await UserModel.isPasswordMatched(payload.password.trim(), user.password);
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
@@ -67,8 +60,6 @@ const loginUser = async (payload: IAuth) => {
       );
     }
 
-    await session.commitTransaction();
-
     return {
       accessToken,
       refreshToken,
@@ -79,18 +70,7 @@ const loginUser = async (payload: IAuth) => {
         role: user.role,
       },
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      try {
-        await session.abortTransaction();
-      } catch (abortError) {
-        console.error('Failed to abort transaction:', abortError);
-      }
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
+  });
 };
 
 const changePassword = async (payload: {
@@ -98,11 +78,7 @@ const changePassword = async (payload: {
   oldPassword: string;
   newPassword: string;
 }) => {
-  const session = await mongoose.startSession();
-
-  try {
-    session.startTransaction();
-
+  return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
@@ -129,29 +105,14 @@ const changePassword = async (payload: {
 
     await user.save({ session });
 
-    await session.commitTransaction();
-
     return {
       message: 'Password changed successfully',
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      try {
-        await session.abortTransaction();
-      } catch (abortError) {
-        console.error('Failed to abort transaction:', abortError);
-      }
-    }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
+  });
 };
 
 const forgetPassword = async (payload: { email: string }) => {
-  const session = await mongoose.startSession();
-  try {
-    await session.startTransaction();
+  return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
@@ -163,6 +124,9 @@ const forgetPassword = async (payload: { email: string }) => {
     }
 
     // ---------------------- Generate Reset Token ----------------------
+    const resetSecret = (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret';
+    const resetExpiry =
+      (config.jwt_pass_reset_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`) || '15m';
     const token = createToken(
       {
         userId: user._id.toString(),
@@ -172,11 +136,12 @@ const forgetPassword = async (payload: { email: string }) => {
         isActive: user.isActive,
         iat: Math.floor(Date.now() / 1000),
       },
-      'resetPasswordSecret' as string,
-      '15m'
+      resetSecret,
+      resetExpiry
     );
 
-    const resetLink = `http://localhost:3000/reset-password?token=${token}`;
+    const clientBase = config.client_url || 'http://localhost:3000';
+    const resetLink = `${clientBase}/reset-password?token=${token}`;
 
     await EmailHelper.sendEmail(
       user.email,
@@ -238,26 +203,43 @@ const forgetPassword = async (payload: { email: string }) => {
       'Password Reset Request'
     );
 
-    await session.commitTransaction();
     return {
       message: 'Reset password link has been sent to your email.',
     };
-  } catch (error) {
-    if (session.inTransaction()) {
-      try {
-        await session.abortTransaction();
-      } catch (abortError) {
-        console.error('Failed to abort transaction:', abortError);
-      }
+  });
+};
+
+const resetPassword = async (payload: { token: string; newPassword: string }) => {
+  return runWithTransaction(async (session) => {
+    if (!payload.token) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Reset token is required');
     }
-    throw error;
-  } finally {
-    await session.endSession();
-  }
+
+    const decoded = verifyToken(
+      payload.token,
+      (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret'
+    ) as { userId: string } & { email?: string };
+
+    const user = await UserModel.findById(decoded.userId).session(session);
+    if (!user) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'User is not found!');
+    }
+
+    user.password = payload.newPassword.trim();
+    user.resetPasswordExpires = null;
+    user.resetPasswordToken = null;
+
+    await user.save({ session });
+
+    return {
+      message: 'Password reset successfully',
+    };
+  });
 };
 
 export const AuthService = {
   loginUser,
   changePassword,
   forgetPassword,
+  resetPassword,
 };

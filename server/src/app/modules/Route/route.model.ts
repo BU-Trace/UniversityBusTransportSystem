@@ -16,6 +16,11 @@ const RouteSchema = new Schema({
     ref: 'Stopage',
     required: true,
   }],
+  bus: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Bus',
+    required: true,
+  }],
   isActive: {
     type: Boolean,
     default: true,
