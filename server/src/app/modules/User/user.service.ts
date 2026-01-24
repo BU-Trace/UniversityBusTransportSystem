@@ -11,19 +11,22 @@ type ClientInfo = NonNullable<IUser['clientInfo']>;
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   student: ['bio', 'department', 'rollNumber'],
   driver: ['bio', 'licenseNumber'],
-  admin: ['bio', 'licenseNumber'],
-  superadmin: ['bio', 'licenseNumber'],
+  admin: ['bio'], // ✅ admin should not include licenseNumber
+  superadmin: ['bio'], // ✅ superadmin should not include licenseNumber
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
+    // If your DB allows null clientInfo, initialize it
+    user.clientInfo = {} as ClientInfo;
+
+    // BUT for required roles, ensure it exists at least
     if (role === 'student') {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Student client info missing');
+      user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
     if (role === 'driver') {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Driver client info missing');
+      user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
-    user.clientInfo = {} as ClientInfo;
   }
 
   return user.clientInfo as ClientInfo;
@@ -90,24 +93,67 @@ export const updateProfile = async (
 
 const registerUser = async (userData: Partial<IUser>) =>
   runWithTransaction(async (session) => {
-    const existingUser = await UserModel.findOne({ email: userData.email }).session(session);
-    if (existingUser) {
-      throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
-    }
-
-    if (!userData.email) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'Email is required');
-    }
+    const email = userData.email?.trim().toLowerCase();
+    if (!email) throw new AppError(StatusCodes.BAD_REQUEST, 'Email is required');
 
     if (!userData.password) {
       throw new AppError(StatusCodes.BAD_REQUEST, 'Password is required');
     }
 
-    const OPT = Math.floor(100000 + Math.random() * 900000);
+    const password = userData.password.trim();
 
-    await EmailHelper.sendEmail(
-      userData.email,
-      `
+    if (!password) throw new AppError(StatusCodes.BAD_REQUEST, 'Password is required');
+
+    const role = userData.role as UserRole;
+    if (!role) throw new AppError(StatusCodes.BAD_REQUEST, 'Role is required');
+
+    const existingUser = await UserModel.findOne({ email }).session(session);
+    if (existingUser) {
+      throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
+    }
+
+    if (role === 'student') {
+      const department = (userData.clientInfo as any)?.department?.toString().trim();
+      const rollNumber = (userData.clientInfo as any)?.rollNumber?.toString().trim();
+      if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+      if (!rollNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'Roll number is required');
+    }
+
+    if (role === 'driver') {
+      const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
+      if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
+    }
+
+    const OTP = Math.floor(100000 + Math.random() * 900000);
+    const otpToken = String(OTP);
+    const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
+
+    const user = new UserModel({
+  name: userData.name,
+  email: userData.email,
+  role: userData.role,
+
+  clientInfo: userData.clientInfo,
+  clientITInfo: userData.clientITInfo,
+
+  
+  password: password,
+
+
+  isActive: false,
+  isApproved: false,
+
+  otpToken: String(OTP),
+  otpExpires: new Date(Date.now() + 15 * 60 * 1000),
+});
+
+
+    await user.save({ session });
+
+    try {
+      await EmailHelper.sendEmail(
+        email,
+        `
   <div style="
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: #f9fafb;
@@ -126,7 +172,7 @@ const registerUser = async (userData: Partial<IUser>) =>
       <h3 style="color: #dc2626; margin-bottom: 20px;">Your One-Time Password (OTP)</h3>
       <p style="color: #374151; font-size: 15px; margin-bottom: 25px;">
         Hi ${userData.name || 'there'},<br/>
-        Use the OTP below to complete your action. This code will expire in <strong>15 minutes</strong>.
+        Use the OTP below to verify your email. This code will expire in <strong>15 minutes</strong>.
       </p>
 
       <div style="
@@ -141,7 +187,7 @@ const registerUser = async (userData: Partial<IUser>) =>
         width: 180px;
         margin: 0 auto 20px auto;
       ">
-        ${OPT}
+        ${otpToken}
       </div>
 
       <p style="color: #4b5563; font-size: 14px;">
@@ -154,30 +200,33 @@ const registerUser = async (userData: Partial<IUser>) =>
     </div>
   </div>
   `,
-      'Your Campus Connect OTP'
-    );
-// create user with inactive status
-    const user = new UserModel({
-      password: userData.password.trim(),
-      isActive: false,
-      isApproved: false,
-      clientITInfo: userData.clientITInfo,
-      otpToken: String(OPT),
-      otpExpires: new Date(Date.now() + 15 * 60 * 1000),
-    });
+        'Your Campus Connect OTP'
+      );
+    } catch (e) {
+      // don't block registration if email fails
+    }
 
-    await user.save({ session });
     return null;
   });
 
 const verifyEmail = async (payload: { email: string; otpToken: string }) =>
   runWithTransaction(async (session) => {
-    const user = await UserModel.findOne({ email: payload.email }).session(session);
+    const email = payload.email?.trim().toLowerCase();
+    const otp = payload.otpToken?.trim();
+
+    if (!email) throw new AppError(StatusCodes.BAD_REQUEST, 'Email is required');
+    if (!otp) throw new AppError(StatusCodes.BAD_REQUEST, 'OTP token is required');
+
+    const user = await UserModel.findOne({ email }).session(session);
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
     }
 
-    if (user.otpToken !== payload.otpToken) {
+    if (user.isActive) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'User already verified');
+    }
+
+    if (!user.otpToken || user.otpToken !== otp) {
       throw new AppError(StatusCodes.BAD_REQUEST, 'Invalid OTP token');
     }
 
@@ -197,10 +246,14 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
     };
   });
 
+/* =========================================================
+   DASHBOARD CRUD (Admin)
+========================================================= */
+
 // GET all users (dashboard)
 const getAllUsers = async () => {
   const users = await UserModel.find()
-    .select('-password') // never send password hash
+    .select('-password')
     .sort({ createdAt: -1 });
 
   return users;
@@ -208,38 +261,35 @@ const getAllUsers = async () => {
 
 // Admin creates user (dashboard add)
 const adminCreateUser = async (payload: any) => {
-  // prevent duplicate email
-  const exists = await UserModel.findOne({ email: payload.email });
+  const email = payload.email?.trim().toLowerCase();
+  if (!email) throw new AppError(StatusCodes.BAD_REQUEST, 'Email is required');
+
+  const exists = await UserModel.findOne({ email });
   if (exists) {
     throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
   }
 
-  // dashboard does not send password -> generate temp
   const tempPassword = generateTempPassword(10);
-
   const role: UserRole = payload.role;
 
   const userDoc: Partial<IUser> = {
-    email: payload.email,
+    email,
     password: tempPassword,
     name: payload.name,
     role,
     isActive: true,
+    isApproved: true, // ✅ admin created means approved
     needPasswordChange: true,
 
-    // docs
     profileImage: payload.profileImage ?? null,
     approvalLetter: payload.approvalLetter ?? null,
 
-    // bus assignment
     assignedBus: payload.assignedBus ?? null,
     assignedBusName: payload.assignedBusName ?? null,
 
-    // role-specific
-    clientInfo: payload.clientInfo,
+    clientInfo: payload.clientInfo ?? {},
   };
 
-  // extra server-side safety
   if ((role === 'admin' || role === 'superadmin' || role === 'driver') && !userDoc.profileImage) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Photo is required for admin/driver');
   }
@@ -252,7 +302,6 @@ const adminCreateUser = async (payload: any) => {
 
   const created = await UserModel.create(userDoc);
 
-  // send temp password email
   try {
     await EmailHelper.sendEmail(
       created.email,
@@ -267,9 +316,7 @@ const adminCreateUser = async (payload: any) => {
       `,
       'Campus Connect Account Created'
     );
-  } catch (e) {
-    // don't block creation if email fails
-  }
+  } catch (e) {}
 
   const safe = await UserModel.findById(created._id).select('-password');
   return safe;
@@ -280,32 +327,28 @@ const adminUpdateUser = async (id: string, payload: any) => {
   const user = await UserModel.findById(id);
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
 
-  // role is required in update schema (discriminated union)
-  const role: UserRole = payload.role;
+  const role: UserRole = payload.role ?? user.role;
 
-  // basic fields
   if (payload.name !== undefined) user.name = payload.name;
-  if (payload.email !== undefined) user.email = payload.email;
+  if (payload.email !== undefined) user.email = payload.email.trim().toLowerCase();
 
-  // docs
   if (payload.profileImage !== undefined) user.profileImage = payload.profileImage;
   if (payload.approvalLetter !== undefined) user.approvalLetter = payload.approvalLetter;
 
-  // clientInfo
   if (payload.clientInfo !== undefined) {
     if (!user.clientInfo) user.clientInfo = {} as any;
     user.clientInfo = { ...(user.clientInfo as any), ...(payload.clientInfo as any) };
   }
 
-  // driver assignment
   if (role === 'driver') {
     if (payload.assignedBus !== undefined) user.assignedBus = payload.assignedBus;
     if (payload.assignedBusName !== undefined) user.assignedBusName = payload.assignedBusName;
   } else {
-    // if non-driver, clear bus assignment if provided
     if (payload.assignedBus !== undefined) user.assignedBus = null;
     if (payload.assignedBusName !== undefined) user.assignedBusName = null;
   }
+
+  user.role = role;
 
   await user.save();
   const safe = await UserModel.findById(user._id).select('-password');

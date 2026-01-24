@@ -12,12 +12,16 @@ import { runWithTransaction } from '../../utils/transaction';
 import {Bus as BusModel} from '../Bus/bus.model';
 
 const getPendingRegistrations = async () => {
-  const pending = await UserModel.find({ isApproved: false, isActive: true })
+  const pending = await UserModel.find({
+    isActive: true,
+    isApproved: false,
+  })
     .select('-password')
     .sort({ createdAt: -1 });
 
   return pending;
 };
+
 
 const approveRegistration = async (
   userId: string,
