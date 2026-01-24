@@ -341,7 +341,7 @@ const RegisterPageComponent = () => {
                 <h4 className="text-gray-900 font-bold text-sm">Email Verification</h4>
               </div>
               <p className="text-gray-500 text-xs mb-3 leading-relaxed">
-                We'll send a 6-digit code to <span className="font-semibold text-gray-800">{verificationEmail || 'your email'}</span> after you submit.
+                We&apos;ll send a 6-digit code to <span className="font-semibold text-gray-800">{verificationEmail || 'your email'}</span> after you submit.
               </p>
               
               <form onSubmit={handleVerify} className="flex gap-2">
