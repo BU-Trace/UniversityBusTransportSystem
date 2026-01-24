@@ -4,6 +4,9 @@ import { AuthRoutes } from '../modules/Auth/auth.routes';
 import StopageRoutes from '../modules/Stopage/stopage.routes';
 import RouteRoutes from '../modules/Route/route.routes';
 import BusRoutes from '../modules/Bus/bus.routes';
+import NotificationRoutes from '../modules/Notification/notification.routes';
+import IssueRoutes from '../modules/Issue/issue.routes';
+import LocationRoutes from '../modules/location/location.routes';
 
 const router = Router();
 
@@ -27,6 +30,18 @@ const moduleRoutes = [
   {
     path: '/bus',
     route: BusRoutes,
+  },
+  {
+    path: '/notification',
+    route: NotificationRoutes,
+  },
+  {
+    path: '/issue',
+    route: IssueRoutes,
+  },
+  {
+    path: '/location',
+    route: LocationRoutes,
   },
 ];
 
