@@ -9,4 +9,7 @@ export interface IRoute {
   isActive?: boolean;
   createdAt?: Date;
   updatedAt?: Date;
+  activeHoursComing?: string[];
+  activeHoursGoing?: string[];
 }
+// mongoose timestamps

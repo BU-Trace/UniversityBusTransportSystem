@@ -1,22 +1,56 @@
 import mongoose, { Schema } from 'mongoose';
-import { IBus } from './bus.interface';
 
-const BusSchema = new Schema<IBus>(
+const BusSchema = new Schema(
   {
+    bus_id: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+
     name: {
       type: String,
       required: true,
       trim: true,
     },
-    type: {
+
+    plateNumber: {
       type: String,
-      enum: ['single-decker', 'double-decker'],
+      required: true,
+      trim: true,
+      unique: true,
+    },
+
+    route: {
+      type: Schema.Types.ObjectId,
+      ref: 'Route',
       required: true,
     },
+    // Photo URL or path
+    photo: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
+    activeHoursComing: {
+      type: [String],
+      required: true,
+      default: [],
+    },
+
+    activeHoursGoing: {
+      type: [String],
+      required: true,
+      default: [],
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-export const Bus = mongoose.model<IBus>('Bus', BusSchema);
+export const Bus = mongoose.model('Bus', BusSchema);

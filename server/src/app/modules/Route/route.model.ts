@@ -2,6 +2,14 @@ import mongoose, { Schema } from 'mongoose';
 
 const RouteSchema = new Schema(
   {
+    activeHoursComing: {
+      type: [String],
+      default: [],
+    },
+    activeHoursGoing: {
+      type: [String],
+      default: [],
+    },
     route_id: {
       type: String,
       required: true,
@@ -37,3 +45,4 @@ const RouteSchema = new Schema(
 );
 
 export const Route = mongoose.model('Route', RouteSchema);
+// mongoose timestamps

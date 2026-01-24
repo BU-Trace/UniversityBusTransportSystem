@@ -4,16 +4,13 @@ import React, { useState } from 'react';
 import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Home, Loader2 } from 'lucide-react'; // Added Loader2 for better spinner
+import { Home, Loader2 } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion'; // For smooth entrance animations
+import { motion } from 'framer-motion';
 
 const LoginPageComponent = () => {
-  // ----------------------------------------------------------------------
-  // LOGIC SECTION (UNCHANGED)
-  // ----------------------------------------------------------------------
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -65,26 +62,23 @@ const LoginPageComponent = () => {
 
     setIsSubmitting(false);
   };
-  // ----------------------------------------------------------------------
-  // END LOGIC SECTION
-  // ----------------------------------------------------------------------
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
-      {/* Decorative background elements */}
+      {}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Card Container */}
+      {}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2.5rem] shadow-2xl overflow-hidden w-full max-w-[95%] xl:max-w-7xl h-[85vh] lg:h-[800px] z-10"
       >
-        {/* LEFT: Image Section (Updated visuals) */}
+        {}
         <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
-          {/* Dark overlay for text readability on mobile */}
+          {}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
 
           <Image
@@ -96,7 +90,7 @@ const LoginPageComponent = () => {
             className="w-full h-full object-cover transition-transform duration-[2s] ease-in-out group-hover:scale-105"
           />
 
-          {/* Mobile Only Text Overlay */}
+          {}
           <div className="absolute inset-0 z-20 lg:hidden flex items-end justify-center pb-8">
             <h3 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
               Welcome Back
@@ -104,9 +98,9 @@ const LoginPageComponent = () => {
           </div>
         </div>
 
-        {/* RIGHT: Form Section (Updated visuals) */}
+        {}
         <div className="w-full lg:w-[35%] p-8 lg:p-12 flex flex-col justify-center h-full bg-white relative">
-          {/* Header */}
+          {/*Header*/}
           <div className="mb-8 text-center">
             <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter mb-2">
               Login
@@ -117,7 +111,7 @@ const LoginPageComponent = () => {
             </p>
           </div>
 
-          {/* Form */}
+          {/*Form*/}
           <form onSubmit={handleSubmit} className="flex flex-col space-y-6 w-full max-w-sm mx-auto">
             <div className="space-y-4">
               <InputField
@@ -139,7 +133,7 @@ const LoginPageComponent = () => {
               />
             </div>
 
-            {/* Form Level Error */}
+            {}
             {errors.form && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -150,7 +144,7 @@ const LoginPageComponent = () => {
               </motion.div>
             )}
 
-            {/* Submit Button */}
+            {}
             <button
               type="submit"
               disabled={isSubmitting}
@@ -174,7 +168,7 @@ const LoginPageComponent = () => {
               )}
             </button>
 
-            {/* Links Footer */}
+            {}
             <div className="flex flex-col items-center space-y-4 pt-4 border-t border-gray-100 mt-2">
               <Link
                 href="/forget-password"
@@ -194,7 +188,7 @@ const LoginPageComponent = () => {
         </div>
       </motion.div>
 
-      {/* Floating Home Button */}
+      {/*HomeBtn*/}
       <Link
         href="/"
         title="Back to Home"

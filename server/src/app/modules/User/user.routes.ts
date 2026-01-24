@@ -10,17 +10,41 @@ import { UserRole } from './user.utils';
 
 const router = Router();
 
-// router.get('/', Auth(UserRole.ADMIN), UserController.getAllUser);
-//
-// router.get('/me', Auth(UserRole.ADMIN, UserRole.USER), UserController.myProfile);
-
 router.post('/', clientInfoParser, UserController.registerUser);
 
+// Verify email
 router.post('/verfy-email', UserController.verifyEmail);
+
+// Get all users
+router.get('/get-all-users', auth(UserRole.ADMIN, UserRole.SUPERADMIN), UserController.getAllUsers);
+
+// Admin adds a user (dashboard add)
+router.post(
+  '/add-user',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  validateRequest(UserValidation.adminCreateUserSchema),
+  UserController.adminCreateUser
+);
+
+// Admin updates a user (dashboard edit)
+router.put(
+  '/update-user/:id',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  validateRequest(UserValidation.adminUpdateUserSchema),
+  UserController.adminUpdateUser
+);
+
+// Admin deletes a user
+router.delete(
+  '/delete-user/:id',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.adminDeleteUser
+);
+
 // Update admin profile
 router.patch(
   '/admin/:id',
-  auth(UserRole.ADMIN),
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
   multerUpload.single('profileImage'),
   parseBody,
   validateRequest(UserValidation.adminProfileValidationSchema),
@@ -46,11 +70,5 @@ router.patch(
   validateRequest(UserValidation.driverProfileValidationSchema),
   UserController.updateDriverProfile
 );
-//
-// router.patch(
-//   '/:id/status',
-//   Auth(UserRole.ADMIN),
-//   UserController.updateUserStatus
-// );
 
 export const UserRoutes = router;

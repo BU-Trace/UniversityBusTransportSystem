@@ -9,26 +9,101 @@ import { createToken, verifyToken } from './auth.util';
 import bcrypt from 'bcrypt';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
+import { Bus as BusModel } from '../Bus/bus.model';
+
+const getPendingRegistrations = async () => {
+  const pending = await UserModel.find({ isApproved: false, isActive: true })
+    .select('-password')
+    .sort({ createdAt: -1 });
+
+  return pending;
+};
+
+const approveRegistration = async (userId: string, payload: { assignedBusId?: string }) =>
+  runWithTransaction(async (session) => {
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+
+    if (!user.isActive) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'User email is not verified yet');
+    }
+
+    if (user.isApproved) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'User already approved');
+    }
+
+    if (user.role === 'driver') {
+      const assignedBusId = payload?.assignedBusId;
+      if (!assignedBusId) {
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver approval');
+      }
+
+      const bus = await BusModel.findById(assignedBusId).session(session);
+      if (!bus) throw new AppError(StatusCodes.NOT_FOUND, 'Bus not found');
+
+      const alreadyAssigned = await UserModel.findOne({
+        role: 'driver',
+        assignedBus: bus._id,
+        isApproved: true,
+      }).session(session);
+
+      if (alreadyAssigned) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'This bus is already assigned to another driver'
+        );
+      }
+
+      user.assignedBus = bus._id as any;
+      user.assignedBusName = `${bus.name} (${bus.plateNumber})`;
+    }
+
+    user.isApproved = true;
+
+    await user.save({ session });
+
+    const safe = await UserModel.findById(user._id).select('-password').session(session);
+
+    return safe;
+  });
+
+const rejectRegistration = async (userId: string) =>
+  runWithTransaction(async (session) => {
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+
+    if (user.isApproved) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Approved users cannot be rejected');
+    }
+
+    await UserModel.findByIdAndDelete(userId).session(session);
+
+    return { message: 'Rejected and removed' };
+  });
 
 const loginUser = async (payload: IAuth) => {
   return runWithTransaction(async (session) => {
-    // ---------------------- Find User ----------------------
-    const user = await UserModel.findOne({ email: payload.email }).session(session);
+    const user = await UserModel.findOne({ email: payload.email })
+      .select('+password')
+      .session(session);
+
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     }
 
     if (!user.isActive) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+      throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
     }
 
-    // ---------------------- Check Password ----------------------
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
+    }
+
     const isMatch = await UserModel.isPasswordMatched(payload.password.trim(), user.password);
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
     }
 
-    // ---------------------- Prepare JWT Payload ----------------------
     const jwtPayload: IJwtPayload = {
       userId: user._id.toString(),
       name: user.name,
@@ -38,7 +113,6 @@ const loginUser = async (payload: IAuth) => {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    // ---------------------- Generate Tokens ----------------------
     const accessToken = createToken(
       jwtPayload,
       config.jwt_access_secret as string,
@@ -51,11 +125,16 @@ const loginUser = async (payload: IAuth) => {
       config.jwt_refresh_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`
     );
 
-    // ---------------------- Update lastLogin & clientInfo ----------------------
     if (payload.clientInfo) {
       await UserModel.findByIdAndUpdate(
         user._id,
         { clientITInfo: payload.clientInfo, lastLogin: new Date() },
+        { new: true, session }
+      );
+    } else {
+      await UserModel.findByIdAndUpdate(
+        user._id,
+        { lastLogin: new Date() },
         { new: true, session }
       );
     }
@@ -79,54 +158,57 @@ const changePassword = async (payload: {
   newPassword: string;
 }) => {
   return runWithTransaction(async (session) => {
-    // ---------------------- Find User ----------------------
-    const user = await UserModel.findOne({ email: payload.email }).session(session);
+    const user = await UserModel.findOne({ email: payload.email })
+      .select('+password')
+      .session(session);
+
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     }
 
     if (!user.isActive) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user email is not verified!');
     }
 
-    // ---------------------- Check Old Password ----------------------
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
+    }
     const isMatch = await UserModel.isPasswordMatched(payload.oldPassword, user.password);
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Old password does not match');
     }
 
-    // ---------------------- Hash New Password ----------------------
     const hashedPassword = await bcrypt.hash(
       payload.newPassword,
       Number(config.bcrypt_salt_rounds)
     );
 
     user.password = hashedPassword;
-
     await user.save({ session });
 
-    return {
-      message: 'Password changed successfully',
-    };
+    return { message: 'Password changed successfully' };
   });
 };
 
 const forgetPassword = async (payload: { email: string }) => {
   return runWithTransaction(async (session) => {
-    // ---------------------- Find User ----------------------
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     }
 
     if (!user.isActive) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user email is not verified!');
     }
 
-    // ---------------------- Generate Reset Token ----------------------
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
+    }
+
     const resetSecret = (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret';
     const resetExpiry =
       (config.jwt_pass_reset_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`) || '15m';
+
     const token = createToken(
       {
         userId: user._id.toString(),
@@ -164,7 +246,7 @@ const forgetPassword = async (payload: { email: string }) => {
       <h3 style="color: #dc2626;">Password Reset Request</h3>
       <p style="color: #374151; font-size: 15px;">
         Hi ${user.name || 'there'}, <br/><br/>
-        We received a request to reset your Campus Connect password. If you made this request, please click the button below to reset your password:
+        We received a request to reset your Campus Connect password. If you made this request, please click the button below:
       </p>
 
       <div style="text-align: center; margin: 25px 0;">
@@ -187,11 +269,11 @@ const forgetPassword = async (payload: { email: string }) => {
       </p>
 
       <p style="color: #6b7280; font-size: 13px; margin-top: 15px;">
-        ⚠️ This link will expire in <strong>15 minutes</strong> for your security.
+        ⚠️ This link will expire in <strong>15 minutes</strong>.
       </p>
 
       <p style="color: #6b7280; font-size: 13px;">
-        If you didn’t request a password reset, you can safely ignore this email.
+        If you didn’t request a password reset, ignore this email.
       </p>
     </div>
 
@@ -203,9 +285,7 @@ const forgetPassword = async (payload: { email: string }) => {
       'Password Reset Request'
     );
 
-    return {
-      message: 'Reset password link has been sent to your email.',
-    };
+    return { message: 'Reset password link has been sent to your email.' };
   });
 };
 
@@ -225,15 +305,20 @@ const resetPassword = async (payload: { token: string; newPassword: string }) =>
       throw new AppError(StatusCodes.NOT_FOUND, 'User is not found!');
     }
 
+    if (!user.isActive) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
+    }
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
+    }
+
     user.password = payload.newPassword.trim();
     user.resetPasswordExpires = null;
     user.resetPasswordToken = null;
 
     await user.save({ session });
 
-    return {
-      message: 'Password reset successfully',
-    };
+    return { message: 'Password reset successfully' };
   });
 };
 
@@ -242,4 +327,7 @@ export const AuthService = {
   changePassword,
   forgetPassword,
   resetPassword,
+  getPendingRegistrations,
+  approveRegistration,
+  rejectRegistration,
 };
