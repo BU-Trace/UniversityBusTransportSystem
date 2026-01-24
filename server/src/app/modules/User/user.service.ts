@@ -158,11 +158,12 @@ const registerUser = async (userData: Partial<IUser>) =>
     );
 
     const user = new UserModel({
-      ...userData,
       password: userData.password.trim(),
       isActive: false,
+      isApproved: false,
       clientITInfo: userData.clientITInfo,
-
+      otpToken: String(OPT),
+      otpExpires: new Date(Date.now() + 15 * 60 * 1000),
     });
 
     await user.save({ session });

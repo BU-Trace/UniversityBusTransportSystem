@@ -48,6 +48,7 @@ interface UserCommon {
 
   lastLogin: Date;
   isActive: boolean;
+  isApproved: boolean;
 
   otpToken?: string | null;
   otpExpires?: Date | null;

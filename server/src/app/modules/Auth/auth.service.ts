@@ -9,21 +9,122 @@ import { createToken, verifyToken } from './auth.util';
 import bcrypt from 'bcrypt';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
+import {Bus as BusModel} from '../Bus/bus.model';
 
+/* =========================================================
+   Pending Registration Requests (Admin Dashboard)
+   - Pending = isActive === true (email verified) AND isApproved === false
+========================================================= */
+const getPendingRegistrations = async () => {
+  const pending = await UserModel.find({ isApproved: false, isActive: true })
+    .select('-password')
+    .sort({ createdAt: -1 });
+
+  return pending;
+};
+
+const approveRegistration = async (
+  userId: string,
+  payload: { assignedBusId?: string }
+) =>
+  runWithTransaction(async (session) => {
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+
+    if (!user.isActive) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'User email is not verified yet');
+    }
+
+    if (user.isApproved) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'User already approved');
+    }
+
+    // If approving a driver, bus assignment is mandatory
+    if (user.role === 'driver') {
+      const assignedBusId = payload?.assignedBusId;
+      if (!assignedBusId) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'Assigned bus is required for driver approval'
+        );
+      }
+
+      const bus = await BusModel.findById(assignedBusId).session(session);
+      if (!bus) throw new AppError(StatusCodes.NOT_FOUND, 'Bus not found');
+
+      // Optional: ensure bus is not already assigned to another driver
+      const alreadyAssigned = await UserModel.findOne({
+        role: 'driver',
+        assignedBus: bus._id,
+        isApproved: true,
+      }).session(session);
+
+      if (alreadyAssigned) {
+        throw new AppError(
+          StatusCodes.BAD_REQUEST,
+          'This bus is already assigned to another driver'
+        );
+      }
+
+      user.assignedBus = bus._id as any;
+      user.assignedBusName = `${bus.name} (${bus.plateNumber})`;
+    }
+
+    // Approve user
+    user.isApproved = true;
+
+    await user.save({ session });
+
+    const safe = await UserModel.findById(user._id)
+      .select('-password')
+      .session(session);
+
+    return safe;
+  });
+
+const rejectRegistration = async (userId: string) =>
+  runWithTransaction(async (session) => {
+    const user = await UserModel.findById(userId).session(session);
+    if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+
+    if (user.isApproved) {
+      throw new AppError(StatusCodes.BAD_REQUEST, 'Approved users cannot be rejected');
+    }
+
+    await UserModel.findByIdAndDelete(userId).session(session);
+
+    return { message: 'Rejected and removed' };
+  });
+
+/* =========================================================
+   Login
+========================================================= */
 const loginUser = async (payload: IAuth) => {
   return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
-    const user = await UserModel.findOne({ email: payload.email }).session(session);
+    const user = await UserModel.findOne({ email: payload.email })
+      .select('+password') // ✅ ensure password is available for compare
+      .session(session);
+
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     }
 
+    // must verify email first
     if (!user.isActive) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+      throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
+    }
+
+    // must be approved by admin
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
     // ---------------------- Check Password ----------------------
-    const isMatch = await UserModel.isPasswordMatched(payload.password.trim(), user.password);
+    const isMatch = await UserModel.isPasswordMatched(
+      payload.password.trim(),
+      user.password
+    );
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
     }
@@ -58,6 +159,12 @@ const loginUser = async (payload: IAuth) => {
         { clientITInfo: payload.clientInfo, lastLogin: new Date() },
         { new: true, session }
       );
+    } else {
+      await UserModel.findByIdAndUpdate(
+        user._id,
+        { lastLogin: new Date() },
+        { new: true, session }
+      );
     }
 
     return {
@@ -73,6 +180,9 @@ const loginUser = async (payload: IAuth) => {
   });
 };
 
+/* =========================================================
+   Change Password
+========================================================= */
 const changePassword = async (payload: {
   email: string;
   oldPassword: string;
@@ -80,13 +190,20 @@ const changePassword = async (payload: {
 }) => {
   return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
-    const user = await UserModel.findOne({ email: payload.email }).session(session);
+    const user = await UserModel.findOne({ email: payload.email })
+      .select('+password')
+      .session(session);
+
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     }
 
     if (!user.isActive) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user email is not verified!');
+    }
+
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
     // ---------------------- Check Old Password ----------------------
@@ -102,15 +219,15 @@ const changePassword = async (payload: {
     );
 
     user.password = hashedPassword;
-
     await user.save({ session });
 
-    return {
-      message: 'Password changed successfully',
-    };
+    return { message: 'Password changed successfully' };
   });
 };
 
+/* =========================================================
+   Forgot Password
+========================================================= */
 const forgetPassword = async (payload: { email: string }) => {
   return runWithTransaction(async (session) => {
     // ---------------------- Find User ----------------------
@@ -120,13 +237,18 @@ const forgetPassword = async (payload: { email: string }) => {
     }
 
     if (!user.isActive) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'This user is not active!');
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user email is not verified!');
+    }
+
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
     // ---------------------- Generate Reset Token ----------------------
     const resetSecret = (config.jwt_pass_reset_secret as string) || 'resetPasswordSecret';
     const resetExpiry =
       (config.jwt_pass_reset_expires_in as `${number}${'s' | 'm' | 'h' | 'd'}`) || '15m';
+
     const token = createToken(
       {
         userId: user._id.toString(),
@@ -164,7 +286,7 @@ const forgetPassword = async (payload: { email: string }) => {
       <h3 style="color: #dc2626;">Password Reset Request</h3>
       <p style="color: #374151; font-size: 15px;">
         Hi ${user.name || 'there'}, <br/><br/>
-        We received a request to reset your Campus Connect password. If you made this request, please click the button below to reset your password:
+        We received a request to reset your Campus Connect password. If you made this request, please click the button below:
       </p>
 
       <div style="text-align: center; margin: 25px 0;">
@@ -187,11 +309,11 @@ const forgetPassword = async (payload: { email: string }) => {
       </p>
 
       <p style="color: #6b7280; font-size: 13px; margin-top: 15px;">
-        ⚠️ This link will expire in <strong>15 minutes</strong> for your security.
+        ⚠️ This link will expire in <strong>15 minutes</strong>.
       </p>
 
       <p style="color: #6b7280; font-size: 13px;">
-        If you didn’t request a password reset, you can safely ignore this email.
+        If you didn’t request a password reset, ignore this email.
       </p>
     </div>
 
@@ -203,12 +325,13 @@ const forgetPassword = async (payload: { email: string }) => {
       'Password Reset Request'
     );
 
-    return {
-      message: 'Reset password link has been sent to your email.',
-    };
+    return { message: 'Reset password link has been sent to your email.' };
   });
 };
 
+/* =========================================================
+   Reset Password
+========================================================= */
 const resetPassword = async (payload: { token: string; newPassword: string }) => {
   return runWithTransaction(async (session) => {
     if (!payload.token) {
@@ -225,15 +348,21 @@ const resetPassword = async (payload: { token: string; newPassword: string }) =>
       throw new AppError(StatusCodes.NOT_FOUND, 'User is not found!');
     }
 
+    // do not allow reset for unverified/unapproved accounts
+    if (!user.isActive) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
+    }
+    if (!user.isApproved) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
+    }
+
     user.password = payload.newPassword.trim();
     user.resetPasswordExpires = null;
     user.resetPasswordToken = null;
 
     await user.save({ session });
 
-    return {
-      message: 'Password reset successfully',
-    };
+    return { message: 'Password reset successfully' };
   });
 };
 
@@ -242,4 +371,9 @@ export const AuthService = {
   changePassword,
   forgetPassword,
   resetPassword,
+
+  // ✅ pending registration
+  getPendingRegistrations,
+  approveRegistration,
+  rejectRegistration,
 };
