@@ -65,8 +65,9 @@ const RegisterPageComponent = () => {
     setClientInfo((prev) => ({
       ...prev,
       device: isMobile ? 'mobile' : 'pc',
-      browser:
-        (userAgent.match(/(firefox|msie|chrome|safari|trident)/i)?.[0] || 'unknown')?.toLowerCase(),
+      browser: (
+        userAgent.match(/(firefox|msie|chrome|safari|trident)/i)?.[0] || 'unknown'
+      )?.toLowerCase(),
       ipAddress: prev.ipAddress,
       pcName: window.location.hostname,
       os: window.navigator.platform,
@@ -180,7 +181,13 @@ const RegisterPageComponent = () => {
 
   const renderForm = () => (
     <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <InputField label="Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
+      <InputField
+        label="Name"
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        error={errors.name}
+      />
       <InputField
         label="Email"
         name="email"

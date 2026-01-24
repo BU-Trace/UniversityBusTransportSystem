@@ -169,7 +169,9 @@ const HomePageComponent: React.FC = () => {
               <p className="text-sm font-semibold text-red-600 uppercase tracking-widest">
                 Built for UBTS
               </p>
-              <h2 className="text-3xl font-bold text-gray-900 mt-1">Campus Transport at a Glance</h2>
+              <h2 className="text-3xl font-bold text-gray-900 mt-1">
+                Campus Transport at a Glance
+              </h2>
               <p className="text-gray-600 mt-2 max-w-2xl">
                 Everything passengers, drivers and admins need to stay aligned: live visibility,
                 accurate schedules and quick access to support.

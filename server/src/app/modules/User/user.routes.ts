@@ -19,32 +19,32 @@ router.post('/', clientInfoParser, UserController.registerUser);
 router.post('/verfy-email', UserController.verifyEmail);
 // Update admin profile
 router.patch(
-	'/admin/:id',
-	auth(UserRole.ADMIN),
-	multerUpload.single('profileImage'),
-	parseBody,
-	validateRequest(UserValidation.adminProfileValidationSchema),
-	UserController.updateAdminProfile
+  '/admin/:id',
+  auth(UserRole.ADMIN),
+  multerUpload.single('profileImage'),
+  parseBody,
+  validateRequest(UserValidation.adminProfileValidationSchema),
+  UserController.updateAdminProfile
 );
 
 // Update student profile
 router.patch(
-	'/student/:id',
-	auth(UserRole.STUDENT),
-	multerUpload.single('profileImage'),
-	parseBody,
-	validateRequest(UserValidation.studentProfileValidationSchema),
-	UserController.updateStudentProfile
+  '/student/:id',
+  auth(UserRole.STUDENT),
+  multerUpload.single('profileImage'),
+  parseBody,
+  validateRequest(UserValidation.studentProfileValidationSchema),
+  UserController.updateStudentProfile
 );
 
 // Update driver profile
 router.patch(
-	'/driver/:id',
-	auth(UserRole.DRIVER),
-	multerUpload.single('profileImage'),
-	parseBody,
-	validateRequest(UserValidation.driverProfileValidationSchema),
-	UserController.updateDriverProfile
+  '/driver/:id',
+  auth(UserRole.DRIVER),
+  multerUpload.single('profileImage'),
+  parseBody,
+  validateRequest(UserValidation.driverProfileValidationSchema),
+  UserController.updateDriverProfile
 );
 //
 // router.patch(

@@ -6,9 +6,7 @@ import UserProvider from '@/context/UserContext';
 const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <SessionProvider>
-      <UserProvider>
-        {children}
-      </UserProvider>
+      <UserProvider>{children}</UserProvider>
     </SessionProvider>
   );
 };

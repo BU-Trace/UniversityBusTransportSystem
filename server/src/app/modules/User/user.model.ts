@@ -20,7 +20,7 @@ const userSchema = new Schema<IUser, UserModel>(
 
     clientITInfo: {
       device: { type: String, enum: ['pc', 'mobile', 'tablet'], default: 'pc' },
-      browser: { type: String , default: null},
+      browser: { type: String, default: null },
       ipAddress: { type: String, default: null },
       pcName: { type: String, default: null },
       os: { type: String, default: null },
@@ -29,7 +29,7 @@ const userSchema = new Schema<IUser, UserModel>(
 
     clientInfo: {
       bio: { type: String, default: null },
-      department: { type: String , default: null},
+      department: { type: String, default: null },
       rollNumber: { type: String, default: null },
       licenseNumber: { type: String, default: null },
     },

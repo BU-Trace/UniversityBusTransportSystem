@@ -3,28 +3,34 @@ import { z } from 'zod';
 const adminProfileValidationSchema = z.object({
   name: z.string().optional(),
   profileImage: z.string().optional(),
-  clientInfo: z.object({
-    bio: z.string().optional(),
-  }).optional(),
+  clientInfo: z
+    .object({
+      bio: z.string().optional(),
+    })
+    .optional(),
 });
 
 const studentProfileValidationSchema = z.object({
   name: z.string().optional(),
   profileImage: z.string().optional(),
-  clientInfo: z.object({
-    bio: z.string().optional(),
-    department: z.string().optional(),
-    rollNumber: z.string().optional(),
-  }).optional(),
+  clientInfo: z
+    .object({
+      bio: z.string().optional(),
+      department: z.string().optional(),
+      rollNumber: z.string().optional(),
+    })
+    .optional(),
 });
 
 const driverProfileValidationSchema = z.object({
   name: z.string().optional(),
   profileImage: z.string().optional(),
-  clientInfo: z.object({
-    bio: z.string().optional(),
-    licenseNumber: z.string().optional(),
-  }).optional(),
+  clientInfo: z
+    .object({
+      bio: z.string().optional(),
+      licenseNumber: z.string().optional(),
+    })
+    .optional(),
 });
 
 /* =========================================================

@@ -6,7 +6,6 @@ import RouteRoutes from '../modules/Route/route.routes';
 
 const router = Router();
 
-
 const moduleRoutes = [
   {
     path: '/user',

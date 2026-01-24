@@ -29,34 +29,24 @@ export default function StatusModal({
   return (
     <>
       {/* BACKDROP */}
-      <div
-        onClick={onClose}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
-      />
+      <div onClick={onClose} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
 
       {/* MODAL */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden">
-
           {/* HEADER */}
           <div className="bg-gradient-to-r from-red-600 to-red-700 p-6 text-white flex justify-between items-center">
             <h2 className="text-lg font-semibold">Driver Status</h2>
-            <button
-              onClick={onClose}
-              className="text-white/80 hover:text-white text-xl"
-            >
+            <button onClick={onClose} className="text-white/80 hover:text-white text-xl">
               ✕
             </button>
           </div>
 
           {/* BODY */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
-
             {/* STATUS SELECT */}
             <div>
-              <p className="text-sm font-semibold text-gray-600 mb-2">
-                Current Status
-              </p>
+              <p className="text-sm font-semibold text-gray-600 mb-2">Current Status</p>
 
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -87,9 +77,7 @@ export default function StatusModal({
 
             {/* DRIVER NAME */}
             <div>
-              <label className="text-sm font-semibold text-gray-600">
-                Driver Name
-              </label>
+              <label className="text-sm font-semibold text-gray-600">Driver Name</label>
               <input
                 type="text"
                 value={name}
@@ -102,9 +90,7 @@ export default function StatusModal({
 
             {/* ROUTE */}
             <div>
-              <label className="text-sm font-semibold text-gray-600">
-                Route
-              </label>
+              <label className="text-sm font-semibold text-gray-600">Route</label>
               <select
                 value={route}
                 onChange={(e) => setRoute(e.target.value)}

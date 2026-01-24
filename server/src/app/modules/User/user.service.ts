@@ -43,11 +43,7 @@ const applyClientInfoUpdates = (
   });
 };
 
-export const updateProfile = async (
-  userId: string,
-  data: Partial<IUser>,
-  role: UserRole
-) => {
+export const updateProfile = async (userId: string, data: Partial<IUser>, role: UserRole) => {
   const user = await UserModel.findById(userId);
 
   if (!user) {
@@ -79,7 +75,6 @@ export const updateProfile = async (
   await user.save();
   return user;
 };
-
 
 const registerUser = async (userData: Partial<IUser>) =>
   runWithTransaction(async (session) => {

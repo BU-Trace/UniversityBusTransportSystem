@@ -189,9 +189,9 @@ const ContactPage: React.FC = () => {
                   <div className="flex items-center justify-between gap-4">
                     <div className="text-sm text-gray-500">
                       <span className="inline text-red-600 mr-1">
-  <FaClock />
-</span> Typical response within 24
-                      hours
+                        <FaClock />
+                      </span>{' '}
+                      Typical response within 24 hours
                     </div>
                     <motion.button
                       whileHover={{ rotate: [-1, 1, -1, 0], scale: 1.05 }}
@@ -228,8 +228,9 @@ const ContactPage: React.FC = () => {
                   className="mt-6 bg-gradient-to-r from-[#9b111e] to-[#b91c1c] text-white px-6 py-2 rounded-md hover:scale-105 transition-all font-medium"
                 >
                   <span className="inline-flex items-center mr-2">
-  <FaEnvelope />
-</span> Send Another
+                    <FaEnvelope />
+                  </span>{' '}
+                  Send Another
                 </button>
               </motion.div>
             )}

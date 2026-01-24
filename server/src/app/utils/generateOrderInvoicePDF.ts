@@ -99,7 +99,7 @@ export const generateUserContractPDF = async (user: IUser): Promise<Buffer> => {
       'The user agrees to comply with all applicable rules and regulations.',
       'The user agrees not to engage in fraudulent or unlawful activities.',
       'The company reserves the right to suspend or terminate accounts that violate terms.',
-      'All personal information will be handled according to the company\'s privacy policy.',
+      "All personal information will be handled according to the company's privacy policy.",
       'This agreement is legally binding and enforceable in accordance with local laws.',
     ];
     terms.forEach((term, index) => {
