@@ -28,25 +28,32 @@ export default function DriverDashboard() {
   const initTracking = () => {
     if (!navigator.geolocation) return alert("GPS not supported");
 
+    let lastSentTime = 0;
+
     watchId.current = navigator.geolocation.watchPosition(
       async (pos) => {
+        const now = Date.now();
+
+        // Send update only if 10 seconds have passed
+        if (now - lastSentTime < 10000) return;
+        lastSentTime = now;
+
         const { latitude: lat, longitude: lng } = pos.coords;
+        
         setLocation({ lat, lng });
 
-        // Note: This fetch will fail if /api/bus isn't set up, 
-        // but it won't crash the UI.
         try {
-          await fetch("/api/bus", {
+          await fetch("/api/location", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               busId: driver.busNo,
               lat,
               lng,
+              
             }),
           });
         } catch {
-          // CHANGE: Removed the unused 'e' variable here to fix TypeScript warning
           console.log("API not ready, location updated locally.");
         }
       },
@@ -55,10 +62,11 @@ export default function DriverDashboard() {
     );
   };
 
+
   const handleStart = () => { setStatus('sharing'); setSidebarOpen(false); initTracking(); };
-  const handlePause = () => { 
+  const handlePause = () => {
     if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-    setStatus('paused'); 
+    setStatus('paused');
   };
   const handleResume = () => { setStatus('sharing'); initTracking(); };
   const handleStop = () => {
@@ -126,14 +134,14 @@ export default function DriverDashboard() {
       <main className="relative flex-1 h-full w-full">
         {!sidebarOpen && (
           <button onClick={() => setSidebarOpen(true)} className="fixed top-6 left-6 z-1001 bg-white text-red-600 p-4 rounded-2xl shadow-xl hover:scale-105 transition-all border border-red-50">
-             <span className="text-xl">☰</span>
+            <span className="text-xl">☰</span>
           </button>
         )}
 
         <div className="absolute inset-0 z-0">
           {location ? <BusMap location={location} /> : (
             <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50">
-               <div className="relative mb-6">
+              <div className="relative mb-6">
                 <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
                 <div className="relative p-8 rounded-full bg-white shadow-2xl flex items-center justify-center">
                   <svg viewBox="0 0 24 24" className="w-16 h-16 text-red-600 fill-current" xmlns="http://www.w3.org/2000/svg">
@@ -153,8 +161,8 @@ export default function DriverDashboard() {
             <button onClick={handleStart} className="w-full bg-green-600 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-transform">Start Shift</button>
           ) : (
             <>
-              <button 
-                onClick={status === 'paused' ? handleResume : handlePause} 
+              <button
+                onClick={status === 'paused' ? handleResume : handlePause}
                 className={`flex-1 py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl transition-all ${status === 'paused' ? 'bg-amber-500 text-white animate-pulse' : 'bg-white text-amber-600 border-2 border-amber-500'}`}
               >
                 {status === 'paused' ? 'Resume' : 'Pause'}
