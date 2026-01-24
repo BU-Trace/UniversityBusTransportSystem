@@ -13,7 +13,7 @@ export type IUserRole = {
 
 // --- Client IT info (device/browser/ip etc.) ------------------
 export type ClientITInfo = {
-  device: 'pc' | 'mobile';
+  device: 'pc' | 'mobile' | 'tablet';
   browser: string;
   ipAddress: string;
   pcName?: string;
@@ -61,6 +61,10 @@ interface UserCommon {
   // mongoose timestamps
   createdAt: Date;
   updatedAt: Date;
+  approvalLetter?: string | null;
+  assignedBus?: Types.ObjectId | null;
+  assignedBusName?: string | null;
+
 }
 
 // --- Discriminated union by role -------------------------------

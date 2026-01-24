@@ -229,7 +229,7 @@ const HomePageComponent: React.FC = () => {
             <Clock className="w-6 h-6 text-red-600" /> Live Next Bus Reminder
           </h2>
 
-          <div className="overflow-x-auto rounded-2xl">
+          <div className="overflow-x-auto rounded-2xl scrollbar-hide">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gradient-to-r from-red-500 to-red-900 text-white text-left text-base uppercase tracking-wider">
