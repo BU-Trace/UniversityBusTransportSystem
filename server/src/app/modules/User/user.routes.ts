@@ -10,7 +10,6 @@ import { UserRole } from './user.utils';
 
 const router = Router();
 
-// Registration (from your public registration page)
 router.post('/', clientInfoParser, UserController.registerUser);
 
 // Verify email

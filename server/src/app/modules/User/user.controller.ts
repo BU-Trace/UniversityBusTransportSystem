@@ -91,7 +91,6 @@ const adminUpdateUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// DELETE /user/delete-user/:id
 const adminDeleteUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.adminDeleteUser(req.params.id);
 

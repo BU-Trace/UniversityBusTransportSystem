@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 import config from '../../config';
 import { IUser, USER_ROLES, UserModel } from './user.interface';
 import AppError from '../../errors/appError';
-
+// import { ClientITInfo } from '../Auth/auth.interface';
 const userSchema = new Schema<IUser, UserModel>(
   {
     email: { type: String, required: true, unique: true, trim: true },
@@ -46,6 +46,7 @@ const userSchema = new Schema<IUser, UserModel>(
 
     lastLogin: { type: Date },
     isActive: { type: Boolean, default: false },
+    isApproved: { type: Boolean, default: false },
 
     otpToken: { type: String, default: null },
     otpExpires: { type: Date, default: null },
@@ -104,7 +105,11 @@ userSchema.statics.checkUserExist = async function (userId: string) {
   }
 
   if (!existingUser.isActive) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User is not active!');
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is not verified!');
+  }
+
+  if (!existingUser.isApproved) {
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User is not approved by admin!');
   }
 
   return existingUser;

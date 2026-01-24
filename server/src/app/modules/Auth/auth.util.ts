@@ -1,7 +1,7 @@
 import jwt, { JwtPayload, SignOptions } from 'jsonwebtoken';
 import { IJwtPayload } from './auth.interface';
 
-// Accept string like '1h', '7d' etc.
+// Accept string like '1h', '7d' etc
 export const createToken = (
   jwtPayload: IJwtPayload,
   secret: string,

@@ -8,5 +8,5 @@ router.put('/update-bus/:id', BusController.updateBus);
 router.delete('/delete-bus/:id', BusController.deleteBus);
 router.get('/get-all-buses', BusController.getAllBuses);
 router.get('/get-bus/:id', BusController.getSingleBus);
-
+// Additional bus routes can be added here
 export default router;
