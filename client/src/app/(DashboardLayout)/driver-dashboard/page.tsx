@@ -5,70 +5,88 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import api from '@/lib/axios';
 
-const BusMap = dynamic(() => import('./Map'), {
-  ssr: false,
-  loading: () => (
-    <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest">
-      Loading Map...
-    </div>
-  ),
-});
+const BusMap = dynamic(() => import('./Map'), { ssr: false });
+
+type Status = 'idle' | 'sharing' | 'paused';
+
+interface Bus {
+  busNo: string;
+  reg: string;
+  route: string;
+}
 
 export default function DriverDashboard() {
   const [driver] = useState({
     name: 'Driver1',
     id: 'DRV-2026-007',
-    busNo: 'BRTC-10',
-    reg: 'DHK-METRO-11-2233',
-    route: 'Route-1',
     profilePic: '/static/driver-photo.jpg',
   });
 
+  const [selectedBus, setSelectedBus] = useState<Bus | null>(null);
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [status, setStatus] = useState<'idle' | 'sharing' | 'paused'>('idle');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [status, setStatus] = useState<Status>('idle');
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(true);
+
   const watchId = useRef<number | null>(null);
 
+  const availableBuses: Bus[] = [
+    { busNo: 'BRTC-10', reg: 'DHK-11-2233', route: 'Route-1' },
+    { busNo: 'BRTC-11', reg: 'DHK-22-8899', route: 'Route-2' },
+    { busNo: 'BRTC-12', reg: 'DHK-55-4455', route: 'Route-3' },
+  ];
+
+  // INIT GPS TRACKING
   const initTracking = () => {
     if (!navigator.geolocation) return alert('GPS not supported');
 
-    let lastSentTime = 0;
+    let lastSent = 0;
 
     watchId.current = navigator.geolocation.watchPosition(
       async (pos) => {
         const now = Date.now();
-
-        if (now - lastSentTime < 10000) return;
-        lastSentTime = now;
+        if (now - lastSent < 10000) return;
+        lastSent = now;
 
         const { latitude: lat, longitude: lng } = pos.coords;
-
         setLocation({ lat, lng });
 
         try {
           await api.post('/location', {
-            bus: driver.busNo,
+            bus: selectedBus?.busNo,
             latitude: lat,
             longitude: lng,
             capturedAt: new Date(),
           });
         } catch {
-          console.log('API not ready, location updated locally.');
+          console.log('Saved locally');
         }
       },
-      (err) => console.error('GPS Error:', err),
+      console.error,
       { enableHighAccuracy: true }
     );
   };
 
+  // BUS SELECT
+  const handleSelectBus = async (bus: Bus) => {
+    setSelectedBus(bus);
+
+    try {
+      await api.post('/assign-bus', {
+        driverId: driver.id,
+        busId: bus.busNo,
+      });
+    } catch { }
+  };
+
+  // CONTROLS
   const handleStart = () => {
+    if (!selectedBus) return alert('Select bus first');
     setStatus('sharing');
-    setSidebarOpen(false);
     initTracking();
   };
 
   const handlePause = () => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+    if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
     setStatus('paused');
   };
 
@@ -78,161 +96,144 @@ export default function DriverDashboard() {
   };
 
   const handleStop = () => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+    if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
     setStatus('idle');
     setLocation(null);
-    setSidebarOpen(true);
   };
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gray-50 font-sans">
+    <div className="flex h-screen w-full bg-gray-50 overflow-hidden">
+
       {/* SIDEBAR */}
       <aside
-        className={`
-          fixed inset-y-0 left-0 z-1002 w-72 
-          bg-linear-to-b from-[#EF4444] to-[#8B0000] 
-          text-white p-6 transition-transform duration-500 ease-in-out shadow-2xl
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        `}
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-red-600 to-red-900 
+        text-white p-6 shadow-2xl transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
+        {/* CLOSE BUTTON */}
         <button
           onClick={() => setSidebarOpen(false)}
-          className="absolute top-4 right-4 text-white/70 hover:text-white text-2xl font-light"
+          className="absolute top-4 right-4 text-2xl text-white/80 hover:text-white"
         >
           ✕
         </button>
 
-        <div className="flex flex-col h-full overflow-hidden">
-          {/* Brand Logo */}
-          <div className="flex items-center mb-10">
-            <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center">
-              <Image
-                src="/static/BUTracelogo-modified.png"
-                alt="Logo"
-                width={40}
-                height={40}
-                priority
-              />
-            </div>
-            <span className="ml-3 font-bold text-xl tracking-tighter uppercase">
-              BUTrace
-            </span>
+        {/* DRIVER PROFILE */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white/40 relative">
+            <Image src={driver.profilePic} alt="Driver" fill className="object-cover" />
           </div>
 
-          {/* Profile */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden bg-white/20 shadow-xl relative flex items-center justify-center">
-                {driver.profilePic ? (
-                  <Image src={driver.profilePic} alt="Driver" fill className="object-cover" />
-                ) : (
-                  <span className="text-4xl">👤</span>
-                )}
-              </div>
-              <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
-            </div>
+          <h2 className="mt-3 text-lg font-bold uppercase">{driver.name}</h2>
+          <p className="text-xs opacity-80">{driver.id}</p>
+        </div>
 
-            <h2 className="mt-4 text-xl font-bold uppercase text-center leading-tight">
-              {driver.name}
-            </h2>
+        {/* INFO */}
+        <div className="space-y-4">
 
-            <p className="text-red-200 text-[10px] font-medium uppercase tracking-widest mt-1 opacity-80">
-              Employee ID: {driver.id}
+          <div className="bg-white/10 p-4 rounded-xl">
+            <p className="text-xs uppercase text-red-200">Selected Bus</p>
+            <p className="font-bold text-lg">
+              {selectedBus?.busNo || 'Not Selected'}
+            </p>
+            <p className="text-xs opacity-70">{selectedBus?.reg}</p>
+          </div>
+
+          <div className="bg-white/10 p-4 rounded-xl">
+            <p className="text-xs uppercase text-red-200">Route</p>
+            <p className="font-semibold">
+              {selectedBus?.route || 'Not Assigned'}
             </p>
           </div>
 
-          {/* Info Cards */}
-          <div className="flex-1 space-y-4">
-            <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
-              <span className="text-[10px] uppercase font-black text-red-200 block mb-1">
-                Assigned Bus
-              </span>
-              <p className="text-base font-bold">{driver.busNo}</p>
-              <p className="text-[10px] opacity-60">{driver.reg}</p>
-            </div>
-
-            <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
-              <span className="text-[10px] uppercase font-black text-red-200 block mb-1">
-                Current Route
-              </span>
-              <p className="text-sm font-semibold leading-tight">{driver.route}</p>
-            </div>
-
-            <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
-              <span className="text-[10px] uppercase font-black text-red-200 block mb-1">
-                Duty Status
-              </span>
-              <p className="text-xs font-bold uppercase tracking-widest text-green-300">
-                {status}
-              </p>
-            </div>
+          <div className="bg-white/10 p-4 rounded-xl">
+            <p className="text-xs uppercase text-red-200">Duty Status</p>
+            <p className="uppercase font-bold text-green-300">{status}</p>
           </div>
         </div>
       </aside>
 
-      {/* MAP AREA */}
-      <main className="relative flex-1 h-full w-full">
+      {/* MAIN */}
+      <main className="flex-1 relative">
+
+        {/* OPEN SIDEBAR BUTTON */}
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="fixed top-6 left-6 z-1001 bg-white text-red-600 p-4 rounded-2xl shadow-xl hover:scale-105 transition-all border border-red-50"
+            className="fixed top-5 left-5 z-40 bg-white p-3 rounded-xl shadow-lg hover:scale-105"
           >
             ☰
           </button>
         )}
 
-        <div className="absolute inset-0 z-0">
+        {/* BUS SELECTION UI */}
+        {!selectedBus && (
+          <div className="absolute top-6 right-6 bg-white p-6 rounded-2xl shadow-2xl w-[360px] z-30">
+            <h3 className="font-bold mb-4 text-lg">Select Your Bus</h3>
+
+            <div className="space-y-3">
+              {availableBuses.map((bus) => (
+                <button
+                  key={bus.busNo}
+                  onClick={() => handleSelectBus(bus)}
+                  className="flex justify-between items-center w-full p-4 border rounded-xl hover:bg-red-50 transition group"
+                >
+                  <div className="text-left">
+                    <p className="font-bold text-base">{bus.busNo}</p>
+                    <p className="text-xs text-gray-500">{bus.route}</p>
+                  </div>
+
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                    Available
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* MAP */}
+        <div className="absolute inset-0">
           {location ? (
             <BusMap location={location} />
           ) : (
-            <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50">
-              <div className="relative mb-6">
-                <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
-                <div className="relative p-8 rounded-full bg-white shadow-2xl flex items-center justify-center">
-                  📍
-                </div>
-              </div>
-
-              <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">
-                System Ready
-              </h3>
-              <p className="text-slate-400 font-medium">
-                Tap Start Shift to begin tracking
-              </p>
+            <div className="h-full flex flex-col justify-center items-center text-gray-500 text-lg">
+              📍 Waiting for journey start
             </div>
           )}
         </div>
 
         {/* CONTROLS */}
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-1001 w-[92%] max-w-md">
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 flex gap-3 w-[92%] max-w-md z-40">
+
           {status === 'idle' ? (
             <button
               onClick={handleStart}
-              className="w-full bg-green-600 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-2xl active:scale-95 transition-transform"
+              disabled={!selectedBus}
+              className={`w-full py-5 rounded-xl font-bold uppercase shadow-xl transition
+              ${selectedBus ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-400 text-white cursor-not-allowed'}`}
             >
-              Start Shift
+              Start Journey
             </button>
           ) : (
             <>
               <button
                 onClick={status === 'paused' ? handleResume : handlePause}
-                className={`flex-1 py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl transition-all ${status === 'paused'
-                  ? 'bg-amber-500 text-white animate-pulse'
-                  : 'bg-white text-amber-600 border-2 border-amber-500'
-                  }`}
+                className="flex-1 py-5 rounded-xl font-bold bg-amber-500 text-white hover:bg-amber-600"
               >
                 {status === 'paused' ? 'Resume' : 'Pause'}
               </button>
 
               <button
                 onClick={handleStop}
-                className="flex-1 bg-red-600 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
+                className="flex-1 py-5 rounded-xl font-bold bg-red-600 text-white hover:bg-red-700"
               >
                 End Shift
               </button>
             </>
           )}
         </div>
+
       </main>
     </div>
   );
