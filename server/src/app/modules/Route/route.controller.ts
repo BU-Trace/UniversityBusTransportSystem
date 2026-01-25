@@ -13,7 +13,7 @@ export const addRoute = catchAsync(async (req: Request, res: Response) => {
     data: route,
   });
 });
-
+//  --- IGNORE ---
 export const updateRoute = catchAsync(async (req: Request, res: Response) => {
   const route = await RouteService.updateRoute(req.params.id, req.body);
   if (!route) {

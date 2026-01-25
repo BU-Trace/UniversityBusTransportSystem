@@ -2,11 +2,6 @@ import { IRoute } from './route.interface';
 import { Route } from './route.model';
 
 export const createRoute = async (payload: IRoute) => {
-  // TODO: Call Google Distance Matrix API to calculate total distance and duration
-  // and assign to payload.distance and payload.duration
-  // Example: const { distance, duration } = await getDistanceAndDuration(payload.stopages)
-  // payload.distance = distance; payload.duration = duration;
-  // Ensure bus field is present (default to empty array if not provided)
   if (!payload.bus) payload.bus = [];
   const route = await Route.create(payload);
   return route;

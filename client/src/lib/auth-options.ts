@@ -119,7 +119,8 @@ export const authOptions: NextAuthOptions = {
           ...token,
           accessToken: (user as unknown as { accessToken?: string }).accessToken,
           refreshToken: (user as unknown as { refreshToken?: string }).refreshToken,
-          accessTokenExpires: (user as unknown as { accessTokenExpires?: number }).accessTokenExpires,
+          accessTokenExpires: (user as unknown as { accessTokenExpires?: number })
+            .accessTokenExpires,
           user: {
             id: (user as unknown as { id?: string }).id ?? token.sub,
             name: user.name,
