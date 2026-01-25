@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
-import Link from "next/link";
-import { toast } from "sonner";
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   Bus,
   Plus,
@@ -18,7 +18,7 @@ import {
   Image as ImageIcon,
   MapPin,
   Clock,
-} from "lucide-react";
+} from 'lucide-react';
 
 import {
   MdDashboard,
@@ -30,10 +30,10 @@ import {
   MdMenu,
   MdClose,
   MdEdit,
-} from "react-icons/md";
+} from 'react-icons/md';
 
 interface Route {
-   id: string;
+  id: string;
   name: string;
   startPoint: string;
   endPoint: string;
@@ -42,7 +42,7 @@ interface Route {
 }
 
 interface BusData {
-   id: string;
+  id: string;
   name: string;
   plateNumber: string;
   routeId: string;
@@ -56,50 +56,49 @@ interface BusData {
 
 const initialRoutes: Route[] = [
   {
-    id: "1",
-    name: "Route 1 (Nothullabad)",
-    startPoint: "Campus",
-    endPoint: "Nothullabad",
-    activeHoursComing: ["08:00 AM - 10:00 AM"],
-    activeHoursGoing: ["02:00 PM - 04:00 PM"],
+    id: '1',
+    name: 'Route 1 (Nothullabad)',
+    startPoint: 'Campus',
+    endPoint: 'Nothullabad',
+    activeHoursComing: ['08:00 AM - 10:00 AM'],
+    activeHoursGoing: ['02:00 PM - 04:00 PM'],
   },
 ];
 
 const initialBuses: BusData[] = [
   {
-    id: "1",
-    name: "Baikali",
-    plateNumber: "DHK-METRO-KA-1234",
-    routeId: "1",
-    routeName: "Route 1 (Nothullabad)",
-    activeHoursComing: ["08:00 AM - 10:00 AM"],
-    activeHoursGoing: ["02:00 PM - 04:00 PM"],
+    id: '1',
+    name: 'Baikali',
+    plateNumber: 'DHK-METRO-KA-1234',
+    routeId: '1',
+    routeName: 'Route 1 (Nothullabad)',
+    activeHoursComing: ['08:00 AM - 10:00 AM'],
+    activeHoursGoing: ['02:00 PM - 04:00 PM'],
     photo:
-      "https://th.bing.com/th/id/R.ffa99e6ef783e2154e18cc2aa9f3e873?rik=6Ic5jyNHg4Ht1w&pid=ImgRaw&r=0",
+      'https://th.bing.com/th/id/R.ffa99e6ef783e2154e18cc2aa9f3e873?rik=6Ic5jyNHg4Ht1w&pid=ImgRaw&r=0',
   },
 ];
 
-const CLOUD_NAME = "dpiofecgs";
-const UPLOAD_PRESET = "butrace";
+const CLOUD_NAME = 'dpiofecgs';
+const UPLOAD_PRESET = 'butrace';
 
 async function uploadToCloudinary(file: File): Promise<string> {
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
   const form = new FormData();
-  form.append("file", file);
-  form.append("upload_preset", UPLOAD_PRESET);
+  form.append('file', file);
+  form.append('upload_preset', UPLOAD_PRESET);
 
-  const res = await fetch(url, { method: "POST", body: form });
+  const res = await fetch(url, { method: 'POST', body: form });
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    console.error("Cloudinary error:", data);
-    throw new Error(data?.error?.message || "Cloudinary upload failed");
+    console.error('Cloudinary error:', data);
+    throw new Error(data?.error?.message || 'Cloudinary upload failed');
   }
 
   return data.secure_url as string;
 }
-
 
 export default function BusManagementOnlyPage() {
   const pathname = usePathname();
@@ -110,7 +109,7 @@ export default function BusManagementOnlyPage() {
   const [routes] = useState<Route[]>(initialRoutes);
   const [buses, setBuses] = useState<BusData[]>(initialBuses);
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
   const filteredBuses = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return buses;
@@ -124,13 +123,13 @@ export default function BusManagementOnlyPage() {
   }, [buses, query]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"add" | "edit" | null>(null);
+  const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [busForm, setBusForm] = useState<Partial<BusData>>({
-    name: "",
-    plateNumber: "",
-    routeId: "",
+    name: '',
+    plateNumber: '',
+    routeId: '',
   });
 
   const [uploading, setUploading] = useState(false);
@@ -138,111 +137,106 @@ export default function BusManagementOnlyPage() {
 
   useEffect(() => {
     setMounted(true);
-    if (isOpen || isModalOpen) document.body.style.overflow = "hidden";
-    else document.body.style.overflow = "auto";
+    if (isOpen || isModalOpen) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'auto';
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, [isOpen, isModalOpen]);
 
-  const admin = { name: "Admin 1", role: "Admin" };
+  const admin = { name: 'Admin 1', role: 'Admin' };
 
   const menuItems = [
-    { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
-    { label: "Bus Management", href: "/dashboard/busManage", icon: MdDirectionsBus },
-    { label: "User Management", href: "/dashboard/userManage", icon: MdPeople },
-    { label: "Route Management", href: "/dashboard/routeManage", icon: MdMap },
-    { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
+    { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
+    { label: 'Bus Management', href: '/dashboard/busManage', icon: MdDirectionsBus },
+    { label: 'User Management', href: '/dashboard/userManage', icon: MdPeople },
+    { label: 'Route Management', href: '/dashboard/routeManage', icon: MdMap },
+    { label: 'Notice Publish', href: '/dashboard/notice', icon: MdNotifications },
   ];
 
   const openAdd = () => {
-  setModalType("add");
-  setSelectedId(null);
+    setModalType('add');
+    setSelectedId(null);
 
-  setBusForm({ name: "", plateNumber: "", routeId: "", photo: "" });
+    setBusForm({ name: '', plateNumber: '', routeId: '', photo: '' });
 
-  setActiveHoursCount(1);
-  setComingSlots([""]);
-  setGoingSlots([""]);
+    setActiveHoursCount(1);
+    setComingSlots(['']);
+    setGoingSlots(['']);
 
-  setIsModalOpen(true);
-};
-
+    setIsModalOpen(true);
+  };
 
   const openEdit = (bus: BusData) => {
-  setModalType("edit");
-  setSelectedId(bus.id);
-  setBusForm({ ...bus });
+    setModalType('edit');
+    setSelectedId(bus.id);
+    setBusForm({ ...bus });
 
-  const count = Math.max(bus.activeHoursComing?.length || 1, bus.activeHoursGoing?.length || 1);
-  setActiveHoursCount(count);
-  setComingSlots(bus.activeHoursComing?.length ? bus.activeHoursComing : Array(count).fill(""));
-  setGoingSlots(bus.activeHoursGoing?.length ? bus.activeHoursGoing : Array(count).fill(""));
+    const count = Math.max(bus.activeHoursComing?.length || 1, bus.activeHoursGoing?.length || 1);
+    setActiveHoursCount(count);
+    setComingSlots(bus.activeHoursComing?.length ? bus.activeHoursComing : Array(count).fill(''));
+    setGoingSlots(bus.activeHoursGoing?.length ? bus.activeHoursGoing : Array(count).fill(''));
 
-  setIsModalOpen(true);
-};
+    setIsModalOpen(true);
+  };
 
   const handleActiveHoursCountChange = (count: number) => {
-  const safeCount = Math.max(0, Math.min(20, Number.isFinite(count) ? count : 0));
-  setActiveHoursCount(safeCount);
+    const safeCount = Math.max(0, Math.min(20, Number.isFinite(count) ? count : 0));
+    setActiveHoursCount(safeCount);
 
-  setComingSlots((prev) => {
-    const next = [...prev];
-    while (next.length < safeCount) next.push("");
-    return next.slice(0, safeCount);
-  });
+    setComingSlots((prev) => {
+      const next = [...prev];
+      while (next.length < safeCount) next.push('');
+      return next.slice(0, safeCount);
+    });
 
-  setGoingSlots((prev) => {
-    const next = [...prev];
-    while (next.length < safeCount) next.push("");
-    return next.slice(0, safeCount);
-  });
-};
+    setGoingSlots((prev) => {
+      const next = [...prev];
+      while (next.length < safeCount) next.push('');
+      return next.slice(0, safeCount);
+    });
+  };
 
-const updateComingSlot = (idx: number, val: string) => {
-  setComingSlots((prev) => {
-    const next = [...prev];
-    next[idx] = val;
-    return next;
-  });
-};
+  const updateComingSlot = (idx: number, val: string) => {
+    setComingSlots((prev) => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
+  };
 
-const updateGoingSlot = (idx: number, val: string) => {
-  setGoingSlots((prev) => {
-    const next = [...prev];
-    next[idx] = val;
-    return next;
-  });
-};
-
-
+  const updateGoingSlot = (idx: number, val: string) => {
+    setGoingSlots((prev) => {
+      const next = [...prev];
+      next[idx] = val;
+      return next;
+    });
+  };
 
   const handleDelete = (id: string) => {
-    if (window.confirm("Are you sure you want to delete this bus permanently?")) {
+    if (window.confirm('Are you sure you want to delete this bus permanently?')) {
       setBuses((prev) => prev.filter((b) => b.id !== id));
-      toast.success("Bus deleted successfully.");
+      toast.success('Bus deleted successfully.');
     }
   };
 
   const [activeHoursCount, setActiveHoursCount] = useState<number>(1);
-  const [comingSlots, setComingSlots] = useState<string[]>([""]);
-  const [goingSlots, setGoingSlots] = useState<string[]>([""]);
-
+  const [comingSlots, setComingSlots] = useState<string[]>(['']);
+  const [goingSlots, setGoingSlots] = useState<string[]>(['']);
 
   const handleBusRouteChange = (routeId: string) => {
-  const selectedRoute = routes.find((r) => r.id === routeId);
-  if (!selectedRoute) {
-    setBusForm((p) => ({ ...p, routeId: "", routeName: "" }));
-    return;
-  }
+    const selectedRoute = routes.find((r) => r.id === routeId);
+    if (!selectedRoute) {
+      setBusForm((p) => ({ ...p, routeId: '', routeName: '' }));
+      return;
+    }
 
-  setBusForm((p) => ({
-    ...p,
-    routeId,
-    routeName: selectedRoute.name,
-  }));
-};
-
+    setBusForm((p) => ({
+      ...p,
+      routeId,
+      routeName: selectedRoute.name,
+    }));
+  };
 
   const handlePickFile = () => fileRef.current?.click();
 
@@ -252,90 +246,88 @@ const updateGoingSlot = (idx: number, val: string) => {
 
     try {
       setUploading(true);
-      toast.message("Uploading photo...");
+      toast.message('Uploading photo...');
       const url = await uploadToCloudinary(file);
       setBusForm((p) => ({ ...p, photo: url }));
-      toast.success("Photo uploaded successfully.");
-    } catch (err: any) {
-  toast.error(err?.message || "Photo upload failed.");
-}
- finally {
+      toast.success('Photo uploaded successfully.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Photo upload failed.';
+      toast.error(message);
+    } finally {
       setUploading(false);
-      e.target.value = "";
+      e.target.value = '';
     }
   };
 
   const handleSave = async (e: React.FormEvent) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!busForm.name?.trim()) return toast.error("Bus name is required.");
-  if (!busForm.plateNumber?.trim()) return toast.error("Number plate is required.");
-  if (!busForm.routeId) return toast.error("Please assign a route.");
+    if (!busForm.name?.trim()) return toast.error('Bus name is required.');
+    if (!busForm.plateNumber?.trim()) return toast.error('Number plate is required.');
+    if (!busForm.routeId) return toast.error('Please assign a route.');
 
-  if (modalType === "add" && !busForm.photo) {
-    return toast.error("Bus photo is mandatory for new registration.");
-  }
-
-  if (uploading) return toast.error("Please wait, photo is uploading...");
-
- 
-  const finalComing = comingSlots.map((x) => x.trim()).filter(Boolean);
-  const finalGoing = goingSlots.map((x) => x.trim()).filter(Boolean);
-
-  if (activeHoursCount > 0) {
-    if (finalComing.length !== activeHoursCount || finalGoing.length !== activeHoursCount) {
-      return toast.error("Please fill all active hour fields.");
+    if (modalType === 'add' && !busForm.photo) {
+      return toast.error('Bus photo is mandatory for new registration.');
     }
-  }
 
-  const payload = {
-    name: busForm.name.trim(),
-    plateNumber: busForm.plateNumber.trim(),
-    routeId: busForm.routeId,
-    photo: busForm.photo, 
+    if (uploading) return toast.error('Please wait, photo is uploading...');
 
-    activeHoursComing: finalComing,
-    activeHoursGoing: finalGoing,
+    const finalComing = comingSlots.map((x) => x.trim()).filter(Boolean);
+    const finalGoing = goingSlots.map((x) => x.trim()).filter(Boolean);
+
+    if (activeHoursCount > 0) {
+      if (finalComing.length !== activeHoursCount || finalGoing.length !== activeHoursCount) {
+        return toast.error('Please fill all active hour fields.');
+      }
+    }
+
+    const payload = {
+      name: busForm.name.trim(),
+      plateNumber: busForm.plateNumber.trim(),
+      routeId: busForm.routeId,
+      photo: busForm.photo,
+
+      activeHoursComing: finalComing,
+      activeHoursGoing: finalGoing,
+    };
+
+    try {
+      toast.message('Saving to server...');
+
+      if (modalType === 'edit') {
+        if (!window.confirm('Update bus details?')) return;
+
+        const res = await fetch(`/api/buses/${selectedId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.message || 'Update failed');
+
+        setBuses((prev) => prev.map((b) => (b.id === selectedId ? data.bus : b)));
+        toast.success('Bus updated successfully.');
+      } else {
+        const res = await fetch(`/api/buses`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data?.message || 'Create failed');
+
+        setBuses((prev) => [...prev, data.bus]);
+        toast.success('Bus added successfully.');
+      }
+
+      setIsModalOpen(false);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Server save failed.';
+      toast.error(message);
+    }
   };
-
-  try {
-    toast.message("Saving to server...");
-
-    if (modalType === "edit") {
-      if (!window.confirm("Update bus details?")) return;
-
-      const res = await fetch(`/api/buses/${selectedId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || "Update failed");
-
-     
-      setBuses((prev) => prev.map((b) => (b.id === selectedId ? data.bus : b)));
-      toast.success("Bus updated successfully.");
-    } else {
-      const res = await fetch(`/api/buses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.message || "Create failed");
-
-      setBuses((prev) => [...prev, data.bus]);
-      toast.success("Bus added successfully.");
-    }
-
-    setIsModalOpen(false);
-  } catch (err: any) {
-    toast.error(err?.message || "Server save failed.");
-  }
-};
-
 
   if (!mounted) return null;
 
@@ -353,12 +345,12 @@ const updateGoingSlot = (idx: number, val: string) => {
 
       {}
       <AnimatePresence>
-        {(isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
+        {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
           <motion.aside
-            initial={{ x: "-100%" }}
+            initial={{ x: '-100%' }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'tween', duration: 0.3 }}
             className="fixed lg:sticky top-0 left-0 z-50 bg-[#E31E24] text-white flex flex-col shadow-2xl w-full lg:w-72 h-screen overflow-hidden"
           >
             <button
@@ -391,8 +383,8 @@ const updateGoingSlot = (idx: number, val: string) => {
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
                     pathname === item.href
-                      ? "bg-white text-[#E31E24] shadow-md"
-                      : "hover:bg-white/10 text-white/90"
+                      ? 'bg-white text-[#E31E24] shadow-md'
+                      : 'hover:bg-white/10 text-white/90'
                   }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
@@ -402,7 +394,7 @@ const updateGoingSlot = (idx: number, val: string) => {
 
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
               >
                 <MdLogout size={20} /> <span className="text-sm">Log Out</span>
@@ -428,7 +420,10 @@ const updateGoingSlot = (idx: number, val: string) => {
 
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -522,8 +517,8 @@ const updateGoingSlot = (idx: number, val: string) => {
                           <div className="font-bold text-blue-600">{bus.routeName}</div>
                           <div className="mt-1 opacity-70 flex items-center gap-1">
                             <MapPin size={12} />
-                            {routes.find((r) => r.id === bus.routeId)?.startPoint || "Start"} ➝{" "}
-                            {routes.find((r) => r.id === bus.routeId)?.endPoint || "End"}
+                            {routes.find((r) => r.id === bus.routeId)?.startPoint || 'Start'} ➝{' '}
+                            {routes.find((r) => r.id === bus.routeId)?.endPoint || 'End'}
                           </div>
                         </td>
 
@@ -573,12 +568,12 @@ const updateGoingSlot = (idx: number, val: string) => {
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col border border-gray-100 scrollbar-hide"
             >
               <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white z-10">
                 <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
-                  {modalType === "add" ? "Register New Bus" : "Update Bus"}
+                  {modalType === 'add' ? 'Register New Bus' : 'Update Bus'}
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -598,7 +593,7 @@ const updateGoingSlot = (idx: number, val: string) => {
                     <input
                       type="text"
                       required
-                      value={busForm.name || ""}
+                      value={busForm.name || ''}
                       onChange={(e) => setBusForm((p) => ({ ...p, name: e.target.value }))}
                       className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all bg-gray-50 focus:bg-white"
                     />
@@ -611,7 +606,7 @@ const updateGoingSlot = (idx: number, val: string) => {
                     <input
                       type="text"
                       required
-                      value={busForm.plateNumber || ""}
+                      value={busForm.plateNumber || ''}
                       onChange={(e) => setBusForm((p) => ({ ...p, plateNumber: e.target.value }))}
                       className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all bg-gray-50 focus:bg-white font-mono"
                     />
@@ -622,17 +617,19 @@ const updateGoingSlot = (idx: number, val: string) => {
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <div className="text-xs font-black uppercase text-gray-600">No of Active Hours</div>
-                      <div className="text-[11px] text-gray-500 mt-1">
-                        Number of trips a day.
+                      <div className="text-xs font-black uppercase text-gray-600">
+                        No of Active Hours
                       </div>
+                      <div className="text-[11px] text-gray-500 mt-1">Number of trips a day.</div>
                     </div>
                     <input
                       type="number"
                       min={0}
                       max={20}
                       value={activeHoursCount}
-                      onChange={(e) => handleActiveHoursCountChange(parseInt(e.target.value || "0"))}
+                      onChange={(e) =>
+                        handleActiveHoursCountChange(parseInt(e.target.value || '0'))
+                      }
                       className="w-28 p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white font-black text-center"
                     />
                   </div>
@@ -648,7 +645,7 @@ const updateGoingSlot = (idx: number, val: string) => {
                             <input
                               type="text"
                               placeholder="e.g. 08:00 AM - 10:00 AM"
-                              value={comingSlots[idx] || ""}
+                              value={comingSlots[idx] || ''}
                               onChange={(e) => updateComingSlot(idx, e.target.value)}
                               className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white"
                               required
@@ -662,7 +659,7 @@ const updateGoingSlot = (idx: number, val: string) => {
                             <input
                               type="text"
                               placeholder="e.g. 02:00 PM - 04:00 PM"
-                              value={goingSlots[idx] || ""}
+                              value={goingSlots[idx] || ''}
                               onChange={(e) => updateGoingSlot(idx, e.target.value)}
                               className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white"
                               required
@@ -674,17 +671,14 @@ const updateGoingSlot = (idx: number, val: string) => {
                   )}
                 </div>
 
-
                 {}
                 <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                   <div className="p-4 bg-gray-50 flex items-center justify-between">
                     <div>
                       <div className="text-xs font-black uppercase text-gray-600">
-                        Bus Photo {modalType === "add" ? "(Mandatory)" : "(Optional)"}
+                        Bus Photo {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
                       </div>
-                      <div className="text-[11px] text-gray-500 mt-1">
-                        Recheck before upload.
-                      </div>
+                      <div className="text-[11px] text-gray-500 mt-1">Recheck before upload.</div>
                     </div>
 
                     <button
@@ -693,12 +687,12 @@ const updateGoingSlot = (idx: number, val: string) => {
                       disabled={uploading}
                       className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${
                         uploading
-                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                          : "bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200"
+                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                          : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
                       }`}
                     >
                       <Upload size={18} />
-                      {uploading ? "Uploading..." : "Upload"}
+                      {uploading ? 'Uploading...' : 'Upload'}
                     </button>
 
                     <input
@@ -723,15 +717,17 @@ const updateGoingSlot = (idx: number, val: string) => {
                         </div>
                         <div className="text-sm">
                           <div className="font-black text-gray-900">Photo Ready</div>
-                          <div className="text-xs text-gray-500">Saved as secure Cloudinary URL.</div>
+                          <div className="text-xs text-gray-500">
+                            Saved as secure Cloudinary URL.
+                          </div>
                         </div>
                       </div>
                     ) : (
                       <div className="text-sm text-gray-500 flex items-center gap-2">
                         <ImageIcon size={18} className="text-gray-400" />
-                        {modalType === "add"
-                          ? "Photo is required to register a new bus."
-                          : "No photo selected (keeping existing photo is okay)."}
+                        {modalType === 'add'
+                          ? 'Photo is required to register a new bus.'
+                          : 'No photo selected (keeping existing photo is okay).'}
                       </div>
                     )}
                   </div>
@@ -743,7 +739,7 @@ const updateGoingSlot = (idx: number, val: string) => {
                     Assign Route
                   </label>
                   <select
-                    value={busForm.routeId || ""}
+                    value={busForm.routeId || ''}
                     onChange={(e) => handleBusRouteChange(e.target.value)}
                     className="w-full p-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none bg-white font-semibold"
                   >
@@ -790,11 +786,11 @@ const updateGoingSlot = (idx: number, val: string) => {
                     type="submit"
                     disabled={uploading}
                     className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${
-                      uploading ? "bg-gray-300 cursor-not-allowed" : "bg-[#E31E24] hover:bg-red-700"
+                      uploading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#E31E24] hover:bg-red-700'
                     }`}
                   >
                     <Save size={18} />
-                    {modalType === "add" ? "Save Bus" : "Save Changes"}
+                    {modalType === 'add' ? 'Save Bus' : 'Save Changes'}
                   </button>
                 </div>
               </form>

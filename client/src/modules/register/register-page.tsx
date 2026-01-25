@@ -66,8 +66,9 @@ const RegisterPageComponent = () => {
     setClientInfo((prev) => ({
       ...prev,
       device: isMobile ? 'mobile' : 'pc',
-      browser:
-        (userAgent.match(/(firefox|msie|chrome|safari|trident)/i)?.[0] || 'unknown')?.toLowerCase(),
+      browser: (
+        userAgent.match(/(firefox|msie|chrome|safari|trident)/i)?.[0] || 'unknown'
+      )?.toLowerCase(),
       ipAddress: prev.ipAddress,
       pcName: window.location.hostname,
       os: window.navigator.platform,
@@ -180,18 +181,27 @@ const RegisterPageComponent = () => {
   };
 
   const renderForm = () => (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500"
+    >
       <div className="col-span-full md:col-span-1">
-        <InputField label="Full Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
+        <InputField
+          label="Full Name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          error={errors.name}
+        />
       </div>
       <div className="col-span-full md:col-span-1">
         <InputField
-            label="Email Address"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            error={errors.email}
+          label="Email Address"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
         />
       </div>
 
@@ -248,9 +258,9 @@ const RegisterPageComponent = () => {
       />
 
       {errors.form ? (
-         <div className="col-span-full p-3 bg-red-50 border border-red-100 rounded-lg">
-             <p className="text-red-600 text-sm text-center font-medium">{errors.form}</p>
-         </div>
+        <div className="col-span-full p-3 bg-red-50 border border-red-100 rounded-lg">
+          <p className="text-red-600 text-sm text-center font-medium">{errors.form}</p>
+        </div>
       ) : null}
 
       <div className="col-span-full mt-4">
@@ -260,18 +270,21 @@ const RegisterPageComponent = () => {
           className={`
             w-full py-3.5 rounded-xl font-bold text-white tracking-wide shadow-lg flex items-center justify-center gap-2
             transition-all duration-300 transform
-            ${isSubmitting 
-                ? 'bg-gray-400 cursor-not-allowed' 
+            ${
+              isSubmitting
+                ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-[#E31E24] hover:bg-red-700 hover:shadow-red-500/30 hover:-translate-y-0.5 active:scale-95'
             }
           `}
         >
           {isSubmitting ? (
-             <>
-               <Loader2 className="animate-spin" size={20} />
-               <span>Creating Account...</span>
-             </>
-          ) : 'Create Account'}
+            <>
+              <Loader2 className="animate-spin" size={20} />
+              <span>Creating Account...</span>
+            </>
+          ) : (
+            'Create Account'
+          )}
         </button>
       </div>
     </form>
@@ -279,22 +292,19 @@ const RegisterPageComponent = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
-      
       {}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
 
       {}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2.5rem] shadow-2xl overflow-hidden w-full max-w-[95%] xl:max-w-7xl h-[90vh] lg:h-[800px] z-10"
       >
-        
         {}
         <div className="w-full lg:w-[40%] xl:w-[35%] p-6 md:p-10 flex flex-col justify-center h-full overflow-y-auto scrollbar-hide bg-white/50 relative">
-          
           <div className="mb-6 text-center">
             <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-2">
               Register
@@ -307,24 +317,25 @@ const RegisterPageComponent = () => {
             {}
             <TabList className="flex p-1 gap-2 bg-gray-100/80 rounded-xl mb-8 border border-gray-200">
               {roles.map((tab, index) => {
-                 const Icon = tab.icon;
-                 const isActive = activeTab === index;
-                 return (
-                    <Tab
-                        key={tab.value}
-                        className={`
+                const Icon = tab.icon;
+                const isActive = activeTab === index;
+                return (
+                  <Tab
+                    key={tab.value}
+                    className={`
                             flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-bold cursor-pointer transition-all duration-300 outline-none
-                            ${isActive 
-                                ? 'bg-white text-[#E31E24] shadow-md scale-[1.02]' 
+                            ${
+                              isActive
+                                ? 'bg-white text-[#E31E24] shadow-md scale-[1.02]'
                                 : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'
                             }
                         `}
-                        selectedClassName="" 
-                    >
-                        <Icon size={16} />
-                        {tab.label}
-                    </Tab>
-                 )
+                    selectedClassName=""
+                  >
+                    <Icon size={16} />
+                    {tab.label}
+                  </Tab>
+                );
               })}
             </TabList>
 
@@ -341,22 +352,26 @@ const RegisterPageComponent = () => {
                 <h4 className="text-gray-900 font-bold text-sm">Email Verification</h4>
               </div>
               <p className="text-gray-500 text-xs mb-3 leading-relaxed">
-                We&apos;ll send a 6-digit code to <span className="font-semibold text-gray-800">{verificationEmail || 'your email'}</span> after you submit.
+                We&apos;ll send a 6-digit code to{' '}
+                <span className="font-semibold text-gray-800">
+                  {verificationEmail || 'your email'}
+                </span>{' '}
+                after you submit.
               </p>
-              
+
               <form onSubmit={handleVerify} className="flex gap-2">
                 <div className="flex-1">
-                   <InputField
+                  <InputField
                     label="Verification Code"
                     name="otpToken"
                     value={otpToken}
                     onChange={(e) => {
-                        setOtpToken(e.target.value);
-                        setErrors((prev) => ({ ...prev, verify: '' }));
+                      setOtpToken(e.target.value);
+                      setErrors((prev) => ({ ...prev, verify: '' }));
                     }}
                     placeholder="Enter 6-digit code"
                     error={errors.verify}
-                    />
+                  />
                 </div>
                 <button
                   type="submit"
@@ -379,9 +394,9 @@ const RegisterPageComponent = () => {
 
         {}
         <div className="hidden lg:block w-full lg:w-[60%] xl:w-[65%] relative h-full group overflow-hidden bg-gray-100">
-           {}
-           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
-           
+          {}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
+
           <Image
             width={1200}
             height={1200}
@@ -390,29 +405,30 @@ const RegisterPageComponent = () => {
             className="w-full h-full object-cover transition-transform duration-[3s] ease-in-out group-hover:scale-105"
             priority
           />
-          
+
           <div className="absolute bottom-12 left-12 z-20 max-w-lg">
-            <h3 className="text-4xl font-black text-white mb-2 drop-shadow-lg">Join Campus Connect</h3>
+            <h3 className="text-4xl font-black text-white mb-2 drop-shadow-lg">
+              Join Campus Connect
+            </h3>
             <p className="text-white/80 font-medium text-lg drop-shadow-md">
-                Streamline your university transport experience today.
+              Streamline your university transport experience today.
             </p>
           </div>
         </div>
 
         {}
         <div className="lg:hidden h-48 relative overflow-hidden shrink-0">
-             <div className="absolute inset-0 bg-black/30 z-10 flex items-center justify-center">
-                 <h3 className="text-2xl font-bold text-white drop-shadow-md">Create Account</h3>
-             </div>
-             <Image
-                width={600}
-                height={300}
-                src="/static/loginpagebanner.png"
-                alt="Mobile Banner"
-                className="w-full h-full object-cover"
-            />
+          <div className="absolute inset-0 bg-black/30 z-10 flex items-center justify-center">
+            <h3 className="text-2xl font-bold text-white drop-shadow-md">Create Account</h3>
+          </div>
+          <Image
+            width={600}
+            height={300}
+            src="/static/loginpagebanner.png"
+            alt="Mobile Banner"
+            className="w-full h-full object-cover"
+          />
         </div>
-
       </motion.div>
 
       {/*HomeBtn*/}

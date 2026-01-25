@@ -16,7 +16,7 @@ export interface IBus {
   activeHoursGoing: string[];
 
   isActive?: boolean;
-// mongoose timestamps
+  // mongoose timestamps
   createdAt?: Date;
   updatedAt?: Date;
 }

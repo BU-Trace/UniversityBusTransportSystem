@@ -16,11 +16,7 @@ router.post('/', clientInfoParser, UserController.registerUser);
 router.post('/verify-email', UserController.verifyEmail);
 
 // Get all users
-router.get(
-  '/get-all-users',
-  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
-  UserController.getAllUsers
-);
+router.get('/get-all-users', auth(UserRole.ADMIN, UserRole.SUPERADMIN), UserController.getAllUsers);
 
 // Admin adds a user (dashboard add)
 router.post(

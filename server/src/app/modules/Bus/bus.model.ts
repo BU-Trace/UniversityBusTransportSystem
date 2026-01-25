@@ -26,7 +26,7 @@ const BusSchema = new Schema(
       ref: 'Route',
       required: true,
     },
-// Photo URL or path
+    // Photo URL or path
     photo: {
       type: String,
       required: true,

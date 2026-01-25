@@ -12,3 +12,4 @@ server/dist
 # editor
 .vscode/
 .idea/
+.sql

@@ -47,8 +47,7 @@ const applyClientInfoUpdates = (
 };
 
 const generateTempPassword = (len = 10) => {
-  const chars =
-    'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*';
   let out = '';
   for (let i = 0; i < len; i++) {
     out += chars[Math.floor(Math.random() * chars.length)];
@@ -56,11 +55,7 @@ const generateTempPassword = (len = 10) => {
   return out;
 };
 
-export const updateProfile = async (
-  userId: string,
-  data: Partial<IUser>,
-  role: UserRole
-) => {
+export const updateProfile = async (userId: string, data: Partial<IUser>, role: UserRole) => {
   const user = await UserModel.findById(userId);
 
   if (!user) {

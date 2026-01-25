@@ -64,7 +64,6 @@ interface UserCommon {
   approvalLetter?: string | null;
   assignedBus?: Types.ObjectId | null;
   assignedBusName?: string | null;
-
 }
 
 export type UserDoc =

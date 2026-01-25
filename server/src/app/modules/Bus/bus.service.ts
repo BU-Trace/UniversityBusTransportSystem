@@ -67,7 +67,6 @@ export const createBus = async (payload: IBus) => {
 };
 
 export const updateBus = async (id: string, payload: Partial<IBus>) => {
-
   if (
     payload.name !== undefined ||
     payload.plateNumber !== undefined ||

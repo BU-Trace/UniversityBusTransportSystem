@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import LiveLocation from "@/models/LiveLocaton";
+import { NextResponse } from 'next/server';
+import { connectDB } from '@/lib/mongodb';
+import LiveLocation from '@/models/LiveLocaton';
 
 export async function POST(req: Request) {
   await connectDB();

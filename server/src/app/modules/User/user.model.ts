@@ -29,8 +29,8 @@ const userSchema = new Schema<IUser, UserModel>(
     clientInfo: {
       bio: { type: String, default: null },
       department: { type: String, default: null },
-      rollNumber: { type: String, default: null }, 
-      licenseNumber: { type: String, default: null }, 
+      rollNumber: { type: String, default: null },
+      licenseNumber: { type: String, default: null },
     },
 
     assignedBus: {

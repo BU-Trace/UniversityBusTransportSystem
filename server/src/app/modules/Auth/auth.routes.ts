@@ -4,7 +4,6 @@ import clientInfoParser from '../../middleware/clientInfoParser';
 import auth from '../../middleware/auth';
 import { UserRole } from '../User/user.utils';
 
-
 const router = Router();
 
 router.post('/login', clientInfoParser, AuthController.loginUser);

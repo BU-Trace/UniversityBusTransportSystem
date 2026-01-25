@@ -117,10 +117,7 @@ export const customerInfoValidationSchema = z.object({
   dateOfBirth: z
     .string()
     .optional()
-    .refine(
-      (value) => !value || !isNaN(Date.parse(value)),
-      'Invalid date format'
-    ),
+    .refine((value) => !value || !isNaN(Date.parse(value)), 'Invalid date format'),
 
   address: z.string().optional(),
 

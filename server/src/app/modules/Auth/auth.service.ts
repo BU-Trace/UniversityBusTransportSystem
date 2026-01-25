@@ -9,7 +9,7 @@ import { createToken, verifyToken } from './auth.util';
 import bcrypt from 'bcrypt';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
-import {Bus as BusModel} from '../Bus/bus.model';
+import { Bus as BusModel } from '../Bus/bus.model';
 
 const getPendingRegistrations = async () => {
   const pending = await UserModel.find({
@@ -21,7 +21,6 @@ const getPendingRegistrations = async () => {
 
   return pending;
 };
-
 
 const approveRegistration = async (
   userId: string,
@@ -42,10 +41,7 @@ const approveRegistration = async (
     if (user.role === 'driver') {
       const assignedBusId = payload?.assignedBusId;
       if (!assignedBusId) {
-        throw new AppError(
-          StatusCodes.BAD_REQUEST,
-          'Assigned bus is required for driver approval'
-        );
+        throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver approval');
       }
 
       const bus = await BusModel.findById(assignedBusId).session(session);
@@ -72,9 +68,7 @@ const approveRegistration = async (
 
     await user.save({ session });
 
-    const safe = await UserModel.findById(user._id)
-      .select('-password')
-      .session(session);
+    const safe = await UserModel.findById(user._id).select('-password').session(session);
 
     return safe;
   });
@@ -95,7 +89,6 @@ const rejectRegistration = async (userId: string) =>
 
 const loginUser = async (payload: IAuth) => {
   return runWithTransaction(async (session) => {
-
     const user = await UserModel.findOne({ email: payload.email })
       .select('+password')
       .session(session);
@@ -112,10 +105,7 @@ const loginUser = async (payload: IAuth) => {
       throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
-    const isMatch = await UserModel.isPasswordMatched(
-      payload.password.trim(),
-      user.password
-    );
+    const isMatch = await UserModel.isPasswordMatched(payload.password.trim(), user.password);
     if (!isMatch) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Password does not match');
     }
@@ -208,7 +198,6 @@ const changePassword = async (payload: {
 
 const forgetPassword = async (payload: { email: string }) => {
   return runWithTransaction(async (session) => {
-
     const user = await UserModel.findOne({ email: payload.email }).session(session);
     if (!user) {
       throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');

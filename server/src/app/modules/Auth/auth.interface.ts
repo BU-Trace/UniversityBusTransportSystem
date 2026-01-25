@@ -19,8 +19,8 @@ export interface IJwtPayload {
   userId: string;
   name: string;
   email: string;
-  role: keyof typeof UserRole; 
+  role: keyof typeof UserRole;
   isActive: boolean;
-  iat?: number; 
-  exp?: number; 
+  iat?: number;
+  exp?: number;
 }

@@ -8,7 +8,6 @@ export default function StatusDesign() {
 
   return (
     <div className="mt-8 grid md:grid-cols-2 gap-6">
-
       {/* AVAILABLE SEATS */}
       <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center">
         <p className="font-semibold text-gray-600 mb-3">Available seats</p>
@@ -39,20 +38,19 @@ export default function StatusDesign() {
 
       {/* LOCATION SHARING */}
       <div className="bg-white rounded-2xl shadow p-6 flex flex-col items-center">
-        <p className="font-semibold text-gray-600 mb-6">
-          Location Sharing
-        </p>
+        <p className="font-semibold text-gray-600 mb-6">Location Sharing</p>
 
         <div className="flex gap-8">
           <div className="w-24 h-24 rounded-full bg-gradient-to-r from-green-500 to-yellow-400 flex items-center justify-center text-white font-bold text-center">
-            res<br />pause
+            res
+            <br />
+            pause
           </div>
           <div className="w-24 h-24 rounded-full bg-red-600 flex items-center justify-center text-white font-bold">
             Stop
           </div>
         </div>
       </div>
-
     </div>
   );
 }

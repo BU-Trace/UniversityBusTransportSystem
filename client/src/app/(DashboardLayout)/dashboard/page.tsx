@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { Home } from 'lucide-react';
 import Link from 'next/link';
 
@@ -19,10 +19,9 @@ import {
   MdEdit,
   MdWarning,
   MdBarChart,
-} from "react-icons/md";
+} from 'react-icons/md';
 
 export default function MergedDashboard() {
-
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
@@ -31,41 +30,64 @@ export default function MergedDashboard() {
     setMounted(true);
 
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     }
 
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, [isOpen]);
 
   const admin = {
-    name: "Admin 1",
-    role: "Admin",
+    name: 'Admin 1',
+    role: 'Admin',
   };
 
   const menuItems = [
-    { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
-    { label: "Bus Management", href: "/dashboard/busManage", icon: MdDirectionsBus },
-    { label: "User Management", href: "/dashboard/userManage", icon: MdPeople },
-    { label: "Route Management", href: "/dashboard/routeManage", icon: MdMap },
-    { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
+    { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
+    { label: 'Bus Management', href: '/dashboard/busManage', icon: MdDirectionsBus },
+    { label: 'Driver Management', href: '/dashboard/driverManage', icon: MdPeople },
+    { label: 'Route Management', href: '/dashboard/routeManage', icon: MdMap },
+    { label: 'Notice Publish', href: '/dashboard/notice', icon: MdNotifications },
   ];
 
   const stats = [
-    { label: 'Total Buses', value: '50', icon: <MdDirectionsBus size={32}/>, color: 'text-red-600', bg: 'bg-red-50' },
-    { label: 'Active Buses', value: '50', icon: <MdDirectionsBus size={32}/>, color: 'text-orange-500', bg: 'bg-orange-50' },
-    { label: 'Total Drivers', value: '50', icon: <MdPeople size={32}/>, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Active Drivers', value: '50', icon: <MdPeople size={32}/>, color: 'text-green-600', bg: 'bg-green-50' },
+    {
+      label: 'Total Buses',
+      value: '50',
+      icon: <MdDirectionsBus size={32} />,
+      color: 'text-red-600',
+      bg: 'bg-red-50',
+    },
+    {
+      label: 'Active Buses',
+      value: '50',
+      icon: <MdDirectionsBus size={32} />,
+      color: 'text-orange-500',
+      bg: 'bg-orange-50',
+    },
+    {
+      label: 'Total Drivers',
+      value: '50',
+      icon: <MdPeople size={32} />,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+    },
+    {
+      label: 'Active Drivers',
+      value: '50',
+      icon: <MdPeople size={32} />,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
+    },
   ];
 
   if (!mounted) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative">
-      
       {/*Mobile Menu*/}
       {!isOpen && (
         <button
@@ -78,13 +100,12 @@ export default function MergedDashboard() {
 
       {/*Sidebar*/}
       <AnimatePresence>
-        {(isOpen ||
-          (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
+        {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
           <motion.aside
-            initial={{ x: "-100%" }}
+            initial={{ x: '-100%' }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'tween', duration: 0.3 }}
             className="
               fixed lg:sticky top-0 left-0 z-50
               bg-[#E31E24] text-white flex flex-col shadow-2xl
@@ -107,18 +128,14 @@ export default function MergedDashboard() {
 
               <div className="relative mb-3">
                 <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold italic opacity-50">
-                    ADMIN
-                  </span>
+                  <span className="text-xl font-bold italic opacity-50">ADMIN</span>
                 </div>
                 <button className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md">
                   <MdEdit size={12} />
                 </button>
               </div>
 
-              <h2 className="font-bold text-base uppercase tracking-widest">
-                {admin.name}
-              </h2>
+              <h2 className="font-bold text-base uppercase tracking-widest">{admin.name}</h2>
               <button className="text-[10px] opacity-70 underline mt-0.5 hover:opacity-100">
                 Edit Profile
               </button>
@@ -135,8 +152,8 @@ export default function MergedDashboard() {
                     flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all
                     ${
                       pathname === item.href
-                        ? "bg-white text-[#E31E24] shadow-md"
-                        : "hover:bg-white/10 text-white/90"
+                        ? 'bg-white text-[#E31E24] shadow-md'
+                        : 'hover:bg-white/10 text-white/90'
                     }
                   `}
                 >
@@ -149,7 +166,7 @@ export default function MergedDashboard() {
             {/* Logout */}
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
               >
                 <MdLogout size={20} />
@@ -163,12 +180,10 @@ export default function MergedDashboard() {
       {}
       <main className="flex-1 flex flex-col min-w-0">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full">
-          
           {}
           <div className="space-y-8">
-            
             {}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-3 mb-2"
@@ -206,20 +221,22 @@ export default function MergedDashboard() {
                         {stat.value}
                       </h3>
                     </div>
-                    <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:rotate-12 transition-transform duration-300`}>
+                    <div
+                      className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:rotate-12 transition-transform duration-300`}
+                    >
                       {stat.icon}
                     </div>
                   </div>
-                  
+
                   <div className="absolute -bottom-2 -right-2 text-gray-100 opacity-20 pointer-events-none">
-                      {stat.icon}
+                    {stat.icon}
                   </div>
                 </motion.div>
               ))}
             </div>
 
             {}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-white rounded-[2.5rem] p-10 border border-red-100 shadow-sm relative overflow-hidden"
@@ -229,17 +246,15 @@ export default function MergedDashboard() {
                 <div className="flex items-center gap-2 text-red-600 font-black uppercase tracking-[0.3em] text-xs">
                   <MdWarning size={20} /> warning
                 </div>
-                
+
                 <p className="text-xl md:text-2xl font-bold text-blue-700 tracking-tight max-w-2xl">
-                    &quot;Bus 1 cancelled the trip due to accident&quot;
+                  &quot;Bus 1 cancelled the trip due to accident&quot;
                 </p>
                 <div className="h-1 w-20 bg-gray-100 rounded-full"></div>
               </div>
             </motion.div>
-
           </div>
           {}
-
         </div>
       </main>
 

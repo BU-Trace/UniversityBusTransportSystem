@@ -1,12 +1,12 @@
 'use client';
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
-import { useEffect } from "react";
-import "leaflet/dist/leaflet.css";
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { useEffect } from 'react';
+import 'leaflet/dist/leaflet.css';
 
 // Red Location Pointer Icon
 const redPointerIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png", // Red pointer icon
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // Red pointer icon
   iconSize: [40, 40],
   iconAnchor: [20, 40],
 });
