@@ -13,7 +13,7 @@ const router = Router();
 router.post('/', clientInfoParser, UserController.registerUser);
 
 // Verify email
-router.post('/verfy-email', UserController.verifyEmail);
+router.post('/verify-email', UserController.verifyEmail);
 
 // Get all users
 router.get('/get-all-users', auth(UserRole.ADMIN, UserRole.SUPERADMIN), UserController.getAllUsers);
