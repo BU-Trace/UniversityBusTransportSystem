@@ -2,10 +2,7 @@ import { IRoute } from './route.interface';
 import { Route } from './route.model';
 
 export const createRoute = async (payload: IRoute) => {
-  // TODO: Call Google Distance Matrix API to calculate total distance and duration
-  // and assign to payload.distance and payload.duration
-  // Example: const { distance, duration } = await getDistanceAndDuration(payload.stopages)
-  // payload.distance = distance; payload.duration = duration;
+  if (!payload.bus) payload.bus = [];
   const route = await Route.create(payload);
   return route;
 };
@@ -25,6 +22,9 @@ export const updateRoute = async (id: string, payload: Partial<IRoute>) => {
   if (payload.name !== undefined) route.name = payload.name;
   if (payload.isActive !== undefined) route.isActive = payload.isActive;
 
+  // Update bus field if provided
+  if (payload.bus) route.bus = payload.bus;
+
   await route.save();
   return route;
 };
@@ -38,7 +38,9 @@ export const getAllRoutes = async () => {
 };
 
 // Placeholder for Google Distance Matrix API integration
-export const getDistanceAndDuration = async (stopageIds: string[]): Promise<{ distance: number, duration: number }> => {
+export const getDistanceAndDuration = async (
+  _stopageIds: string[]
+): Promise<{ distance: number; duration: number }> => {
   // TODO: Fetch stopage coordinates from DB, call Google API, return total distance/duration
   return { distance: 0, duration: 0 };
 };

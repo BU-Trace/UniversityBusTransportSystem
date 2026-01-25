@@ -19,8 +19,8 @@ export interface IJwtPayload {
   userId: string;
   name: string;
   email: string;
-  role: keyof typeof UserRole; // Use keys of runtime UserRole object
+  role: keyof typeof UserRole;
   isActive: boolean;
-  iat?: number; // issued at (from JWT)
-  exp?: number; // expiration timestamp
+  iat?: number;
+  exp?: number;
 }

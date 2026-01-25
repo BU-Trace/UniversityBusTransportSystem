@@ -13,7 +13,7 @@ export type IUserRole = {
 
 // --- Client IT info (device/browser/ip etc.) ------------------
 export type ClientITInfo = {
-  device: 'pc' | 'mobile';
+  device: 'pc' | 'mobile' | 'tablet';
   browser: string;
   ipAddress: string;
   pcName?: string;
@@ -24,18 +24,20 @@ export type ClientITInfo = {
 // --- Role-specific client info --------------------------------
 type BaseClientInfo = {
   bio?: string;
+  department?: string;
+  rollNumber?: string;
+  licenseNumber?: string;
 };
 
 type StudentClientInfo = BaseClientInfo & {
-  department: string;
-  rollNumber: string;
+  department?: string;
+  rollNumber?: string;
 };
 
 type DriverClientInfo = BaseClientInfo & {
-  licenseNumber: string;
+  licenseNumber?: string;
 };
 
-// --- Core fields shared by all users ---------------------------
 interface UserCommon {
   _id: Types.ObjectId;
   email: string;
@@ -45,6 +47,7 @@ interface UserCommon {
 
   lastLogin: Date;
   isActive: boolean;
+  isApproved: boolean;
 
   otpToken?: string | null;
   otpExpires?: Date | null;
@@ -58,10 +61,11 @@ interface UserCommon {
   // mongoose timestamps
   createdAt: Date;
   updatedAt: Date;
+  approvalLetter?: string | null;
+  assignedBus?: Types.ObjectId | null;
+  assignedBusName?: string | null;
 }
 
-// --- Discriminated union by role -------------------------------
-// Admins don’t require extra clientInfo, students & drivers do.
 export type UserDoc =
   | (UserCommon & {
       role: 'student';
@@ -76,10 +80,8 @@ export type UserDoc =
       clientInfo?: BaseClientInfo; // optional for admins
     });
 
-// If you prefer interface form that extends mongoose Document:
 export interface IUser extends Document<Types.ObjectId>, Omit<UserDoc, '_id'> {}
 
-// --- Model (statics) -------------------------------------------
 export interface UserModel extends Model<IUser> {
   // statics (these are better as statics than instance methods)
   isPasswordMatched(plainTextPassword: string, hashedPassword: string): Promise<boolean>;
