@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import api from '@/lib/axios';
 
 const BusMap = dynamic(() => import('./Map'), {
   ssr: false,
@@ -14,14 +15,13 @@ const BusMap = dynamic(() => import('./Map'), {
 });
 
 export default function DriverDashboard() {
-  // --- STATIC DATA (Simulating Database Response) ---
   const [driver] = useState({
     name: 'Driver1',
     id: 'DRV-2026-007',
-    busNo: 'BRTC-10', // Static Assigned Bus
+    busNo: 'BRTC-10',
     reg: 'DHK-METRO-11-2233',
-    route: 'Route-1', // Static Assigned Route
-    profilePic: '/static/driver-photo.jpg', // Local static file
+    route: 'Route-1',
+    profilePic: '/static/driver-photo.jpg',
   });
 
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -38,7 +38,6 @@ export default function DriverDashboard() {
       async (pos) => {
         const now = Date.now();
 
-        // Send update only if 10 seconds have passed
         if (now - lastSentTime < 10000) return;
         lastSentTime = now;
 
@@ -47,14 +46,11 @@ export default function DriverDashboard() {
         setLocation({ lat, lng });
 
         try {
-          await fetch('/api/location', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              busId: driver.busNo,
-              lat,
-              lng,
-            }),
+          await api.post('/location', {
+            bus: driver.busNo,
+            latitude: lat,
+            longitude: lng,
+            capturedAt: new Date(),
           });
         } catch {
           console.log('API not ready, location updated locally.');
@@ -70,14 +66,17 @@ export default function DriverDashboard() {
     setSidebarOpen(false);
     initTracking();
   };
+
   const handlePause = () => {
     if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
     setStatus('paused');
   };
+
   const handleResume = () => {
     setStatus('sharing');
     initTracking();
   };
+
   const handleStop = () => {
     if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
     setStatus('idle');
@@ -90,11 +89,11 @@ export default function DriverDashboard() {
       {/* SIDEBAR */}
       <aside
         className={`
-        fixed inset-y-0 left-0 z-1002 w-72 
-        bg-linear-to-b from-[#EF4444] to-[#8B0000] 
-        text-white p-6 transition-transform duration-500 ease-in-out shadow-2xl
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}
+          fixed inset-y-0 left-0 z-1002 w-72 
+          bg-linear-to-b from-[#EF4444] to-[#8B0000] 
+          text-white p-6 transition-transform duration-500 ease-in-out shadow-2xl
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
       >
         <button
           onClick={() => setSidebarOpen(false)}
@@ -115,10 +114,12 @@ export default function DriverDashboard() {
                 priority
               />
             </div>
-            <span className="ml-3 font-bold text-xl tracking-tighter uppercase">BUTrace</span>
+            <span className="ml-3 font-bold text-xl tracking-tighter uppercase">
+              BUTrace
+            </span>
           </div>
 
-          {/* Profile Section */}
+          {/* Profile */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative">
               <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden bg-white/20 shadow-xl relative flex items-center justify-center">
@@ -130,15 +131,17 @@ export default function DriverDashboard() {
               </div>
               <div className="absolute bottom-1 right-1 bg-green-500 w-5 h-5 rounded-full border-2 border-white"></div>
             </div>
+
             <h2 className="mt-4 text-xl font-bold uppercase text-center leading-tight">
               {driver.name}
             </h2>
+
             <p className="text-red-200 text-[10px] font-medium uppercase tracking-widest mt-1 opacity-80">
               Employee ID: {driver.id}
             </p>
           </div>
 
-          {/* Static Data from "Database" */}
+          {/* Info Cards */}
           <div className="flex-1 space-y-4">
             <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
               <span className="text-[10px] uppercase font-black text-red-200 block mb-1">
@@ -147,30 +150,34 @@ export default function DriverDashboard() {
               <p className="text-base font-bold">{driver.busNo}</p>
               <p className="text-[10px] opacity-60">{driver.reg}</p>
             </div>
+
             <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
               <span className="text-[10px] uppercase font-black text-red-200 block mb-1">
                 Current Route
               </span>
               <p className="text-sm font-semibold leading-tight">{driver.route}</p>
             </div>
+
             <div className="bg-white/10 p-4 rounded-2xl border border-white/10">
               <span className="text-[10px] uppercase font-black text-red-200 block mb-1">
                 Duty Status
               </span>
-              <p className="text-xs font-bold uppercase tracking-widest text-green-300">{status}</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-green-300">
+                {status}
+              </p>
             </div>
           </div>
         </div>
       </aside>
 
-      {/* MAP / MAIN AREA */}
+      {/* MAP AREA */}
       <main className="relative flex-1 h-full w-full">
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
             className="fixed top-6 left-6 z-1001 bg-white text-red-600 p-4 rounded-2xl shadow-xl hover:scale-105 transition-all border border-red-50"
           >
-            <span className="text-xl">☰</span>
+            ☰
           </button>
         )}
 
@@ -182,19 +189,16 @@ export default function DriverDashboard() {
               <div className="relative mb-6">
                 <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping"></div>
                 <div className="relative p-8 rounded-full bg-white shadow-2xl flex items-center justify-center">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="w-16 h-16 text-red-600 fill-current"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
-                  </svg>
+                  📍
                 </div>
               </div>
+
               <h3 className="text-2xl font-black text-slate-800 uppercase tracking-tighter">
                 System Ready
               </h3>
-              <p className="text-slate-400 font-medium">Tap Start Shift to begin tracking</p>
+              <p className="text-slate-400 font-medium">
+                Tap Start Shift to begin tracking
+              </p>
             </div>
           )}
         </div>
@@ -212,10 +216,14 @@ export default function DriverDashboard() {
             <>
               <button
                 onClick={status === 'paused' ? handleResume : handlePause}
-                className={`flex-1 py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl transition-all ${status === 'paused' ? 'bg-amber-500 text-white animate-pulse' : 'bg-white text-amber-600 border-2 border-amber-500'}`}
+                className={`flex-1 py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl transition-all ${status === 'paused'
+                  ? 'bg-amber-500 text-white animate-pulse'
+                  : 'bg-white text-amber-600 border-2 border-amber-500'
+                  }`}
               >
                 {status === 'paused' ? 'Resume' : 'Pause'}
               </button>
+
               <button
                 onClick={handleStop}
                 className="flex-1 bg-red-600 text-white py-5 rounded-4xl font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
