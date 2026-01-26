@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import api from '@/lib/axios';
 
-const BusMap = dynamic(() => import('./Map'), { ssr: false });
+// const BusMap = dynamic(() => import('./Map'), { ssr: false });
 
 type Status = 'idle' | 'sharing' | 'paused';
 
@@ -14,6 +14,17 @@ interface Bus {
   reg: string;
   route: string;
 }
+import { io } from "socket.io-client";
+const socket = io("http://localhost:5000");
+
+const BusMap = dynamic(() => import("./Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest">
+      Loading Map...
+    </div>
+  ),
+});
 
 export default function DriverDashboard() {
   const [driver] = useState({
@@ -57,6 +68,23 @@ export default function DriverDashboard() {
             longitude: lng,
             capturedAt: new Date(),
           });
+          // await fetch("/api/location", {
+          //   method: "POST",
+          //   headers: { "Content-Type": "application/json" },
+          //   body: JSON.stringify({
+          //     busId: driver.busNo,
+          //     lat,
+          //     lng,
+
+          //   }),
+          // });
+          socket.emit("sendLocation", {
+            busId: driver.id,
+            lat,
+            lng,
+            time: new Date().toISOString(),
+          });
+
         } catch {
           console.log('Saved locally');
         }

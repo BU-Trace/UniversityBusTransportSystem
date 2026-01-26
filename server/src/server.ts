@@ -5,6 +5,10 @@ import config from './app/config';
 import seedAdmin from './app/DB/seed';
 import app from './app';
 
+import http from 'http';
+import { initSocket } from './socket';
+
+
 let server: Server | null = null;
 
 // Database connection
@@ -38,9 +42,19 @@ async function bootstrap() {
     await connectToDatabase();
     //await seed();
 
-    server = app.listen(config.port, () => {
-      console.log(`Application is running on port ${config.port}`);
-    });
+    // server = app.listen(config.port, () => {
+    //   console.log(`Application is running on port ${config.port}`);
+    // });
+
+    const httpServer = http.createServer(app);
+
+// 🔌 Attach Socket.io
+initSocket(httpServer);
+
+server = httpServer.listen(config.port, () => {
+  console.log(`🚀 Application + Socket running on port ${config.port}`);
+});
+
 
     // Listen for termination signals
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
