@@ -75,47 +75,32 @@ interface IPendingRequest {
   createdAt?: string;
 }
 
-type RawBus = {
-  _id?: string;
-  id?: string;
-  name?: string;
-  plateNumber?: string;
-};
+async function apiFetch<T>(pathOrUrl: string, options: RequestInit = {}): Promise<T> {
+  const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
 
-type RawUser = {
-  _id?: string;
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: UserRole;
-  studentId?: string;
-  licenseNumber?: string;
-  photoUrl?: string;
-  photo?: string;
-  approvalLetterUrl?: string;
-  approvalLetter?: string;
-  assignedBusId?: string;
-  assignedBusName?: string;
-  createdAt?: string;
-};
+  const url = isFullUrl ? pathOrUrl : `${BASE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
 
-type RawPendingRequest = {
-  _id?: string;
-  id?: string;
-  name?: string;
-  email?: string;
-  role?: UserRole;
-  studentId?: string;
-  licenseNumber?: string;
-  photoUrl?: string;
-  photo?: string;
-  approvalLetterUrl?: string;
-  approvalLetter?: string;
-  createdAt?: string;
-};
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    credentials: "include", // IMPORTANT if you use cookies (refresh token)
+  });
 
-const CLOUD_NAME = 'dpiofecgs';
-const UPLOAD_PRESET = 'butrace';
+  const json = await res.json().catch(() => ({} as any));
+
+  if (!res.ok) {
+    throw new Error(json?.message || "Request failed");
+  }
+
+  return json as T;
+}
+
+
+const CLOUD_NAME = "dpiofecgs";
+const UPLOAD_PRESET = "butrace";
 
 async function uploadToCloudinary(file: File): Promise<string> {
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
@@ -294,24 +279,19 @@ export default function UserManagementPage() {
   ];
 
   const loadBuses = async () => {
-    try {
-      const res = await fetch(API.buses);
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || 'Failed to load buses');
+  try {
+    const json = await apiFetch<any>("/bus/get-all-buses");
+    const busList = (json?.data || []).map((b: any) => ({
+      id: b._id,
+      name: b.name,
+      plateNumber: b.plateNumber,
+    }));
+    setBuses(busList);
+  } catch (e: any) {
+    toast.error(e.message);
+  }
+};
 
-      const busList: IBusLite[] = Array.isArray(json?.data)
-        ? (json.data as RawBus[]).map((b) => ({
-            id: b._id || b.id || '',
-            name: b.name || '',
-            plateNumber: b.plateNumber || '',
-          }))
-        : [];
-
-      setBuses(busList);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Could not load buses'));
-    }
-  };
 
   const loadUsers = async () => {
     try {
@@ -528,33 +508,29 @@ export default function UserManagementPage() {
   };
 
   const loadPending = async () => {
-    setPendingLoading(true);
-    try {
-      const res = await fetch(API.pendingAll);
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || 'Failed to load pending requests');
+  setPendingLoading(true);
+  try {
+    const json = await apiFetch<any>("/auth/get-pending-registrations");
+    setPending(
+      (json?.data || []).map((r: any) => ({
+        id: r._id,
+        name: r.name,
+        email: r.email,
+        role: r.role,
+        studentId: r.clientInfo?.rollNumber || r.studentId,
+        licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
+        photoUrl: r.profileImage || r.photoUrl,
+        approvalLetterUrl: r.approvalLetter || r.approvalLetterUrl,
+        createdAt: r.createdAt,
+      }))
+    );
+  } catch (e: any) {
+    toast.error(e.message);
+  } finally {
+    setPendingLoading(false);
+  }
+};
 
-      const list: IPendingRequest[] = Array.isArray(json?.data)
-        ? (json.data as RawPendingRequest[]).map((r) => ({
-            id: r._id || r.id || '',
-            name: r.name || '',
-            email: r.email || '',
-            role: r.role || 'student',
-            studentId: r.studentId,
-            licenseNumber: r.licenseNumber,
-            photoUrl: r.photoUrl || r.photo,
-            approvalLetterUrl: r.approvalLetterUrl || r.approvalLetter,
-            createdAt: r.createdAt,
-          }))
-        : [];
-
-      setPending(list);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Could not load pending requests.'));
-    } finally {
-      setPendingLoading(false);
-    }
-  };
 
   const openPending = async () => {
     setPendingOpen(true);
@@ -579,65 +555,57 @@ export default function UserManagementPage() {
   };
 
   const finalizeApprove = async (extra: { assignedBusId?: string }) => {
-    if (!approvalItem) return;
+  if (!approvalItem) return;
 
-    try {
-      toast.message('Approving user...');
+  try {
+    toast.message("Approving...");
 
-      const payload = {
-        assignedBusId: approvalItem.role === 'driver' ? extra.assignedBusId : undefined,
-      };
+    const json = await apiFetch<any>(`/auth/approve-registration/${approvalItem.id}`, {
+      method: "POST",
+      body: JSON.stringify({
+        assignedBusId: approvalItem.role === "driver" ? extra.assignedBusId : undefined,
+      }),
+    });
 
-      const res = await fetch(API.approvePending(approvalItem.id), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+    const created = json.data;
+    setUsers((prev) => [...prev, {
+      id: created._id,
+      name: created.name,
+      email: created.email,
+      role: created.role,
+      licenseNumber: created.clientInfo?.licenseNumber,
+      studentId: created.clientInfo?.rollNumber,
+      photoUrl: created.profileImage,
+      approvalLetterUrl: created.approvalLetter,
+      assignedBusId: created.assignedBus,
+      assignedBusName: created.assignedBusName,
+      createdAt: created.createdAt,
+    }]);
 
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || 'Approval failed');
+    setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
+    toast.success("Approved and added to users.");
 
-      const created: IUser = {
-        id: json?.data?._id || json?.data?.id,
-        name: json?.data?.name,
-        email: json?.data?.email,
-        role: json?.data?.role,
-        studentId: json?.data?.studentId,
-        licenseNumber: json?.data?.licenseNumber,
-        photoUrl: json?.data?.photoUrl || json?.data?.photo,
-        approvalLetterUrl: json?.data?.approvalLetterUrl || json?.data?.approvalLetter,
-        assignedBusId: json?.data?.assignedBusId,
-        assignedBusName: json?.data?.assignedBusName,
-        createdAt: json?.data?.createdAt,
-      };
+    setAssignBusOpen(false);
+    setApprovalOpen(false);
+    setApprovalItem(null);
+  } catch (e: any) {
+    toast.error(e.message);
+  }
+};
 
-      setUsers((prev) => [...prev, created]);
-      setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
-
-      toast.success('User approved and added to database.');
-
-      setAssignBusOpen(false);
-      setApprovalOpen(false);
-      setApprovalItem(null);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Approval failed.'));
-    }
-  };
 
   const rejectPending = async (id: string) => {
-    if (!window.confirm('Reject this registration request?')) return;
+  if (!window.confirm("Reject this registration request?")) return;
 
-    try {
-      const res = await fetch(API.rejectPending(id), { method: 'DELETE' });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || 'Reject failed');
+  try {
+    await apiFetch<any>(`/auth/reject-registration/${id}`, { method: "DELETE" });
+    setPending((prev) => prev.filter((p) => p.id !== id));
+    toast.success("Request rejected.");
+  } catch (e: any) {
+    toast.error(e.message);
+  }
+};
 
-      setPending((prev) => prev.filter((p) => p.id !== id));
-      toast.success('Request rejected.');
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Reject failed.'));
-    }
-  };
 
   if (!mounted) return null;
 
