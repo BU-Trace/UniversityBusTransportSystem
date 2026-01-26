@@ -116,7 +116,7 @@ async function uploadToCloudinary(file: File): Promise<string> {
     console.error("Cloudinary error:", data);
     throw new Error(data?.error?.message || "Cloudinary upload failed");
   }
-  return data.secure_url as string;
+  return data.secure_url;
 }
 
 const BASE_URL =
@@ -287,18 +287,18 @@ export default function UserManagementPage() {
   ];
 
   const loadBuses = async () => {
-  try {
-    const json = await apiFetch<any>("/bus/get-all-buses");
-    const busList = (json?.data || []).map((b: any) => ({
-      id: b._id,
-      name: b.name,
-      plateNumber: b.plateNumber,
-    }));
-    setBuses(busList);
-  } catch (e: any) {
-    toast.error(e.message);
-  }
-};
+    try {
+      const { data } = await apiFetch<BusResponse[]>("/bus/get-all-buses");
+      const busList = (data || []).map((b) => ({
+        id: b._id,
+        name: b.name,
+        plateNumber: b.plateNumber,
+      }));
+      setBuses(busList);
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Failed to load buses'));
+    }
+  };
 
 
   const loadUsers = async () => {
@@ -560,63 +560,63 @@ export default function UserManagementPage() {
   };
 
   const finalizeApprove = async (extra: { assignedBusId?: string }) => {
-  if (!approvalItem) return;
+    if (!approvalItem) return;
 
-  try {
-    toast.message("Approving...");
+    try {
+      toast.message("Approving...");
 
-    const json = await apiFetch<any>(`/auth/approve-registration/${approvalItem.id}`, {
-      method: "POST",
-      body: JSON.stringify({
-        assignedBusId: approvalItem.role === "driver" ? extra.assignedBusId : undefined,
-      }),
-    });
+      const { data } = await apiFetch<RawUser>(`/auth/approve-registration/${approvalItem.id}`, {
+        method: "POST",
+        body: JSON.stringify({
+          assignedBusId: approvalItem.role === "driver" ? extra.assignedBusId : undefined,
+        }),
+      });
 
-    const created = json.data;
-    setUsers((prev) => [...prev, {
-      id: created._id,
-      name: created.name,
-      email: created.email,
-      role: created.role,
-      licenseNumber: created.clientInfo?.licenseNumber,
-      studentId: created.clientInfo?.rollNumber,
-      photoUrl: created.profileImage,
-      approvalLetterUrl: created.approvalLetter,
-      assignedBusId: created.assignedBus,
-      assignedBusName: created.assignedBusName,
-      createdAt: created.createdAt,
-    }]);
+      const created = data;
+      setUsers((prev) => [...prev, {
+        id: created._id,
+        name: created.name,
+        email: created.email,
+        role: created.role,
+        licenseNumber: created.clientInfo?.licenseNumber,
+        studentId: created.clientInfo?.rollNumber,
+        photoUrl: created.photoUrl || created.photo,
+        approvalLetterUrl: created.approvalLetterUrl || created.approvalLetter,
+        assignedBusId: created.assignedBusId,
+        assignedBusName: created.assignedBusName,
+        createdAt: created.createdAt,
+      }]);
 
-    setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
-    toast.success("Approved and added to users.");
+      setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
+      toast.success("Approved and added to users.");
 
-    setAssignBusOpen(false);
-    setApprovalOpen(false);
-    setApprovalItem(null);
-  } catch (e: any) {
-    toast.error(e.message);
-  }
-};
+      setAssignBusOpen(false);
+      setApprovalOpen(false);
+      setApprovalItem(null);
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Approval failed'));
+    }
+  };
 
 
   const rejectPending = async (id: string) => {
-  if (!window.confirm("Reject this registration request?")) return;
+    if (!window.confirm("Reject this registration request?")) return;
 
-  try {
-    await apiFetch<any>(`/auth/reject-registration/${id}`, { method: "DELETE" });
-    setPending((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Request rejected.");
-  } catch (e: any) {
-    toast.error(e.message);
-  }
-};
+    try {
+      await apiFetch<null>(`/auth/reject-registration/${id}`, { method: "DELETE" });
+      setPending((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Request rejected.");
+    } catch (e: unknown) {
+      toast.error(getErrorMessage(e, 'Rejection failed'));
+    }
+  };
 
 
   if (!mounted) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative font-sans text-gray-800">
-      {}
+      { }
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -626,7 +626,7 @@ export default function UserManagementPage() {
         </button>
       )}
 
-      {}
+      { }
       <AnimatePresence>
         {(isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
           <motion.aside
@@ -687,10 +687,10 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      { }
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-7xl mx-auto">
-          {}
+          { }
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
@@ -728,7 +728,7 @@ export default function UserManagementPage() {
             </div>
           </div>
 
-          {}
+          { }
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2 mb-8 flex flex-wrap gap-2">
             {[
               { id: "student", label: "Students", icon: Users },
@@ -750,7 +750,7 @@ export default function UserManagementPage() {
             ))}
           </div>
 
-          {}
+          { }
           <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-black text-lg text-gray-800 uppercase tracking-wide flex items-center gap-2">
@@ -866,7 +866,7 @@ export default function UserManagementPage() {
         </div>
       </main>
 
-      {}
+      { }
       <AnimatePresence>
         {isModalOpen && (
           <Overlay onClose={() => setIsModalOpen(false)}>
@@ -884,7 +884,7 @@ export default function UserManagementPage() {
               />
 
               <form onSubmit={saveUser} className="p-8 space-y-6">
-                {}
+                { }
                 <div>
                   <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
                     Role
@@ -910,7 +910,7 @@ export default function UserManagementPage() {
                   </select>
                 </div>
 
-                {}
+                { }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
@@ -1018,7 +1018,7 @@ export default function UserManagementPage() {
                     </div>
 
                     <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {}
+                      { }
                       <div className="rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-black uppercase text-gray-600">
@@ -1065,7 +1065,7 @@ export default function UserManagementPage() {
                         </div>
                       </div>
 
-                      {}
+                      { }
                       <div className="rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-black uppercase text-gray-600">
@@ -1117,7 +1117,7 @@ export default function UserManagementPage() {
                   </div>
                 )}
 
-                {}
+                { }
                 <div className="pt-2 flex gap-3">
                   <button
                     type="button"
@@ -1145,7 +1145,7 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      { }
       <AnimatePresence>
         {pendingOpen && (
           <Overlay onClose={() => setPendingOpen(false)}>
@@ -1270,7 +1270,7 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      { }
       <AnimatePresence>
         {approvalOpen && approvalItem && (
           <Overlay
@@ -1388,7 +1388,7 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      { }
       <AnimatePresence>
         {assignBusOpen && approvalItem?.role === "driver" && (
           <Overlay

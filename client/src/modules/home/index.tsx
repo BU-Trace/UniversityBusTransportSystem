@@ -82,17 +82,17 @@ const HomePageComponent: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-blue-100 via-white to-blue-50 overflow-hidden">
+    <div className="relative min-h-screen bg-linear-to-br from-blue-100 via-white to-blue-50 overflow-hidden ">
       <div className="absolute inset-0 overflow-hidden z-0">
         <div className="absolute w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,rgba(246, 59, 59, 0.08)_0%,transparent_70%)] animate-[wave_8s_ease-in-out_infinite_alternate]" />
       </div>
 
-      {}
+      { }
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1 }}
-        className="relative w-full h-[380px] md:h-[450px] lg:h-[500px] mt-16 overflow-hidden shadow-xl rounded-b-[3rem]"
+        className="relative w-full h-[380px] md:h-[450px] lg:h-[500px] mt-16 order-1 lg:order-1 overflow-hidden shadow-xl rounded-b-0 md:rounded-b-[3rem]"
       >
         <Image
           src="/static/loginpagebanner.png"
@@ -112,13 +112,13 @@ const HomePageComponent: React.FC = () => {
         </div>
       </motion.div>
 
-      {}
-      <div className="max-w-6xl mx-auto px-6 md:px-12 lg:px-20 py-12 -mt-16 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+      { }
+      <div className="max-w-6xl mx-auto px-4 md:px-12 lg:px-20 py-12 -mt-16 relative z-10 flex flex-col">
+        <div className="grid grid-cols-2 sm:grid-cols-3 order-3 lg:order-2 lg:grid-cols-4 gap-3 mb-16">
           <StatCard
             title="Total Trips Today"
             value="1,234"
-            icon={<Bus className="w-6 h-6" />}
+            icon={<Bus className="w-5 h-5" />}
             footerText={
               <>
                 <ArrowUpRight className="w-4 h-4 mr-1" /> +12% from Yesterday
@@ -129,7 +129,7 @@ const HomePageComponent: React.FC = () => {
           <StatCard
             title="Total Passengers"
             value="5,678"
-            icon={<Users className="w-6 h-6" />}
+            icon={<Users className="w-5 h-5" />}
             footerText={
               <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
                 Active Routes
@@ -140,7 +140,7 @@ const HomePageComponent: React.FC = () => {
           <StatCard
             title="Active Buses"
             value="3/4"
-            icon={<Bus className="w-6 h-6" />}
+            icon={<Bus className="w-5 h-5" />}
             footerText={
               <>
                 <Clock className="w-4 h-4 mr-1" /> Last updated 2 min ago
@@ -151,7 +151,7 @@ const HomePageComponent: React.FC = () => {
           <StatCard
             title="Total Stops"
             value="13"
-            icon={<MapPin className="w-6 h-6" />}
+            icon={<MapPin className="w-5 h-5" />}
             footerText="Covering 6 Major Routes"
             color="indigo"
           />
@@ -162,7 +162,7 @@ const HomePageComponent: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="bg-white/80 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border border-red-50 mb-12"
+          className="bg-white/80  backdrop-blur-xl shadow-2xl order-4 lg:order-3 rounded-3xl p-8 border border-red-50 mb-12"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
             <div>
@@ -200,7 +200,7 @@ const HomePageComponent: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
+          className="grid order-5 lg:order-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
         >
           {quickLinks.map((link) => (
             <Link
@@ -225,19 +225,19 @@ const HomePageComponent: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="bg-white/70 backdrop-blur-xl shadow-2xl rounded-3xl p-8 border-t-4 border-red-600"
+          className="bg-white/70 mb-20 lg:mb-0  backdrop-blur-xl shadow-2xl rounded-3xl p-3 border-t-4 border-red-600 order-2 lg:order-4"
         >
-          <h2 className="text-3xl font-bold text-gray-900 mb-6 text-center border-b pb-3 flex justify-center items-center gap-2">
+          <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 lg:mb-6 text-center border-b pb-3 flex justify-center items-center gap-2">
             <Clock className="w-6 h-6 text-red-600" /> Live Next Bus Reminder
           </h2>
 
           <div className="overflow-x-auto rounded-2xl scrollbar-hide">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gradient-to-r from-red-500 to-red-900 text-white text-left text-base uppercase tracking-wider">
-                  <th className="py-4 px-6 rounded-tl-xl">Route Location</th>
-                  <th className="py-4 px-6">Next Departure</th>
-                  <th className="py-4 px-6 rounded-tr-xl">Status / Direction</th>
+                <tr className="bg-linear-to-r from-red-500 to-red-900 text-white text-center  lg:text-left text-sm lg:text-base uppercase tracking-wider">
+                  <th className="py-4 px-2 rounded-tl-xl">Route Location</th>
+                  <th className="py-4 px-2">Next Departure</th>
+                  <th className="py-4 px-2 rounded-tr-xl">Status / Direction</th>
                 </tr>
               </thead>
               <tbody>
@@ -252,20 +252,19 @@ const HomePageComponent: React.FC = () => {
                       key={bus.route}
                       whileHover={{ scale: 1.02, backgroundColor: '#f0f9ff' }}
                       transition={{ duration: 0.3 }}
-                      className={`${
-                        idx % 2 === 0 ? 'bg-white/80' : 'bg-red-50/70'
-                      } border-b border-gray-100 backdrop-blur-sm`}
+                      className={`${idx % 2 === 0 ? 'bg-white/80' : 'bg-red-50/70'
+                        } border-b border-gray-100 backdrop-blur-sm`}
                     >
-                      <td className="py-4 px-6 font-semibold text-gray-800 flex items-center gap-2">
+                      <td className="py-4 px-2 font-semibold text-gray-800 flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-red-500" /> {bus.route}
                       </td>
-                      <td className="py-4 px-6 text-lg font-bold text-red-700">
+                      <td className="py-4 px-2 text-sm font-bold text-red-700">
                         {bus.nextBus?.split(' ')[0] || 'N/A'}
                         <span className="text-sm font-medium text-gray-500 ml-2">
                           {bus.nextBus?.split(' ').slice(1).join(' ') || ''}
                         </span>
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-4 px-2">
                         {isActive ? (
                           <span className="bg-green-100 text-green-700 text-sm font-semibold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
                             {direction}
