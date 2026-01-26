@@ -134,7 +134,7 @@ export default function DriverDashboard() {
 
       {/* SIDEBAR */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-gradient-to-b from-red-600 to-red-900 
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-linear-to-b from-red-600 to-red-900 
         text-white p-6 shadow-2xl transition-transform duration-300
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
