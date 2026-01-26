@@ -23,7 +23,7 @@ const Header: React.FC<HeaderProps> = ({
   secondaryHref = '#contact',
 }) => {
   return (
-    <header className="w-full relative h-[320px] sm:h-[380px] md:h-[420px] lg:h-[480px]">
+    <header className="w-full relative h-80 sm:h-[380px] md:h-[420px] lg:h-[480px]">
       <Image
         width={1600}
         height={600}
