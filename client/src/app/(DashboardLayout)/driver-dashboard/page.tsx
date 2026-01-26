@@ -76,25 +76,33 @@ export default function DriverDashboard() {
     );
   };
 
-  const handleStart = () => {
-    setStatus('sharing');
-    setSidebarOpen(false);
-    initTracking();
-  };
-  const handlePause = () => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-    setStatus('paused');
-  };
-  const handleResume = () => {
-    setStatus('sharing');
-    initTracking();
-  };
-  const handleStop = () => {
-    if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
-    setStatus('idle');
-    setLocation(null);
-    setSidebarOpen(true);
-  };
+const handleStart = () => {
+  setStatus('sharing');
+  setSidebarOpen(false);
+  socket.emit("busStatus", { busId: driver.busNo, status: "running" });
+  initTracking();
+};
+
+const handlePause = () => {
+  if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+  setStatus('paused');
+  socket.emit("busStatus", { busId: driver.busNo, status: "paused" });
+};
+
+const handleResume = () => {
+  setStatus('sharing');
+  socket.emit("busStatus", { busId: driver.busNo, status: "running" });
+  initTracking();
+};
+
+const handleStop = () => {
+  if (watchId.current !== null) navigator.geolocation.clearWatch(watchId.current);
+  setStatus('idle');
+  socket.emit("busStatus", { busId: driver.busNo, status: "stopped" });
+  setLocation(null);
+  setSidebarOpen(true);
+};
+
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50 font-sans">
