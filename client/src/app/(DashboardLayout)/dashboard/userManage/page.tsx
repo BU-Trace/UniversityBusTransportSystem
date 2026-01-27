@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { signOut } from 'next-auth/react';
-import { toast } from 'sonner';
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import { signOut, useSession } from "next-auth/react";
+import { toast } from "sonner";
 import {
   Users,
   Plus,
@@ -20,7 +20,7 @@ import {
   Bus,
   Clock,
   BadgeCheck,
-} from 'lucide-react';
+} from "lucide-react";
 
 import {
   MdDashboard,
@@ -32,9 +32,9 @@ import {
   MdMenu,
   MdClose,
   MdEdit,
-} from 'react-icons/md';
+} from "react-icons/md";
 
-type UserRole = 'student' | 'driver' | 'admin';
+type UserRole = "student" | "driver" | "admin";
 
 interface IUser {
   id: string;
@@ -75,84 +75,28 @@ interface IPendingRequest {
   createdAt?: string;
 }
 
-interface RawUser {
-  _id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  studentId?: string;
-  licenseNumber?: string;
-  photoUrl?: string;
-  photo?: string;
-  approvalLetterUrl?: string;
-  approvalLetter?: string;
-  assignedBusId?: string;
-  assignedBusName?: string;
-  createdAt?: string;
-  clientInfo?: {
-    rollNumber?: string;
-    licenseNumber?: string;
-  };
-}
-
-interface RawPending {
-  _id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  clientInfo?: {
-    rollNumber?: string;
-    licenseNumber?: string;
-  };
-  studentId?: string;
-  licenseNumber?: string;
-  profileImage?: string;
-  photoUrl?: string;
-  approvalLetter?: string;
-  approvalLetterUrl?: string;
-  createdAt?: string;
-}
-
-interface BusResponse {
-  _id: string;
-  name: string;
-  plateNumber: string;
-}
-
-interface CloudinaryResponse {
-  secure_url: string;
-  error?: {
-    message: string;
-  };
-}
-
-interface ApiResponse<T> {
-  data: T;
-  message?: string;
-}
-
-async function apiFetch<T>(pathOrUrl: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
+async function apiFetch<T>(
+  pathOrUrl: string,
+  options: RequestInit = {},
+  accessToken?: string
+): Promise<T> {
   const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
-
   const url = isFullUrl ? pathOrUrl : `${BASE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
 
   const res = await fetch(url, {
     ...options,
     headers: {
       "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(options.headers || {}),
     },
-    credentials: "include", // IMPORTANT if you use cookies (refresh token)
   });
 
-  const json: ApiResponse<T> = await res.json().catch(() => ({ data: null as T, message: 'Invalid JSON response' }));
-
-  if (!res.ok) {
-    throw new Error(json?.message || "Request failed");
-  }
-
-  return json;
+  const json = await res.json().catch(() => ({} as any));
+  if (!res.ok) throw new Error(json?.message || "Request failed");
+  return json as T;
 }
+
 
 
 const CLOUD_NAME = "dpiofecgs";
@@ -162,20 +106,21 @@ async function uploadToCloudinary(file: File): Promise<string> {
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`;
 
   const form = new FormData();
-  form.append('file', file);
-  form.append('upload_preset', UPLOAD_PRESET);
+  form.append("file", file);
+  form.append("upload_preset", UPLOAD_PRESET);
 
-  const res = await fetch(url, { method: 'POST', body: form });
-  const data: CloudinaryResponse = await res.json().catch(() => ({ secure_url: '' }));
+  const res = await fetch(url, { method: "POST", body: form });
+  const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    console.error('Cloudinary error:', data);
-    throw new Error(data?.error?.message || 'Cloudinary upload failed');
+    console.error("Cloudinary error:", data);
+    throw new Error(data?.error?.message || "Cloudinary upload failed");
   }
   return data.secure_url;
 }
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
 
 const API = {
   buses: `${BASE_URL}/bus/get-all-buses`,
@@ -191,13 +136,13 @@ const API = {
 };
 
 function prettyRole(role: UserRole) {
-  if (role === 'student') return 'Student';
-  if (role === 'driver') return 'Driver';
-  return 'Admin';
+  if (role === "student") return "Student";
+  if (role === "driver") return "Driver";
+  return "Admin";
 }
 
 function formatDate(d?: string) {
-  if (!d) return '—';
+  if (!d) return "—";
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return d;
   return dt.toLocaleString();
@@ -205,16 +150,16 @@ function formatDate(d?: string) {
 
 function safeOpen(url?: string) {
   if (!url) return;
-  window.open(url, '_blank', 'noopener,noreferrer');
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
-function getErrorMessage(err: unknown, fallback: string) {
-  if (err instanceof Error) return err.message;
-  if (typeof err === 'string') return err;
-  return fallback;
-}
-
-function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
+function Overlay({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -242,8 +187,12 @@ function HeaderModal({
   return (
     <div className="p-6 border-b border-gray-100 flex justify-between items-start gap-4 sticky top-0 bg-white z-10">
       <div>
-        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">{title}</h2>
-        {subtitle ? <p className="text-xs text-gray-500 mt-1 font-medium">{subtitle}</p> : null}
+        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="text-xs text-gray-500 mt-1 font-medium">{subtitle}</p>
+        ) : null}
       </div>
       <button
         onClick={onClose}
@@ -258,12 +207,15 @@ function HeaderModal({
 export default function UserManagementPage() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
+  const { data: session } = useSession();
+  const accessToken = (session as any)?.accessToken as string | undefined;
+
 
   // sidebar
   const [isOpen, setIsOpen] = useState(false);
 
   // tabs
-  const [activeTab, setActiveTab] = useState<UserRole>('student');
+  const [activeTab, setActiveTab] = useState<UserRole>("student");
 
   // data
   const [users, setUsers] = useState<IUser[]>([]);
@@ -275,7 +227,7 @@ export default function UserManagementPage() {
   const [pendingLoading, setPendingLoading] = useState(false);
 
   // search
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
 
   const filteredUsers = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -286,22 +238,22 @@ export default function UserManagementPage() {
       return (
         u.name.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
-        (u.studentId || '').toLowerCase().includes(q) ||
-        (u.licenseNumber || '').toLowerCase().includes(q) ||
-        (u.assignedBusName || '').toLowerCase().includes(q)
+        (u.studentId || "").toLowerCase().includes(q) ||
+        (u.licenseNumber || "").toLowerCase().includes(q) ||
+        (u.assignedBusName || "").toLowerCase().includes(q)
       );
     });
   }, [users, activeTab, query]);
 
   // modal add/edit
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
+  const [modalType, setModalType] = useState<"add" | "edit" | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [form, setForm] = useState<Partial<IUser>>({
-    role: 'student',
-    name: '',
-    email: '',
+    role: "student",
+    name: "",
+    email: "",
   });
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -313,25 +265,25 @@ export default function UserManagementPage() {
   const [approvalItem, setApprovalItem] = useState<IPendingRequest | null>(null);
 
   const [assignBusOpen, setAssignBusOpen] = useState(false);
-  const [assignBusId, setAssignBusId] = useState<string>('');
+  const [assignBusId, setAssignBusId] = useState<string>("");
 
   useEffect(() => {
     setMounted(true);
     const lock = isOpen || isModalOpen || pendingOpen || approvalOpen || assignBusOpen;
-    document.body.style.overflow = lock ? 'hidden' : 'auto';
+    document.body.style.overflow = lock ? "hidden" : "auto";
     return () => {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = "auto";
     };
   }, [isOpen, isModalOpen, pendingOpen, approvalOpen, assignBusOpen]);
 
-  const admin = { name: 'Admin 1', role: 'Admin' };
+  const admin = { name: "Admin 1", role: "Admin" };
 
   const menuItems = [
-    { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
-    { label: 'Bus Management', href: '/dashboard/busManage', icon: MdDirectionsBus },
-    { label: 'User Management', href: '/dashboard/userManage', icon: MdPeople },
-    { label: 'Route Management', href: '/dashboard/routeManage', icon: MdMap },
-    { label: 'Notice Publish', href: '/dashboard/notice', icon: MdNotifications },
+    { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
+    { label: "Bus Management", href: "/dashboard/busManage", icon: MdDirectionsBus },
+    { label: "User Management", href: "/dashboard/userManage", icon: MdPeople },
+    { label: "Route Management", href: "/dashboard/routeManage", icon: MdMap },
+    { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
   ];
 
   const loadBuses = async () => {
@@ -351,26 +303,27 @@ export default function UserManagementPage() {
 
   const loadUsers = async () => {
     try {
-      const { data } = await apiFetch<RawUser[]>("/user/get-all-users");
-      const list: IUser[] = Array.isArray(data)
-        ? data.map((u) => ({
-          id: u._id || '',
-          name: u.name || '',
-          email: u.email || '',
-          role: u.role || 'student',
-          studentId: u.studentId,
-          licenseNumber: u.licenseNumber,
-          photoUrl: u.photoUrl || u.photo,
-          approvalLetterUrl: u.approvalLetterUrl || u.approvalLetter,
-          assignedBusId: u.assignedBusId,
-          assignedBusName: u.assignedBusName,
-          createdAt: u.createdAt,
-        }))
-        : [];
+      const res = await fetch(API.usersAll);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.message || "Failed to load users");
+
+      const list: IUser[] = (json?.data || []).map((u: any) => ({
+        id: u._id || u.id,
+        name: u.name,
+        email: u.email,
+        role: u.role,
+        studentId: u.studentId,
+        licenseNumber: u.licenseNumber,
+        photoUrl: u.photoUrl || u.photo,
+        approvalLetterUrl: u.approvalLetterUrl || u.approvalLetter,
+        assignedBusId: u.assignedBusId,
+        assignedBusName: u.assignedBusName,
+        createdAt: u.createdAt,
+      }));
 
       setUsers(list);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Could not load users'));
+    } catch (e: any) {
+      toast.error(e?.message || "Could not load users");
     }
   };
 
@@ -381,45 +334,45 @@ export default function UserManagementPage() {
   }, [mounted]);
 
   const openAdd = () => {
-    setModalType('add');
+    setModalType("add");
     setSelectedId(null);
     setForm({
       role: activeTab,
-      name: '',
-      email: '',
-      studentId: '',
-      licenseNumber: '',
-      photoUrl: '',
-      approvalLetterUrl: '',
-      assignedBusId: '',
-      assignedBusName: '',
+      name: "",
+      email: "",
+      studentId: "",
+      licenseNumber: "",
+      photoUrl: "",
+      approvalLetterUrl: "",
+      assignedBusId: "",
+      assignedBusName: "",
     });
     setIsModalOpen(true);
   };
 
   const openEdit = (u: IUser) => {
-    setModalType('edit');
+    setModalType("edit");
     setSelectedId(u.id);
     setForm({ ...u });
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to delete this user permanently?')) return;
+    if (!window.confirm("Are you sure you want to delete this user permanently?")) return;
 
     try {
-      const res = await fetch(API.userDelete(id), { method: 'DELETE' });
+      const res = await fetch(API.userDelete(id), { method: "DELETE" });
       const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || 'Delete failed');
+      if (!res.ok) throw new Error(json?.message || "Delete failed");
 
       setUsers((prev) => prev.filter((x) => x.id !== id));
-      toast.success('User deleted successfully.');
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Delete failed.'));
+      toast.success("User deleted successfully.");
+    } catch (e: any) {
+      toast.error(e?.message || "Delete failed.");
     }
   };
 
-  const requireDocs = form.role === 'admin' || form.role === 'driver';
+  const requireDocs = form.role === "admin" || form.role === "driver";
 
   const pickPhoto = () => photoRef.current?.click();
   const pickLetter = () => letterRef.current?.click();
@@ -429,15 +382,15 @@ export default function UserManagementPage() {
     if (!file) return;
     try {
       setUploadingPhoto(true);
-      toast.message('Uploading photo...');
+      toast.message("Uploading photo...");
       const url = await uploadToCloudinary(file);
       setForm((p) => ({ ...p, photoUrl: url }));
-      toast.success('Photo uploaded.');
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Photo upload failed.'));
+      toast.success("Photo uploaded.");
+    } catch (err: any) {
+      toast.error(err?.message || "Photo upload failed.");
     } finally {
       setUploadingPhoto(false);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -446,70 +399,69 @@ export default function UserManagementPage() {
     if (!file) return;
     try {
       setUploadingLetter(true);
-      toast.message('Uploading approval letter...');
+      toast.message("Uploading approval letter...");
       const url = await uploadToCloudinary(file);
       setForm((p) => ({ ...p, approvalLetterUrl: url }));
-      toast.success('Approval letter uploaded.');
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Letter upload failed.'));
+      toast.success("Approval letter uploaded.");
+    } catch (err: any) {
+      toast.error(err?.message || "Letter upload failed.");
     } finally {
       setUploadingLetter(false);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
   const saveUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!form.role) return toast.error('Role is required.');
-    if (!form.name?.trim()) return toast.error('Name is required.');
-    if (!form.email?.trim()) return toast.error('Email is required.');
+    if (!form.role) return toast.error("Role is required.");
+    if (!form.name?.trim()) return toast.error("Name is required.");
+    if (!form.email?.trim()) return toast.error("Email is required.");
 
-    if (form.role === 'student' && !form.studentId?.trim()) {
-      return toast.error('Student ID is required for students.');
+    if (form.role === "student" && !form.studentId?.trim()) {
+      return toast.error("Student ID is required for students.");
     }
 
-    if (form.role === 'driver' && !form.licenseNumber?.trim()) {
-      return toast.error('License number is required for drivers.');
+    if (form.role === "driver" && !form.licenseNumber?.trim()) {
+      return toast.error("License number is required for drivers.");
     }
 
-    if (modalType === 'add' && requireDocs) {
-      if (!form.photoUrl) return toast.error('Photo is mandatory for admin/driver.');
-      if (!form.approvalLetterUrl)
-        return toast.error('Approval letter is mandatory for admin/driver.');
+    if (modalType === "add" && requireDocs) {
+      if (!form.photoUrl) return toast.error("Photo is mandatory for admin/driver.");
+      if (!form.approvalLetterUrl) return toast.error("Approval letter is mandatory for admin/driver.");
     }
 
-    if (form.role === 'driver' && !form.assignedBusId) {
-      return toast.error('Please assign a bus to this driver.');
+    if (form.role === "driver" && !form.assignedBusId) {
+      return toast.error("Please assign a bus to this driver.");
     }
 
-    if (uploadingPhoto || uploadingLetter) return toast.error('Wait for uploads to finish.');
+    if (uploadingPhoto || uploadingLetter) return toast.error("Wait for uploads to finish.");
 
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
       role: form.role,
 
-      studentId: form.role === 'student' ? form.studentId?.trim() : undefined,
-      licenseNumber: form.role === 'driver' ? form.licenseNumber?.trim() : undefined,
+      studentId: form.role === "student" ? form.studentId?.trim() : undefined,
+      licenseNumber: form.role === "driver" ? form.licenseNumber?.trim() : undefined,
 
       photoUrl: requireDocs ? form.photoUrl || undefined : undefined,
       approvalLetterUrl: requireDocs ? form.approvalLetterUrl || undefined : undefined,
 
-      assignedBusId: form.role === 'driver' ? form.assignedBusId : undefined,
+      assignedBusId: form.role === "driver" ? form.assignedBusId : undefined,
     };
 
     try {
-      toast.message('Saving to server...');
+      toast.message("Saving to server...");
 
-      if (modalType === 'edit') {
+      if (modalType === "edit") {
         const res = await fetch(API.userUpdate(selectedId as string), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.message || 'Update failed');
+        if (!res.ok) throw new Error(json?.message || "Update failed");
 
         const updated: IUser = {
           id: json?.data?._id || json?.data?.id || (selectedId as string),
@@ -526,15 +478,15 @@ export default function UserManagementPage() {
         };
 
         setUsers((prev) => prev.map((x) => (x.id === selectedId ? updated : x)));
-        toast.success('User updated successfully.');
+        toast.success("User updated successfully.");
       } else {
         const res = await fetch(API.userAdd, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
         const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.message || 'Create failed');
+        if (!res.ok) throw new Error(json?.message || "Create failed");
 
         const created: IUser = {
           id: json?.data?._id || json?.data?.id,
@@ -551,38 +503,38 @@ export default function UserManagementPage() {
         };
 
         setUsers((prev) => [...prev, created]);
-        toast.success('User added successfully.');
+        toast.success("User added successfully.");
       }
 
       setIsModalOpen(false);
-    } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Save failed.'));
+    } catch (err: any) {
+      toast.error(err?.message || "Save failed.");
     }
   };
 
   const loadPending = async () => {
-    setPendingLoading(true);
-    try {
-      const { data } = await apiFetch<RawPending[]>("/auth/get-pending-registrations");
-      setPending(
-        (data || []).map((r) => ({
-          id: r._id,
-          name: r.name,
-          email: r.email,
-          role: r.role,
-          studentId: r.clientInfo?.rollNumber || r.studentId,
-          licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
-          photoUrl: r.profileImage || r.photoUrl,
-          approvalLetterUrl: r.approvalLetter || r.approvalLetterUrl,
-          createdAt: r.createdAt,
-        }))
-      );
-    } catch (e: unknown) {
-      toast.error(getErrorMessage(e, 'Failed to load pending requests'));
-    } finally {
-      setPendingLoading(false);
-    }
-  };
+  setPendingLoading(true);
+  try {
+    const json = await apiFetch<any>("/auth/get-pending-registrations", {}, accessToken);
+    setPending(
+      (json?.data || []).map((r: any) => ({
+        id: r._id,
+        name: r.name,
+        email: r.email,
+        role: r.role,
+        studentId: r.clientInfo?.rollNumber || r.studentId,
+        licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
+        photoUrl: r.profileImage || r.photoUrl,
+        approvalLetterUrl: r.approvalLetter || r.approvalLetterUrl,
+        createdAt: r.createdAt,
+      }))
+    );
+  } catch (e: any) {
+    toast.error(e.message);
+  } finally {
+    setPendingLoading(false);
+  }
+};
 
 
   const openPending = async () => {
@@ -598,8 +550,8 @@ export default function UserManagementPage() {
   const confirmApprove = async () => {
     if (!approvalItem) return;
 
-    if (approvalItem.role === 'driver') {
-      setAssignBusId('');
+    if (approvalItem.role === "driver") {
+      setAssignBusId("");
       setAssignBusOpen(true);
       return;
     }
@@ -676,12 +628,12 @@ export default function UserManagementPage() {
 
       { }
       <AnimatePresence>
-        {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
+        {(isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
           <motion.aside
-            initial={{ x: '-100%' }}
+            initial={{ x: "-100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
             className="fixed lg:sticky top-0 left-0 z-50 bg-[#E31E24] text-white flex flex-col shadow-2xl w-full lg:w-72 h-screen overflow-hidden"
           >
             <button
@@ -712,10 +664,11 @@ export default function UserManagementPage() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
-                      ? 'bg-white text-[#E31E24] shadow-md'
-                      : 'hover:bg-white/10 text-white/90'
-                    }`}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
+                    pathname === item.href
+                      ? "bg-white text-[#E31E24] shadow-md"
+                      : "hover:bg-white/10 text-white/90"
+                  }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
                 </Link>
@@ -724,7 +677,7 @@ export default function UserManagementPage() {
 
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
-                onClick={() => signOut({ callbackUrl: '/' })}
+                onClick={() => signOut({ callbackUrl: "/" })}
                 className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
               >
                 <MdLogout size={20} /> <span className="text-sm">Log Out</span>
@@ -750,10 +703,7 @@ export default function UserManagementPage() {
 
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-80">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -781,17 +731,18 @@ export default function UserManagementPage() {
           { }
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2 mb-8 flex flex-wrap gap-2">
             {[
-              { id: 'student', label: 'Students', icon: Users },
-              { id: 'driver', label: 'Drivers', icon: Bus },
-              { id: 'admin', label: 'Admins', icon: ShieldCheck },
+              { id: "student", label: "Students", icon: Users },
+              { id: "driver", label: "Drivers", icon: Bus },
+              { id: "admin", label: "Admins", icon: ShieldCheck },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as UserRole)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${activeTab === tab.id
-                    ? 'bg-[#E31E24] text-white shadow-lg shadow-red-200'
-                    : 'text-gray-500 hover:bg-gray-50'
-                  }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${
+                  activeTab === tab.id
+                    ? "bg-[#E31E24] text-white shadow-lg shadow-red-200"
+                    : "text-gray-500 hover:bg-gray-50"
+                }`}
               >
                 <tab.icon size={18} />
                 {tab.label}
@@ -828,7 +779,7 @@ export default function UserManagementPage() {
                       <th className="pb-4">Name</th>
                       <th className="pb-4">Email</th>
                       <th className="pb-4">Role Details</th>
-                      {activeTab === 'driver' && <th className="pb-4">Assigned Bus</th>}
+                      {activeTab === "driver" && <th className="pb-4">Assigned Bus</th>}
                       <th className="pb-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -841,17 +792,19 @@ export default function UserManagementPage() {
                         <td className="py-4 font-black text-gray-900">{u.name}</td>
                         <td className="py-4 text-gray-600">{u.email}</td>
                         <td className="py-4 text-xs text-gray-600">
-                          {u.role === 'student' && (
+                          {u.role === "student" && (
                             <div className="font-semibold">
-                              Student ID: <span className="font-black">{u.studentId || '—'}</span>
+                              Student ID:{" "}
+                              <span className="font-black">{u.studentId || "—"}</span>
                             </div>
                           )}
-                          {u.role === 'driver' && (
+                          {u.role === "driver" && (
                             <div className="font-semibold">
-                              License: <span className="font-black">{u.licenseNumber || '—'}</span>
+                              License:{" "}
+                              <span className="font-black">{u.licenseNumber || "—"}</span>
                             </div>
                           )}
-                          {u.role === 'admin' && (
+                          {u.role === "admin" && (
                             <div className="font-black text-red-600">System Admin</div>
                           )}
 
@@ -879,10 +832,10 @@ export default function UserManagementPage() {
                           )}
                         </td>
 
-                        {activeTab === 'driver' && (
+                        {activeTab === "driver" && (
                           <td className="py-4 text-xs text-gray-600">
                             <span className="font-black text-blue-600">
-                              {u.assignedBusName || 'Not Assigned'}
+                              {u.assignedBusName || "Not Assigned"}
                             </span>
                           </td>
                         )}
@@ -921,11 +874,11 @@ export default function UserManagementPage() {
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
-                title={`${modalType === 'add' ? 'Add' : 'Update'} ${prettyRole(form.role as UserRole) || 'User'}`}
+                title={`${modalType === "add" ? "Add" : "Update"} ${prettyRole(form.role as UserRole) || "User"}`}
                 subtitle="Fill the same fields as registration. Admin/Driver require documents."
                 onClose={() => setIsModalOpen(false)}
               />
@@ -943,10 +896,10 @@ export default function UserManagementPage() {
                       setForm((p) => ({
                         ...p,
                         role,
-                        studentId: role === 'student' ? p.studentId : '',
-                        licenseNumber: role === 'driver' ? p.licenseNumber : '',
-                        assignedBusId: role === 'driver' ? p.assignedBusId : '',
-                        assignedBusName: role === 'driver' ? p.assignedBusName : '',
+                        studentId: role === "student" ? p.studentId : "",
+                        licenseNumber: role === "driver" ? p.licenseNumber : "",
+                        assignedBusId: role === "driver" ? p.assignedBusId : "",
+                        assignedBusName: role === "driver" ? p.assignedBusName : "",
                       }));
                     }}
                     className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white font-black"
@@ -966,7 +919,7 @@ export default function UserManagementPage() {
                     <input
                       type="text"
                       required
-                      value={form.name || ''}
+                      value={form.name || ""}
                       onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
                       className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white"
                     />
@@ -979,15 +932,15 @@ export default function UserManagementPage() {
                     <input
                       type="email"
                       required
-                      value={form.email || ''}
+                      value={form.email || ""}
                       onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
                       className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white"
                     />
                   </div>
                 </div>
 
-                { }
-                {form.role === 'student' && (
+                {}
+                {form.role === "student" && (
                   <div>
                     <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
                       Student ID
@@ -995,14 +948,14 @@ export default function UserManagementPage() {
                     <input
                       type="text"
                       required
-                      value={form.studentId || ''}
+                      value={form.studentId || ""}
                       onChange={(e) => setForm((p) => ({ ...p, studentId: e.target.value }))}
                       className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                     />
                   </div>
                 )}
 
-                {form.role === 'driver' && (
+                {form.role === "driver" && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
@@ -1011,8 +964,10 @@ export default function UserManagementPage() {
                       <input
                         type="text"
                         required
-                        value={form.licenseNumber || ''}
-                        onChange={(e) => setForm((p) => ({ ...p, licenseNumber: e.target.value }))}
+                        value={form.licenseNumber || ""}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, licenseNumber: e.target.value }))
+                        }
                         className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                       />
                     </div>
@@ -1022,7 +977,7 @@ export default function UserManagementPage() {
                         Assign Bus
                       </label>
                       <select
-                        value={form.assignedBusId || ''}
+                        value={form.assignedBusId || ""}
                         onChange={(e) => {
                           const id = e.target.value;
                           const bus = buses.find((b) => b.id === id);
@@ -1045,8 +1000,8 @@ export default function UserManagementPage() {
                   </div>
                 )}
 
-                { }
-                {(form.role === 'admin' || form.role === 'driver') && (
+                {}
+                {(form.role === "admin" || form.role === "driver") && (
                   <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                     <div className="p-4 bg-gray-50 flex items-start justify-between gap-3">
                       <div>
@@ -1055,9 +1010,9 @@ export default function UserManagementPage() {
                           Required Documents
                         </div>
                         <div className="text-[11px] text-gray-500 mt-1">
-                          {modalType === 'add'
-                            ? 'Photo and approval letter are mandatory.'
-                            : 'You can keep existing documents or upload new ones.'}
+                          {modalType === "add"
+                            ? "Photo and approval letter are mandatory."
+                            : "You can keep existing documents or upload new ones."}
                         </div>
                       </div>
                     </div>
@@ -1067,18 +1022,19 @@ export default function UserManagementPage() {
                       <div className="rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-black uppercase text-gray-600">
-                            Photo {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
+                            Photo {modalType === "add" ? "(Mandatory)" : "(Optional)"}
                           </div>
                           <button
                             type="button"
                             onClick={pickPhoto}
                             disabled={uploadingPhoto}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingPhoto
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                              }`}
+                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
+                              uploadingPhoto
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                : "bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200"
+                            }`}
                           >
-                            <Upload size={16} /> {uploadingPhoto ? 'Uploading...' : 'Upload'}
+                            <Upload size={16} /> {uploadingPhoto ? "Uploading..." : "Upload"}
                           </button>
                           <input
                             ref={photoRef}
@@ -1101,9 +1057,9 @@ export default function UserManagementPage() {
                             </button>
                           ) : (
                             <div className="text-sm text-gray-500">
-                              {modalType === 'add'
-                                ? 'Upload a photo to continue.'
-                                : 'No photo selected.'}
+                              {modalType === "add"
+                                ? "Upload a photo to continue."
+                                : "No photo selected."}
                             </div>
                           )}
                         </div>
@@ -1113,18 +1069,19 @@ export default function UserManagementPage() {
                       <div className="rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-black uppercase text-gray-600">
-                            Approval Letter {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
+                            Approval Letter {modalType === "add" ? "(Mandatory)" : "(Optional)"}
                           </div>
                           <button
                             type="button"
                             onClick={pickLetter}
                             disabled={uploadingLetter}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingLetter
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                              }`}
+                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
+                              uploadingLetter
+                                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                : "bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200"
+                            }`}
                           >
-                            <Upload size={16} /> {uploadingLetter ? 'Uploading...' : 'Upload'}
+                            <Upload size={16} /> {uploadingLetter ? "Uploading..." : "Upload"}
                           </button>
                           <input
                             ref={letterRef}
@@ -1149,9 +1106,9 @@ export default function UserManagementPage() {
                             </button>
                           ) : (
                             <div className="text-sm text-gray-500">
-                              {modalType === 'add'
-                                ? 'Upload an approval letter to continue.'
-                                : 'No letter selected.'}
+                              {modalType === "add"
+                                ? "Upload an approval letter to continue."
+                                : "No letter selected."}
                             </div>
                           )}
                         </div>
@@ -1172,13 +1129,14 @@ export default function UserManagementPage() {
                   <button
                     type="submit"
                     disabled={uploadingPhoto || uploadingLetter}
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploadingPhoto || uploadingLetter
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-[#E31E24] hover:bg-red-700'
-                      }`}
+                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${
+                      uploadingPhoto || uploadingLetter
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-[#E31E24] hover:bg-red-700"
+                    }`}
                   >
                     <Save size={18} />
-                    {modalType === 'add' ? 'Save User' : 'Save Changes'}
+                    {modalType === "add" ? "Save User" : "Save Changes"}
                   </button>
                 </div>
               </form>
@@ -1195,7 +1153,7 @@ export default function UserManagementPage() {
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
@@ -1240,16 +1198,14 @@ export default function UserManagementPage() {
                             </div>
 
                             <div className="mt-2 text-xs text-gray-600">
-                              {p.role === 'student' && (
+                              {p.role === "student" && (
                                 <span className="font-semibold">
-                                  Student ID:{' '}
-                                  <span className="font-black">{p.studentId || '—'}</span>
+                                  Student ID: <span className="font-black">{p.studentId || "—"}</span>
                                 </span>
                               )}
-                              {p.role === 'driver' && (
+                              {p.role === "driver" && (
                                 <span className="font-semibold">
-                                  License:{' '}
-                                  <span className="font-black">{p.licenseNumber || '—'}</span>
+                                  License: <span className="font-black">{p.licenseNumber || "—"}</span>
                                 </span>
                               )}
                             </div>
@@ -1327,7 +1283,7 @@ export default function UserManagementPage() {
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
@@ -1354,19 +1310,19 @@ export default function UserManagementPage() {
                   </div>
 
                   <div className="mt-3 text-sm text-gray-700">
-                    {approvalItem.role === 'student' && (
+                    {approvalItem.role === "student" && (
                       <div>
-                        Student ID:{' '}
-                        <span className="font-black">{approvalItem.studentId || '—'}</span>
+                        Student ID:{" "}
+                        <span className="font-black">{approvalItem.studentId || "—"}</span>
                       </div>
                     )}
-                    {approvalItem.role === 'driver' && (
+                    {approvalItem.role === "driver" && (
                       <div>
-                        License Number:{' '}
-                        <span className="font-black">{approvalItem.licenseNumber || '—'}</span>
+                        License Number:{" "}
+                        <span className="font-black">{approvalItem.licenseNumber || "—"}</span>
                       </div>
                     )}
-                    {approvalItem.role === 'admin' && (
+                    {approvalItem.role === "admin" && (
                       <div className="font-black text-red-600">
                         Admin requires documents verification.
                       </div>
@@ -1402,8 +1358,7 @@ export default function UserManagementPage() {
                     Sure about approval?
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    Approving will add this user to the user database and remove the pending
-                    request.
+                    Approving will add this user to the user database and remove the pending request.
                   </p>
                 </div>
 
@@ -1435,7 +1390,7 @@ export default function UserManagementPage() {
 
       { }
       <AnimatePresence>
-        {assignBusOpen && approvalItem?.role === 'driver' && (
+        {assignBusOpen && approvalItem?.role === "driver" && (
           <Overlay
             onClose={() => {
               setAssignBusOpen(false);
@@ -1445,7 +1400,7 @@ export default function UserManagementPage() {
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
@@ -1459,7 +1414,8 @@ export default function UserManagementPage() {
                   <div className="font-black text-gray-900">{approvalItem.name}</div>
                   <div className="text-sm text-gray-600">{approvalItem.email}</div>
                   <div className="text-sm text-gray-700 mt-2">
-                    License: <span className="font-black">{approvalItem.licenseNumber || '—'}</span>
+                    License:{" "}
+                    <span className="font-black">{approvalItem.licenseNumber || "—"}</span>
                   </div>
                 </div>
 
@@ -1496,7 +1452,7 @@ export default function UserManagementPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (!assignBusId) return toast.error('Please select a bus for this driver.');
+                      if (!assignBusId) return toast.error("Please select a bus for this driver.");
                       finalizeApprove({ assignedBusId: assignBusId });
                     }}
                     className="flex-1 py-4 rounded-2xl font-black text-white bg-[#E31E24] hover:bg-red-700 transition-colors shadow-lg shadow-red-200 flex justify-center items-center gap-2"

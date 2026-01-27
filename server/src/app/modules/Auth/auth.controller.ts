@@ -1,28 +1,42 @@
-import { Request, Response } from 'express';
-import sendResponse from '../../utils/sendResponse';
-import catchAsync from '../../utils/catchAsync';
-import { StatusCodes } from 'http-status-codes';
-import config from '../../config';
-import { AuthService } from './auth.service';
+import { Request, Response } from "express";
+import catchAsync from "../../utils/catchAsync";
+import sendResponse from "../../utils/sendResponse";
+import { StatusCodes } from "http-status-codes";
+import { AuthService } from "./auth.service";
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
-  const { refreshToken, accessToken } = result;
 
-  res.cookie('refreshToken', refreshToken, {
-    secure: config.NODE_ENV === 'production',
+  // set refresh token cookie
+  res.cookie("refreshToken", result.refreshToken, {
     httpOnly: true,
-    sameSite: 'none',
-    maxAge: 1000 * 60 * 60 * 24 * 365,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days (cookie lifetime)
   });
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'User logged in successfully!',
+    message: "User logged in successfully",
     data: {
-      accessToken,
-      refreshToken,
+      accessToken: result.accessToken,
+      user: result.user,
+    },
+  });
+});
+
+const refreshToken = catchAsync(async (req: Request, res: Response) => {
+  const token = req.cookies?.refreshToken;
+
+  const result = await AuthService.refreshToken(token);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Access token refreshed",
+    data: {
+      accessToken: result.accessToken,
     },
   });
 });
@@ -33,71 +47,73 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Password changed successfully!',
-    data: result,
+    message: result.message,
+    data: null,
   });
 });
 
 const forgetPassword = catchAsync(async (req: Request, res: Response) => {
-  const data = await AuthService.forgetPassword(req.body);
+  const result = await AuthService.forgetPassword(req.body);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Reset password link has been sent to your email.',
-    data,
+    message: result.message,
+    data: null,
   });
 });
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
-  const data = await AuthService.resetPassword(req.body);
+  const result = await AuthService.resetPassword(req.body);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Password reset successfully!',
-    data,
+    message: result.message,
+    data: null,
   });
 });
 
 const getPendingRegistrations = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.getPendingRegistrations();
+  const result = await AuthService.getPendingRegistrations(req.user);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Pending registrations fetched successfully',
+    message: "Pending registrations fetched successfully",
     data: result,
   });
 });
 
 const approveRegistration = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.approveRegistration(req.params.id, req.body);
+  const result = await AuthService.approveRegistration(req.params.id, req.body, req.user);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'User approved successfully',
+    message: "Registration approved successfully",
     data: result,
   });
 });
 
 const rejectRegistration = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.rejectRegistration(req.params.id);
+  const result = await AuthService.rejectRegistration(req.params.id, req.user);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Registration request rejected',
+    message: "Registration rejected successfully",
     data: result,
   });
 });
 
 export const AuthController = {
   loginUser,
+  refreshToken,
   changePassword,
   forgetPassword,
   resetPassword,
+
   getPendingRegistrations,
   approveRegistration,
   rejectRegistration,

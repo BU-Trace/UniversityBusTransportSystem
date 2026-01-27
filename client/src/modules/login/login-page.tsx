@@ -210,21 +210,65 @@ import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Home, Loader2 } from 'lucide-react';
-import { signIn } from 'next-auth/react';
+import { getSession, signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
+type UserRole = 'student' | 'driver' | 'admin' | 'superadmin';
+
+function isRoleAllowedForPath(role: UserRole | undefined, path: string) {
+  if (!role) return false;
+
+  // Admin dashboard
+  if (path.startsWith('/dashboard')) return role === 'admin' || role === 'superadmin';
+
+  // Student dashboard
+  if (path.startsWith('/student-dashboard')) return role === 'student';
+
+  // Driver dashboard (if you have it)
+  if (path.startsWith('/driver-dashboard')) return role === 'driver';
+
+  // Public / other routes: allow
+  return true;
+}
+
+function defaultRouteForRole(role: UserRole | undefined) {
+  if (role === 'admin' || role === 'superadmin') return '/dashboard';
+  if (role === 'student') return '/student-dashboard';
+  if (role === 'driver') return '/driver-dashboard';
+  return '/';
+}
+
+function normalizeCallbackUrl(callbackUrl: string | null) {
+  const raw = (callbackUrl || '').trim();
+  if (!raw) return null;
+
+  // If next-auth gives absolute URL, convert to pathname
+  try {
+    if (/^https?:\/\//i.test(raw)) {
+      const u = new URL(raw);
+      return u.pathname + (u.search || '');
+    }
+  } catch {
+    // ignore
+  }
+
+  // Ensure it starts with /
+  if (!raw.startsWith('/')) return `/${raw}`;
+  return raw;
+}
+
 const LoginPageComponent = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+
+  // keep your callbackUrl support, but we will enforce role access after login
+  const callbackUrl = normalizeCallbackUrl(searchParams.get('callbackUrl'));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -233,13 +277,13 @@ const LoginPageComponent = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const email = formData.email.trim().toLowerCase();
+    const password = formData.password;
+
     const validationErrors: { email?: string; password?: string } = {};
-    if (!formData.email) {
-      validationErrors.email = 'Email is required';
-    }
-    if (!formData.password) {
-      validationErrors.password = 'Password is required';
-    }
+    if (!email) validationErrors.email = 'Email is required';
+    if (!password) validationErrors.password = 'Password is required';
 
     if (Object.keys(validationErrors).length) {
       setErrors(validationErrors);
@@ -249,28 +293,48 @@ const LoginPageComponent = () => {
     setIsSubmitting(true);
     setErrors({});
 
-    const result = await signIn('credentials', {
-      email: formData.email,
-      password: formData.password,
-      redirect: false,
-      callbackUrl,
-    });
+    try {
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+        // keep it, but final navigation will be decided by role below
+        callbackUrl: callbackUrl || '/dashboard',
+      });
 
-    if (result?.error) {
-      const message = result.error || 'Unable to sign in.';
+      if (result?.error) {
+        const message = result.error || 'Unable to sign in.';
+        setErrors({ form: message });
+        toast.error(message);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Pull session after successful sign-in (important for role-based routing)
+      const session = await getSession();
+      const role = (session?.user as any)?.role as UserRole | undefined;
+
+      const safeDefault = defaultRouteForRole(role);
+
+      // If callbackUrl exists AND role is allowed to access it, keep it.
+      // Otherwise redirect to the role’s default dashboard.
+      const nextPath =
+        callbackUrl && isRoleAllowedForPath(role, callbackUrl) ? callbackUrl : safeDefault;
+
+      toast.success('Signed in successfully');
+      router.replace(nextPath);
+    } catch (err: any) {
+      const message = err?.message || 'Sign in failed (network error).';
       setErrors({ form: message });
       toast.error(message);
-    } else {
-      toast.success('Signed in successfully');
-      router.push(result?.url || callbackUrl);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 overflow-hidden relative p-0 lg:p-4">
-
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
+      {/* blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
 
@@ -280,10 +344,9 @@ const LoginPageComponent = () => {
         transition={{ duration: 0.5 }}
         className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border-none lg:border lg:border-white/50 rounded-none lg:rounded-[2.5rem] shadow-none lg:shadow-2xl overflow-hidden w-full lg:max-w-[95%] xl:max-w-7xl h-screen lg:h-[800px] z-10"
       >
-
+        {/* Left banner */}
         <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
-
-          <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
 
           <Image
             width={1000}
@@ -302,9 +365,8 @@ const LoginPageComponent = () => {
           </div>
         </div>
 
-
-        <div className="w-full lg:w-[35%] p-4 lg:p-12 flex flex-col justify-center h-full bg-white relative">
-          {/*Header*/}
+        {/* Right glass box */}
+        <div className="w-full lg:w-[35%] p-8 lg:p-12 flex flex-col justify-center h-full bg-white relative">
           <div className="mb-8 text-center">
             <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter mb-2">
               Login
@@ -315,7 +377,6 @@ const LoginPageComponent = () => {
             </p>
           </div>
 
-          {/*Form*/}
           <form onSubmit={handleSubmit} className="flex flex-col space-y-6 w-full max-w-sm mx-auto">
             <div className="space-y-4">
               <InputField
@@ -371,7 +432,6 @@ const LoginPageComponent = () => {
               )}
             </button>
 
-
             <div className="flex flex-col items-center space-y-4 pt-4 border-t border-gray-100 mt-2">
               <Link
                 href="/forget-password"
@@ -391,7 +451,7 @@ const LoginPageComponent = () => {
         </div>
       </motion.div>
 
-      {/*HomeBtn*/}
+      {/* Home button */}
       <Link
         href="/"
         title="Back to Home"
