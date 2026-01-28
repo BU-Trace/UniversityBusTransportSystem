@@ -75,11 +75,7 @@ interface IPendingRequest {
   createdAt?: string;
 }
 
-async function apiFetch<T>(
-  pathOrUrl: string,
-  options: RequestInit = {},
-  accessToken?: string
-): Promise<T> {
+async function apiFetch<T>(pathOrUrl: string, options: RequestInit = {}, token?: string): Promise<T> {
   const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
   const url = isFullUrl ? pathOrUrl : `${BASE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
 
@@ -87,15 +83,21 @@ async function apiFetch<T>(
     ...options,
     headers: {
       "Content-Type": "application/json",
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers || {}),
     },
+    credentials: "include",
   });
 
   const json = await res.json().catch(() => ({} as any));
-  if (!res.ok) throw new Error(json?.message || "Request failed");
+
+  if (!res.ok) {
+    throw new Error(json?.message || "Request failed");
+  }
+
   return json as T;
 }
+
 
 
 
@@ -208,8 +210,14 @@ export default function UserManagementPage() {
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
-  const accessToken = (session as any)?.accessToken as string | undefined;
+  const accessTokenFromSession = (session as any)?.accessToken as string | undefined;
 
+  // keep a mutable token so refresh can update it without re-render dependency issues
+  const accessTokenRef = useRef<string | undefined>(accessTokenFromSession);
+
+  useEffect(() => {
+    accessTokenRef.current = accessTokenFromSession;
+  }, [accessTokenFromSession]);
 
   // sidebar
   const [isOpen, setIsOpen] = useState(false);
@@ -512,29 +520,64 @@ export default function UserManagementPage() {
     }
   };
 
-  const loadPending = async () => {
-  setPendingLoading(true);
-  try {
-    const json = await apiFetch<any>("/auth/get-pending-registrations", {}, accessToken);
-    setPending(
-      (json?.data || []).map((r: any) => ({
-        id: r._id,
-        name: r.name,
-        email: r.email,
-        role: r.role,
-        studentId: r.clientInfo?.rollNumber || r.studentId,
-        licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
-        photoUrl: r.profileImage || r.photoUrl,
-        approvalLetterUrl: r.approvalLetter || r.approvalLetterUrl,
-        createdAt: r.createdAt,
-      }))
-    );
-  } catch (e: any) {
-    toast.error(e.message);
-  } finally {
-    setPendingLoading(false);
-  }
-};
+    const loadPending = async () => {
+    setPendingLoading(true);
+    try {
+      const json = await apiFetchWithRefresh<any>("/auth/get-pending-registrations");
+
+      setPending(
+        (json?.data || []).map((r: any) => ({
+          id: r._id,
+          name: r.name,
+          email: r.email,
+          role: r.role,
+          studentId: r.clientInfo?.rollNumber || r.studentId,
+          licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
+          photoUrl: r.profileImage || r.photoUrl,
+          approvalLetterUrl: r.approvalLetter || r.approvalLetterUrl,
+          createdAt: r.createdAt,
+        }))
+      );
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
+  const refreshAccessToken = async () => {
+    // backend reads refresh token from cookie
+    const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    const json = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(json?.message || "Unable to refresh token");
+
+    // adjust if your backend uses a different key
+    const newAccessToken = json?.data?.accessToken || json?.accessToken;
+    if (!newAccessToken) throw new Error("Refresh succeeded but no access token returned");
+
+    accessTokenRef.current = newAccessToken;
+    return newAccessToken as string;
+  };
+
+  const apiFetchWithRefresh = async <T,>(pathOrUrl: string, options: RequestInit = {}) => {
+    try {
+      return await apiFetch<T>(pathOrUrl, options, accessTokenRef.current);
+    } catch (e: any) {
+      const msg = String(e?.message || "");
+      // your backend sends: "Token has expired! Please login again."
+      if (msg.toLowerCase().includes("expired")) {
+        const newToken = await refreshAccessToken();
+        return await apiFetch<T>(pathOrUrl, options, newToken);
+      }
+      throw e;
+    }
+  };
+
+
 
 
   const openPending = async () => {
@@ -565,29 +608,38 @@ export default function UserManagementPage() {
   try {
     toast.message("Approving...");
 
-    const json = await apiFetch<any>(`/auth/approve-registration/${approvalItem.id}`, {
-      method: "POST",
-      body: JSON.stringify({
-        assignedBusId: approvalItem.role === "driver" ? extra.assignedBusId : undefined,
-      }),
-    });
+    const json = await apiFetchWithRefresh<any>(
+      `/auth/approve-registration/${approvalItem.id}`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          assignedBusId:
+            approvalItem.role === "driver" ? extra.assignedBusId : undefined,
+        }),
+      }
+    );
 
     const created = json.data;
-    setUsers((prev) => [...prev, {
-      id: created._id,
-      name: created.name,
-      email: created.email,
-      role: created.role,
-      licenseNumber: created.clientInfo?.licenseNumber,
-      studentId: created.clientInfo?.rollNumber,
-      photoUrl: created.profileImage,
-      approvalLetterUrl: created.approvalLetter,
-      assignedBusId: created.assignedBus,
-      assignedBusName: created.assignedBusName,
-      createdAt: created.createdAt,
-    }]);
+
+    setUsers((prev) => [
+      ...prev,
+      {
+        id: created._id,
+        name: created.name,
+        email: created.email,
+        role: created.role,
+        licenseNumber: created.clientInfo?.licenseNumber,
+        studentId: created.clientInfo?.rollNumber,
+        photoUrl: created.profileImage,
+        approvalLetterUrl: created.approvalLetter,
+        assignedBusId: created.assignedBus,
+        assignedBusName: created.assignedBusName,
+        createdAt: created.createdAt,
+      },
+    ]);
 
     setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
+
     toast.success("Approved and added to users.");
 
     setAssignBusOpen(false);
@@ -597,6 +649,7 @@ export default function UserManagementPage() {
     toast.error(e.message);
   }
 };
+
 
 
   const rejectPending = async (id: string) => {
