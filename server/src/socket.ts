@@ -8,7 +8,14 @@ export const initSocket = (httpServer: any) => {
 
   io.on("connection", (socket) => {
     console.log("Socket connected:", socket.id);
-//loacation update handler
+
+    //join route room
+    socket.on("joinRoute", ({ routeId }) => {
+      socket.join(routeId);
+      console.log(`Socket ${socket.id} joined route room: ${routeId}`);
+    });
+    
+    //loacation update handler
     socket.on("sendLocation", async (data) => {
       try {
         console.log("Received from client:", data);
@@ -17,19 +24,21 @@ export const initSocket = (httpServer: any) => {
           { busId: data.busId },
           {
             busId: data.busId,
+            routeId: data.routeId,
             lat: data.lat,
             lng: data.lng,
-           
+
             time: new Date(),
-            status:data.status||"running"
+            status: data.status || "running"
           },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );
 
         console.log("Saved in MongoDB:", saved);
 
-       
-        io.emit("receiveLocation", saved); 
+
+        // io.emit("receiveLocation", saved);
+         io.to(data.routeId).emit("receiveLocation", saved);
       } catch (err) {
         console.error("MongoDB Save Error:", err);
       }
@@ -48,7 +57,7 @@ export const initSocket = (httpServer: any) => {
           { new: true }
         );
 
-        io.emit("receiveBusStatus", updated);
+        io.to(data.routeId).emit("receiveBusStatus", updated);
       } catch (err) {
         console.error("Status Update Error:", err);
       }

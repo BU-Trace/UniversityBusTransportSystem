@@ -2,6 +2,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { io } from "socket.io-client";
 import "leaflet/dist/leaflet.css";
 import BusMarker from "./BusMarker"; 
@@ -15,6 +16,7 @@ const studentIcon = new L.Icon({
 });
 
 type Bus = {
+  routeId: string;
   busId: string;
   lat: number;
   lng: number;
@@ -25,11 +27,19 @@ type Bus = {
 };
 
 export default function MapView({ busId }: { busId: string | null }) {
+const params = useSearchParams();
+const routeId = params.get("route");
+
   const [buses, setBuses] = useState<Bus[]>([]);
   const [studentPos, setStudentPos] = useState<[number, number] | null>(null);
   const [activeBusId, setActiveBusId] = useState<string | null>(null);
 
   useEffect(() => {
+  if (routeId) {
+    socket.emit("joinRoute", { routeId });
+    setBuses([]); // clear previous buses when route changes
+  }
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((pos) => {
         setStudentPos([pos.coords.latitude, pos.coords.longitude]);
@@ -37,9 +47,10 @@ export default function MapView({ busId }: { busId: string | null }) {
     }
 
     const handler = (data: Bus) => {
+      if(data.routeId !== routeId) return; // ignore if not in the same route
       setBuses((prev) => {
-        const rest = prev.filter((b) => b.busId !== data.busId);
-        return [...rest, data];
+        const filtered = prev.filter((b) => b.busId !== data.busId);
+        return [...filtered, data];
       });
     };
 
@@ -50,7 +61,7 @@ export default function MapView({ busId }: { busId: string | null }) {
       socket.off("receiveLocation", handler);
       socket.off("receiveBusStatus", handler);
     };
-  }, []);
+  }, [routeId]);
 
   const filteredBuses = busId
     ? buses.filter((b) => b.busId === busId)
