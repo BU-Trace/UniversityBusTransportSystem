@@ -35,6 +35,7 @@ import {
 } from "react-icons/md";
 
 type UserRole = "student" | "driver" | "admin";
+type StaffRole = "admin" | "superadmin";
 
 interface IUser {
   id: string;
@@ -75,21 +76,98 @@ interface IPendingRequest {
   createdAt?: string;
 }
 
-async function apiFetch<T>(pathOrUrl: string, options: RequestInit = {}, token?: string): Promise<T> {
-  const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
-  const url = isFullUrl ? pathOrUrl : `${BASE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
+type ApiFetchOptions = RequestInit & { headers?: Record<string, string> };
 
-  const res = await fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(options.headers || {}),
-    },
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+
+function joinUrl(pathOrUrl: string) {
+  const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
+  if (isFullUrl) return pathOrUrl;
+  return `${BASE_URL}${pathOrUrl.startsWith("/") ? "" : "/"}${pathOrUrl}`;
+}
+
+function getErrorMessage(err: unknown) {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return "Something went wrong";
+  }
+}
+
+function isTokenExpiredMessage(message?: string) {
+  if (!message) return false;
+  const m = message.toLowerCase();
+  return m.includes("token has expired") || m.includes("jwt expired") || m.includes("expired");
+}
+
+/**
+ * Cookie-based refresh. Backend must read refresh token from cookie.
+ * Should return: { data: { accessToken: "..." } } (or similar)
+ */
+async function refreshAccessToken(): Promise<string> {
+  const res = await fetch(joinUrl("/auth/refresh-token"), {
+    method: "POST",
     credentials: "include",
   });
 
   const json = await res.json().catch(() => ({} as any));
+  if (!res.ok) {
+    throw new Error(json?.message || "Session expired. Please login again.");
+  }
+
+  const newToken: string | undefined = json?.data?.accessToken || json?.accessToken;
+  if (!newToken) {
+    throw new Error("Refresh succeeded but no access token returned.");
+  }
+
+  return newToken;
+}
+
+/**
+ * Main API helper: sends Authorization header using accessTokenRef.current
+ * If expired -> refresh once -> retry once.
+ */
+async function apiFetchAuth<T>(
+  pathOrUrl: string,
+  options: ApiFetchOptions,
+  accessTokenRef: React.MutableRefObject<string | undefined>
+): Promise<T> {
+  const url = joinUrl(pathOrUrl);
+
+  const doFetch = async (token?: string) => {
+    const res = await fetch(url, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: "include",
+    });
+    const json = await res.json().catch(() => ({} as any));
+    return { res, json };
+  };
+
+  // 1) first attempt with current token
+  let { res, json } = await doFetch(accessTokenRef.current);
+
+  // 2) if unauthorized and looks expired -> refresh and retry once
+  if (!res.ok) {
+    const unauthorized = res.status === 401 || res.status === 403;
+    const msg = json?.message || "";
+
+    if (unauthorized && isTokenExpiredMessage(msg)) {
+      const newToken = await refreshAccessToken();
+      accessTokenRef.current = newToken;
+
+      const retry = await doFetch(newToken);
+      res = retry.res;
+      json = retry.json;
+    }
+  }
 
   if (!res.ok) {
     throw new Error(json?.message || "Request failed");
@@ -97,9 +175,6 @@ async function apiFetch<T>(pathOrUrl: string, options: RequestInit = {}, token?:
 
   return json as T;
 }
-
-
-
 
 const CLOUD_NAME = "dpiofecgs";
 const UPLOAD_PRESET = "butrace";
@@ -121,20 +196,17 @@ async function uploadToCloudinary(file: File): Promise<string> {
   return data.secure_url as string;
 }
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
-
 const API = {
-  buses: `${BASE_URL}/bus/get-all-buses`,
+  buses: `/bus/get-all-buses`,
 
-  usersAll: `${BASE_URL}/user/get-all-users`,
-  userAdd: `${BASE_URL}/user/add-user`,
-  userUpdate: (id: string) => `${BASE_URL}/user/update-user/${id}`,
-  userDelete: (id: string) => `${BASE_URL}/user/delete-user/${id}`,
+  usersAll: `/user/get-all-users`,
+  userAdd: `/user/add-user`,
+  userUpdate: (id: string) => `/user/update-user/${id}`,
+  userDelete: (id: string) => `/user/delete-user/${id}`,
 
-  pendingAll: `${BASE_URL}/auth/get-pending-registrations`,
-  approvePending: (id: string) => `${BASE_URL}/auth/approve-registration/${id}`,
-  rejectPending: (id: string) => `${BASE_URL}/auth/reject-registration/${id}`,
+  pendingAll: `/auth/get-pending-registrations`,
+  approvePending: (id: string) => `/auth/approve-registration/${id}`,
+  rejectPending: (id: string) => `/auth/reject-registration/${id}`,
 };
 
 function prettyRole(role: UserRole) {
@@ -208,16 +280,25 @@ function HeaderModal({
 
 export default function UserManagementPage() {
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
-  const accessTokenFromSession = (session as any)?.accessToken as string | undefined;
 
-  // keep a mutable token so refresh can update it without re-render dependency issues
+  // role + accessToken from next-auth session (adjust if your session shape differs)
+  const staffRole = ((session as any)?.user?.role || (session as any)?.role) as
+    | StaffRole
+    | undefined;
+
+  const accessTokenFromSession = (session as any)?.accessToken as
+    | string
+    | undefined;
+
+  // keep latest access token in ref so refresh can update it
   const accessTokenRef = useRef<string | undefined>(accessTokenFromSession);
 
   useEffect(() => {
     accessTokenRef.current = accessTokenFromSession;
   }, [accessTokenFromSession]);
+
+  const [mounted, setMounted] = useState(false);
 
   // sidebar
   const [isOpen, setIsOpen] = useState(false);
@@ -277,7 +358,8 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     setMounted(true);
-    const lock = isOpen || isModalOpen || pendingOpen || approvalOpen || assignBusOpen;
+    const lock =
+      isOpen || isModalOpen || pendingOpen || approvalOpen || assignBusOpen;
     document.body.style.overflow = lock ? "hidden" : "auto";
     return () => {
       document.body.style.overflow = "auto";
@@ -288,50 +370,51 @@ export default function UserManagementPage() {
 
   const menuItems = [
     { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
-    { label: "Bus Management", href: "/dashboard/busManage", icon: MdDirectionsBus },
+    {
+      label: "Bus Management",
+      href: "/dashboard/busManage",
+      icon: MdDirectionsBus,
+    },
     { label: "User Management", href: "/dashboard/userManage", icon: MdPeople },
     { label: "Route Management", href: "/dashboard/routeManage", icon: MdMap },
     { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
   ];
 
   const loadBuses = async () => {
-  try {
-    const json = await apiFetch<any>("/bus/get-all-buses");
-    const busList = (json?.data || []).map((b: any) => ({
-      id: b._id,
-      name: b.name,
-      plateNumber: b.plateNumber,
-    }));
-    setBuses(busList);
-  } catch (e: any) {
-    toast.error(e.message);
-  }
-};
-
+    try {
+      const json = await apiFetchAuth<any>(API.buses, { method: "GET" }, accessTokenRef);
+      const busList = (json?.data || []).map((b: any) => ({
+        id: b._id,
+        name: b.name,
+        plateNumber: b.plateNumber,
+      }));
+      setBuses(busList);
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    }
+  };
 
   const loadUsers = async () => {
     try {
-      const res = await fetch(API.usersAll);
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || "Failed to load users");
+      const json = await apiFetchAuth<any>(API.usersAll, { method: "GET" }, accessTokenRef);
 
       const list: IUser[] = (json?.data || []).map((u: any) => ({
         id: u._id || u.id,
         name: u.name,
         email: u.email,
         role: u.role,
-        studentId: u.studentId,
-        licenseNumber: u.licenseNumber,
-        photoUrl: u.photoUrl || u.photo,
-        approvalLetterUrl: u.approvalLetterUrl || u.approvalLetter,
-        assignedBusId: u.assignedBusId,
+        studentId: u.studentId || u.clientInfo?.rollNumber,
+        licenseNumber: u.licenseNumber || u.clientInfo?.licenseNumber,
+        photoUrl: u.profileImage || u.photoUrl || u.photo,
+        approvalLetterUrl: u.approvalLetter || u.approvalLetterUrl,
+        assignedBusId: u.assignedBus || u.assignedBusId,
         assignedBusName: u.assignedBusName,
         createdAt: u.createdAt,
       }));
 
       setUsers(list);
-    } catch (e: any) {
-      toast.error(e?.message || "Could not load users");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     }
   };
 
@@ -339,6 +422,7 @@ export default function UserManagementPage() {
     if (!mounted) return;
     loadBuses();
     loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   const openAdd = () => {
@@ -369,14 +453,11 @@ export default function UserManagementPage() {
     if (!window.confirm("Are you sure you want to delete this user permanently?")) return;
 
     try {
-      const res = await fetch(API.userDelete(id), { method: "DELETE" });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json?.message || "Delete failed");
-
+      await apiFetchAuth<any>(API.userDelete(id), { method: "DELETE" }, accessTokenRef);
       setUsers((prev) => prev.filter((x) => x.id !== id));
       toast.success("User deleted successfully.");
-    } catch (e: any) {
-      toast.error(e?.message || "Delete failed.");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     }
   };
 
@@ -394,8 +475,8 @@ export default function UserManagementPage() {
       const url = await uploadToCloudinary(file);
       setForm((p) => ({ ...p, photoUrl: url }));
       toast.success("Photo uploaded.");
-    } catch (err: any) {
-      toast.error(err?.message || "Photo upload failed.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setUploadingPhoto(false);
       e.target.value = "";
@@ -411,8 +492,8 @@ export default function UserManagementPage() {
       const url = await uploadToCloudinary(file);
       setForm((p) => ({ ...p, approvalLetterUrl: url }));
       toast.success("Approval letter uploaded.");
-    } catch (err: any) {
-      toast.error(err?.message || "Letter upload failed.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     } finally {
       setUploadingLetter(false);
       e.target.value = "";
@@ -445,11 +526,13 @@ export default function UserManagementPage() {
 
     if (uploadingPhoto || uploadingLetter) return toast.error("Wait for uploads to finish.");
 
+    // IMPORTANT: match your backend expected structure (you were using studentId/licenseNumber)
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
       role: form.role,
 
+      // if your backend expects clientInfo instead, we can adjust later
       studentId: form.role === "student" ? form.studentId?.trim() : undefined,
       licenseNumber: form.role === "driver" ? form.licenseNumber?.trim() : undefined,
 
@@ -457,30 +540,32 @@ export default function UserManagementPage() {
       approvalLetterUrl: requireDocs ? form.approvalLetterUrl || undefined : undefined,
 
       assignedBusId: form.role === "driver" ? form.assignedBusId : undefined,
+      assignedBusName:
+        form.role === "driver"
+          ? buses.find((b) => b.id === form.assignedBusId)?.name
+          : undefined,
     };
 
     try {
       toast.message("Saving to server...");
 
       if (modalType === "edit") {
-        const res = await fetch(API.userUpdate(selectedId as string), {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.message || "Update failed");
+        const json = await apiFetchAuth<any>(
+          API.userUpdate(selectedId as string),
+          { method: "PUT", body: JSON.stringify(payload) },
+          accessTokenRef
+        );
 
         const updated: IUser = {
           id: json?.data?._id || json?.data?.id || (selectedId as string),
           name: json?.data?.name,
           email: json?.data?.email,
           role: json?.data?.role,
-          studentId: json?.data?.studentId,
-          licenseNumber: json?.data?.licenseNumber,
-          photoUrl: json?.data?.photoUrl || json?.data?.photo,
-          approvalLetterUrl: json?.data?.approvalLetterUrl || json?.data?.approvalLetter,
-          assignedBusId: json?.data?.assignedBusId,
+          studentId: json?.data?.studentId || json?.data?.clientInfo?.rollNumber,
+          licenseNumber: json?.data?.licenseNumber || json?.data?.clientInfo?.licenseNumber,
+          photoUrl: json?.data?.profileImage || json?.data?.photoUrl || json?.data?.photo,
+          approvalLetterUrl: json?.data?.approvalLetter || json?.data?.approvalLetterUrl,
+          assignedBusId: json?.data?.assignedBus || json?.data?.assignedBusId,
           assignedBusName: json?.data?.assignedBusName,
           createdAt: json?.data?.createdAt,
         };
@@ -488,24 +573,22 @@ export default function UserManagementPage() {
         setUsers((prev) => prev.map((x) => (x.id === selectedId ? updated : x)));
         toast.success("User updated successfully.");
       } else {
-        const res = await fetch(API.userAdd, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.message || "Create failed");
+        const json = await apiFetchAuth<any>(
+          API.userAdd,
+          { method: "POST", body: JSON.stringify(payload) },
+          accessTokenRef
+        );
 
         const created: IUser = {
           id: json?.data?._id || json?.data?.id,
           name: json?.data?.name,
           email: json?.data?.email,
           role: json?.data?.role,
-          studentId: json?.data?.studentId,
-          licenseNumber: json?.data?.licenseNumber,
-          photoUrl: json?.data?.photoUrl || json?.data?.photo,
-          approvalLetterUrl: json?.data?.approvalLetterUrl || json?.data?.approvalLetter,
-          assignedBusId: json?.data?.assignedBusId,
+          studentId: json?.data?.studentId || json?.data?.clientInfo?.rollNumber,
+          licenseNumber: json?.data?.licenseNumber || json?.data?.clientInfo?.licenseNumber,
+          photoUrl: json?.data?.profileImage || json?.data?.photoUrl || json?.data?.photo,
+          approvalLetterUrl: json?.data?.approvalLetter || json?.data?.approvalLetterUrl,
+          assignedBusId: json?.data?.assignedBus || json?.data?.assignedBusId,
           assignedBusName: json?.data?.assignedBusName,
           createdAt: json?.data?.createdAt,
         };
@@ -515,15 +598,15 @@ export default function UserManagementPage() {
       }
 
       setIsModalOpen(false);
-    } catch (err: any) {
-      toast.error(err?.message || "Save failed.");
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   };
 
-    const loadPending = async () => {
+  const loadPending = async () => {
     setPendingLoading(true);
     try {
-      const json = await apiFetchWithRefresh<any>("/auth/get-pending-registrations");
+      const json = await apiFetchAuth<any>(API.pendingAll, { method: "GET" }, accessTokenRef);
 
       setPending(
         (json?.data || []).map((r: any) => ({
@@ -538,47 +621,12 @@ export default function UserManagementPage() {
           createdAt: r.createdAt,
         }))
       );
-    } catch (e: any) {
-      toast.error(e.message);
+    } catch (e) {
+      toast.error(getErrorMessage(e));
     } finally {
       setPendingLoading(false);
     }
   };
-
-  const refreshAccessToken = async () => {
-    // backend reads refresh token from cookie
-    const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
-      method: "POST",
-      credentials: "include",
-    });
-
-    const json = await res.json().catch(() => ({} as any));
-    if (!res.ok) throw new Error(json?.message || "Unable to refresh token");
-
-    // adjust if your backend uses a different key
-    const newAccessToken = json?.data?.accessToken || json?.accessToken;
-    if (!newAccessToken) throw new Error("Refresh succeeded but no access token returned");
-
-    accessTokenRef.current = newAccessToken;
-    return newAccessToken as string;
-  };
-
-  const apiFetchWithRefresh = async <T,>(pathOrUrl: string, options: RequestInit = {}) => {
-    try {
-      return await apiFetch<T>(pathOrUrl, options, accessTokenRef.current);
-    } catch (e: any) {
-      const msg = String(e?.message || "");
-      // your backend sends: "Token has expired! Please login again."
-      if (msg.toLowerCase().includes("expired")) {
-        const newToken = await refreshAccessToken();
-        return await apiFetch<T>(pathOrUrl, options, newToken);
-      }
-      throw e;
-    }
-  };
-
-
-
 
   const openPending = async () => {
     setPendingOpen(true);
@@ -586,6 +634,11 @@ export default function UserManagementPage() {
   };
 
   const startApprove = (item: IPendingRequest) => {
+    // UI rule: admin can't approve admin
+    if (staffRole === "admin" && item.role === "admin") {
+      toast.error("Admin cannot approve another Admin. Only SuperAdmin can approve Admin.");
+      return;
+    }
     setApprovalItem(item);
     setApprovalOpen(true);
   };
@@ -603,73 +656,80 @@ export default function UserManagementPage() {
   };
 
   const finalizeApprove = async (extra: { assignedBusId?: string }) => {
-  if (!approvalItem) return;
+    if (!approvalItem) return;
 
-  try {
-    toast.message("Approving...");
+    // UI rule again (safety)
+    if (staffRole === "admin" && approvalItem.role === "admin") {
+      toast.error("Only SuperAdmin can approve Admin.");
+      return;
+    }
 
-    const json = await apiFetchWithRefresh<any>(
-      `/auth/approve-registration/${approvalItem.id}`,
-      {
-        method: "POST",
-        body: JSON.stringify({
-          assignedBusId:
-            approvalItem.role === "driver" ? extra.assignedBusId : undefined,
-        }),
-      }
-    );
+    try {
+      toast.message("Approving...");
 
-    const created = json.data;
+      const json = await apiFetchAuth<any>(
+        API.approvePending(approvalItem.id),
+        {
+          method: "POST",
+          body: JSON.stringify({
+            assignedBusId: approvalItem.role === "driver" ? extra.assignedBusId : undefined,
+          }),
+        },
+        accessTokenRef
+      );
 
-    setUsers((prev) => [
-      ...prev,
-      {
-        id: created._id,
-        name: created.name,
-        email: created.email,
-        role: created.role,
-        licenseNumber: created.clientInfo?.licenseNumber,
-        studentId: created.clientInfo?.rollNumber,
-        photoUrl: created.profileImage,
-        approvalLetterUrl: created.approvalLetter,
-        assignedBusId: created.assignedBus,
-        assignedBusName: created.assignedBusName,
-        createdAt: created.createdAt,
-      },
-    ]);
+      const created = json?.data;
 
-    setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
+      setUsers((prev) => [
+        ...prev,
+        {
+          id: created?._id,
+          name: created?.name,
+          email: created?.email,
+          role: created?.role,
+          licenseNumber: created?.clientInfo?.licenseNumber,
+          studentId: created?.clientInfo?.rollNumber,
+          photoUrl: created?.profileImage,
+          approvalLetterUrl: created?.approvalLetter,
+          assignedBusId: created?.assignedBus,
+          assignedBusName: created?.assignedBusName,
+          createdAt: created?.createdAt,
+        },
+      ]);
 
-    toast.success("Approved and added to users.");
+      setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
 
-    setAssignBusOpen(false);
-    setApprovalOpen(false);
-    setApprovalItem(null);
-  } catch (e: any) {
-    toast.error(e.message);
-  }
-};
+      toast.success("Approved and added to users.");
 
-
+      setAssignBusOpen(false);
+      setApprovalOpen(false);
+      setApprovalItem(null);
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    }
+  };
 
   const rejectPending = async (id: string) => {
-  if (!window.confirm("Reject this registration request?")) return;
+    if (!window.confirm("Reject this registration request?")) return;
 
-  try {
-    await apiFetch<any>(`/auth/reject-registration/${id}`, { method: "DELETE" });
-    setPending((prev) => prev.filter((p) => p.id !== id));
-    toast.success("Request rejected.");
-  } catch (e: any) {
-    toast.error(e.message);
-  }
-};
+    try {
+      await apiFetchAuth<any>(
+        API.rejectPending(id),
+        { method: "DELETE" },
+        accessTokenRef
+      );
 
+      setPending((prev) => prev.filter((p) => p.id !== id));
+      toast.success("Request rejected.");
+    } catch (e) {
+      toast.error(getErrorMessage(e));
+    }
+  };
 
   if (!mounted) return null;
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative font-sans text-gray-800">
-      {}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -679,7 +739,6 @@ export default function UserManagementPage() {
         </button>
       )}
 
-      {}
       <AnimatePresence>
         {(isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
           <motion.aside
@@ -740,10 +799,8 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-7xl mx-auto">
-          {}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
@@ -756,7 +813,10 @@ export default function UserManagementPage() {
 
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={18}
+                />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -781,7 +841,6 @@ export default function UserManagementPage() {
             </div>
           </div>
 
-          {}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2 mb-8 flex flex-wrap gap-2">
             {[
               { id: "student", label: "Students", icon: Users },
@@ -803,7 +862,6 @@ export default function UserManagementPage() {
             ))}
           </div>
 
-          {}
           <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-black text-lg text-gray-800 uppercase tracking-wide flex items-center gap-2">
@@ -919,7 +977,7 @@ export default function UserManagementPage() {
         </div>
       </main>
 
-      {}
+      {/* Add/Edit Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <Overlay onClose={() => setIsModalOpen(false)}>
@@ -931,13 +989,14 @@ export default function UserManagementPage() {
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
-                title={`${modalType === "add" ? "Add" : "Update"} ${prettyRole(form.role as UserRole) || "User"}`}
+                title={`${modalType === "add" ? "Add" : "Update"} ${
+                  prettyRole(form.role as UserRole) || "User"
+                }`}
                 subtitle="Fill the same fields as registration. Admin/Driver require documents."
                 onClose={() => setIsModalOpen(false)}
               />
 
               <form onSubmit={saveUser} className="p-8 space-y-6">
-                {}
                 <div>
                   <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
                     Role
@@ -963,7 +1022,6 @@ export default function UserManagementPage() {
                   </select>
                 </div>
 
-                {}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
@@ -992,7 +1050,6 @@ export default function UserManagementPage() {
                   </div>
                 </div>
 
-                {}
                 {form.role === "student" && (
                   <div>
                     <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
@@ -1037,7 +1094,9 @@ export default function UserManagementPage() {
                           setForm((p) => ({
                             ...p,
                             assignedBusId: id || undefined,
-                            assignedBusName: bus ? `${bus.name} (${bus.plateNumber})` : undefined,
+                            assignedBusName: bus
+                              ? `${bus.name} (${bus.plateNumber})`
+                              : undefined,
                           }));
                         }}
                         className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white font-black"
@@ -1053,7 +1112,6 @@ export default function UserManagementPage() {
                   </div>
                 )}
 
-                {}
                 {(form.role === "admin" || form.role === "driver") && (
                   <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                     <div className="p-4 bg-gray-50 flex items-start justify-between gap-3">
@@ -1071,7 +1129,6 @@ export default function UserManagementPage() {
                     </div>
 
                     <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {}
                       <div className="rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-black uppercase text-gray-600">
@@ -1118,7 +1175,6 @@ export default function UserManagementPage() {
                         </div>
                       </div>
 
-                      {}
                       <div className="rounded-2xl border border-gray-200 p-4">
                         <div className="flex items-center justify-between">
                           <div className="text-xs font-black uppercase text-gray-600">
@@ -1170,7 +1226,6 @@ export default function UserManagementPage() {
                   </div>
                 )}
 
-                {}
                 <div className="pt-2 flex gap-3">
                   <button
                     type="button"
@@ -1198,7 +1253,7 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      {/* Pending Modal */}
       <AnimatePresence>
         {pendingOpen && (
           <Overlay onClose={() => setPendingOpen(false)}>
@@ -1253,12 +1308,14 @@ export default function UserManagementPage() {
                             <div className="mt-2 text-xs text-gray-600">
                               {p.role === "student" && (
                                 <span className="font-semibold">
-                                  Student ID: <span className="font-black">{p.studentId || "—"}</span>
+                                  Student ID:{" "}
+                                  <span className="font-black">{p.studentId || "—"}</span>
                                 </span>
                               )}
                               {p.role === "driver" && (
                                 <span className="font-semibold">
-                                  License: <span className="font-black">{p.licenseNumber || "—"}</span>
+                                  License:{" "}
+                                  <span className="font-black">{p.licenseNumber || "—"}</span>
                                 </span>
                               )}
                             </div>
@@ -1323,7 +1380,7 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      {/* Approval Modal */}
       <AnimatePresence>
         {approvalOpen && approvalItem && (
           <Overlay
@@ -1441,14 +1498,10 @@ export default function UserManagementPage() {
         )}
       </AnimatePresence>
 
-      {}
+      {/* Assign bus modal */}
       <AnimatePresence>
         {assignBusOpen && approvalItem?.role === "driver" && (
-          <Overlay
-            onClose={() => {
-              setAssignBusOpen(false);
-            }}
-          >
+          <Overlay onClose={() => setAssignBusOpen(false)}>
             <motion.div
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}

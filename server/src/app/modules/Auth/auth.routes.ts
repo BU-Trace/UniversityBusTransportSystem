@@ -1,35 +1,41 @@
-import express from "express";
-import auth from "../../middleware/auth";
-import { AuthController } from "./auth.controller";
-import { UserRole } from "../User/user.utils";
+import { Router } from 'express';
+import { AuthController } from './auth.controller';
+import clientInfoParser from '../../middleware/clientInfoParser';
+import auth from '../../middleware/auth';
+import { UserRole } from '../User/user.utils';
 
-const router = express.Router();
+const router = Router();
 
-// auth
-router.post("/login", AuthController.loginUser);
-router.post("/refresh-token", AuthController.refreshToken);
+router.post('/login', clientInfoParser, AuthController.loginUser);
 
-router.post("/change-password", auth(UserRole.STUDENT, UserRole.DRIVER, UserRole.ADMIN, UserRole.SUPERADMIN), AuthController.changePassword);
-router.post("/forget-password", AuthController.forgetPassword);
-router.post("/reset-password", AuthController.resetPassword);
+router.post('/change-password', AuthController.changePassword);
 
-// admin dashboard approvals
+router.post('/forget-password', AuthController.forgetPassword);
+
+router.post('/reset-password', AuthController.resetPassword);
+
 router.get(
-  "/get-pending-registrations",
+  '/get-pending-registrations',
   auth(UserRole.ADMIN, UserRole.SUPERADMIN),
   AuthController.getPendingRegistrations
 );
 
 router.post(
-  "/approve-registration/:id",
+  '/approve-registration/:id',
   auth(UserRole.ADMIN, UserRole.SUPERADMIN),
   AuthController.approveRegistration
 );
 
 router.delete(
-  "/reject-registration/:id",
+  '/reject-registration/:id',
   auth(UserRole.ADMIN, UserRole.SUPERADMIN),
   AuthController.rejectRegistration
 );
 
+/**
+ * ✅ Export both ways so you can import safely using either:
+ *   import AuthRoutes from ...
+ *   import { AuthRoutes } from ...
+ */
 export const AuthRoutes = router;
+export default router;
