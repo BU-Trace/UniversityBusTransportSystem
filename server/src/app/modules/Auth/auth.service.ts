@@ -223,7 +223,7 @@ const loginUser = async (payload: LoginPayload) => {
   });
 };
 
-const refreshToken = async (tokenFromCookie: string | undefined) => {
+const refreshAccessToken = async (tokenFromCookie: string | undefined) => {
   if (!tokenFromCookie) {
     throw new AppError(StatusCodes.UNAUTHORIZED, "Refresh token missing");
   }
@@ -361,7 +361,7 @@ const resetPassword = async (payload: { token: string; newPassword: string }) =>
 
 export const AuthService = {
   loginUser,
-  refreshToken,
+  refreshAccessToken,
   changePassword,
   forgetPassword,
   resetPassword,

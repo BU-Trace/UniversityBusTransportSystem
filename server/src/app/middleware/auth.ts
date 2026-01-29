@@ -47,9 +47,18 @@ const auth = (...requiredRoles: UserRole[]) => {
       }
 
       // ✅ role authorization check using DB role (source of truth)
-      if (requiredRoles.length > 0 && !requiredRoles.includes(user.role)) {
+      // Some routes pass enum-like roles ("ADMIN", "STUDENT"...). Your DB uses lowercase.
+      // Normalize both sides so authorization works consistently.
+      const normalizedRequiredRoles = requiredRoles.map((r) =>
+        String(r).toLowerCase()
+      );
+
+      const userRole = String(user.role).toLowerCase();
+
+      if (normalizedRequiredRoles.length > 0 && !normalizedRequiredRoles.includes(userRole)) {
         throw new AppError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
       }
+
 
       // ✅ attach user info from DB (prevents token/db mismatch issues)
       req.user = {
