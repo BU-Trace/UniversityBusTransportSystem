@@ -17,6 +17,7 @@ type BusProps = {
     lng: number;
     speed: number;
     eta?: string;
+    distance?: string; // New: Added distance field
     status: "running" | "paused" | "stopped";
     time: string;
   };
@@ -61,18 +62,23 @@ export default function BusMarker({ bus, isActive, onMarkerClick }: BusProps) {
 
             {/* Body */}
             <div className="p-3 space-y-3">
+              {/* Distance Section (New) */}
+              <div className="bg-red-50/50 p-2 rounded-lg border border-red-100 flex justify-between items-center">
+                <p className="text-[10px] text-red-600 font-bold uppercase">Distance</p>
+                <p className="text-[11px] font-black text-red-900">{bus.distance || "..."}</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
-                
                 {/* Speed */}
-                <div className="bg-red-50 p-2 rounded-lg border border-red-100">
-                  <p className="text-[8px] text-red-400 font-bold uppercase mb-0.5">
+                <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <p className="text-[8px] text-slate-400 font-bold uppercase mb-0.5">
                     Speed
                   </p>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-lg font-black text-red-900">
+                    <span className="text-lg font-black text-slate-800">
                       {bus.speed || 0}
                     </span>
-                    <span className="text-[9px] font-bold text-red-700">
+                    <span className="text-[9px] font-bold text-slate-500 uppercase">
                       km/h
                     </span>
                   </div>
@@ -91,8 +97,8 @@ export default function BusMarker({ bus, isActive, onMarkerClick }: BusProps) {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-center px-3 py-2 bg-red-50/40 border-t border-red-100">
-              <div className="flex items-center gap-1 text-red-400">
+            <div className="flex justify-between items-center px-3 py-2 bg-slate-50 border-t border-slate-100">
+              <div className="flex items-center gap-1 text-slate-400">
                 <svg
                   className="w-2.5 h-2.5"
                   fill="none"
@@ -111,7 +117,7 @@ export default function BusMarker({ bus, isActive, onMarkerClick }: BusProps) {
                 </span>
               </div>
 
-              <span className="text-[9px] font-black text-red-900">
+              <span className="text-[9px] font-black text-slate-600">
                 {new Date(bus.time).toLocaleTimeString([], {
                   hour: "2-digit",
                   minute: "2-digit",

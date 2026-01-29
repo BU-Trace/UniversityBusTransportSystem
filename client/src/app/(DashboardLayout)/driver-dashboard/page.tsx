@@ -40,11 +40,11 @@ export default function DriverDashboard() {
 
   const availableBuses: Bus[] = [
     { busNo: "BRTC-8", reg: "DHK-11-2233", route: "Route-1" },
-     { busNo: "BRTC-9", reg: "DHK-11-2233", route: "Route-1" },
+    { busNo: "BRTC-9", reg: "DHK-11-2233", route: "Route-1" },
     { busNo: "BRTC-10", reg: "DHK-22-8899", route: "Route-2" },
-     { busNo: "BRTC-11", reg: "DHK-22-8899", route: "Route-2" },
+    { busNo: "BRTC-11", reg: "DHK-22-8899", route: "Route-2" },
     { busNo: "BRTC-12", reg: "DHK-55-4455", route: "Route-3" },
-     { busNo: "BRTC-13", reg: "DHK-55-4455", route: "Route-3" },
+    { busNo: "BRTC-13", reg: "DHK-55-4455", route: "Route-3" },
   ];
 
   const initTracking = () => {
@@ -61,13 +61,23 @@ export default function DriverDashboard() {
         const { latitude: lat, longitude: lng } = pos.coords;
         setLocation({ lat, lng });
 
+        // socket.emit("sendLocation", {
+        //   routeId: selectedBus.route,
+        //   busId: selectedBus.busNo,
+        //   lat,
+        //   lng,
+        //   status: "running",
+        // });
+        // DriverDashboard page.tsx 
         socket.emit("sendLocation", {
           routeId: selectedBus.route,
           busId: selectedBus.busNo,
-          lat,
-          lng,
+          // some slight offset for testing multiple buses
+          lat: lat + (selectedBus.busNo === "BRTC-9" ? 0.0009 : 0),
+          lng: lng + (selectedBus.busNo === "BRTC-9" ? 0.0009 : 0),
           status: "running",
         });
+
       },
       (err) => console.error("GPS Error:", err),
       { enableHighAccuracy: true }
@@ -79,48 +89,48 @@ export default function DriverDashboard() {
     setStatus("sharing");
     setSidebarOpen(false);
     // socket.emit("busStatus", { busId: selectedBus.busNo, status: "running" });
-      // JOIN ROUTE ROOM
-  socket.emit("joinRoute", { routeId: selectedBus.route });
+    // JOIN ROUTE ROOM
+    socket.emit("joinRoute", { routeId: selectedBus.route });
 
-  socket.emit("busStatus", { 
-    busId: selectedBus.busNo, 
-    routeId: selectedBus.route,
-    status: "running" 
-  });
+    socket.emit("busStatus", {
+      busId: selectedBus.busNo,
+      routeId: selectedBus.route,
+      status: "running"
+    });
     initTracking();
   };
 
   const handlePause = () => {
-  if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
-  setStatus("paused");
-  socket.emit("busStatus", { 
-    routeId: selectedBus?.route,
-    busId: selectedBus?.busNo, 
-    status: "paused" 
-  });
-};
+    if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
+    setStatus("paused");
+    socket.emit("busStatus", {
+      routeId: selectedBus?.route,
+      busId: selectedBus?.busNo,
+      status: "paused"
+    });
+  };
 
-const handleResume = () => {
-  setStatus("sharing");
-  socket.emit("busStatus", { 
-    routeId: selectedBus?.route,
-    busId: selectedBus?.busNo, 
-    status: "running" 
-  });
-  initTracking();
-};
+  const handleResume = () => {
+    setStatus("sharing");
+    socket.emit("busStatus", {
+      routeId: selectedBus?.route,
+      busId: selectedBus?.busNo,
+      status: "running"
+    });
+    initTracking();
+  };
 
-const handleStop = () => {
-  if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
-  setStatus("idle");
-  socket.emit("busStatus", { 
-    routeId: selectedBus?.route,
-    busId: selectedBus?.busNo, 
-    status: "stopped" 
-  });
-  setLocation(null);
-  setSidebarOpen(true);
-};
+  const handleStop = () => {
+    if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
+    setStatus("idle");
+    socket.emit("busStatus", {
+      routeId: selectedBus?.route,
+      busId: selectedBus?.busNo,
+      status: "stopped"
+    });
+    setLocation(null);
+    setSidebarOpen(true);
+  };
 
 
   return (
