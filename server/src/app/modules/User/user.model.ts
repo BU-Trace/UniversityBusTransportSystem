@@ -1,14 +1,17 @@
-import mongoose, { Schema } from 'mongoose';
-import bcrypt from 'bcrypt';
-import { StatusCodes } from 'http-status-codes';
-import config from '../../config';
-import { IUser, USER_ROLES, UserModel } from './user.interface';
-import AppError from '../../errors/appError';
-// import { ClientITInfo } from '../Auth/auth.interface';
+import mongoose, { Schema } from "mongoose";
+import bcrypt from "bcrypt";
+import { StatusCodes } from "http-status-codes";
+import config from "../../config";
+import { IUser, USER_ROLES, UserModel } from "./user.interface";
+import AppError from "../../errors/appError";
+
 const userSchema = new Schema<IUser, UserModel>(
   {
     email: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true },
+
+    // ✅ best practice: do not return password unless explicitly selected
+    password: { type: String, required: true, select: false },
+
     name: { type: String, required: true },
 
     role: {
@@ -18,7 +21,7 @@ const userSchema = new Schema<IUser, UserModel>(
     },
 
     clientITInfo: {
-      device: { type: String, enum: ['pc', 'mobile', 'tablet'], default: 'pc' },
+      device: { type: String, enum: ["pc", "mobile", "tablet"], default: "pc" },
       browser: { type: String, default: null },
       ipAddress: { type: String, default: null },
       pcName: { type: String, default: null },
@@ -35,7 +38,7 @@ const userSchema = new Schema<IUser, UserModel>(
 
     assignedBus: {
       type: Schema.Types.ObjectId,
-      ref: 'Bus',
+      ref: "Bus",
       default: null,
     },
 
@@ -58,62 +61,63 @@ const userSchema = new Schema<IUser, UserModel>(
     profileImage: { type: String, default: null },
     approvalLetter: { type: String, default: null },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-userSchema.pre('save', async function (next) {
+userSchema.pre("save", async function (next) {
   const user = this as IUser;
 
-  if (user.isModified('password')) {
+  if (user.isModified("password")) {
     user.password = await bcrypt.hash(user.password, Number(config.bcrypt_salt_rounds));
   }
 
   next();
 });
 
-userSchema.post('save', function (doc, next) {
-  doc.password = '';
+// ✅ keep it (you had it), but do it safely
+userSchema.post("save", function (doc, next) {
+  // doc.password might not exist if not selected
+  (doc as any).password = "";
   next();
 });
 
-// userSchema.set('toJSON', {
-//   transform: (_doc, ret: any) => {
-//     delete ret.password;
-//     return ret;
-//   },
-// });
+// ✅ safest: always remove password in JSON responses
+userSchema.set("toJSON", {
+  transform: (_doc, ret: any) => {
+    delete ret.password;
+    return ret;
+  },
+});
 
 userSchema.statics.isPasswordMatched = async function (
   plainTextPassword: string,
   hashedPassword: string
 ) {
-  console.log(plainTextPassword, hashedPassword);
-  return await bcrypt.compare(plainTextPassword, hashedPassword);
+  return bcrypt.compare(plainTextPassword, hashedPassword);
 };
 
+// ✅ FIX: use `this` (NOT `User`) because User is declared later
 userSchema.statics.isUserExistsByEmail = async function (email: string) {
-  return await User.findOne({ email }).select('+password');
+  return this.findOne({ email }).select("+password");
 };
 
 userSchema.statics.checkUserExist = async function (userId: string) {
   const existingUser = await this.findById(userId);
 
   if (!existingUser) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User does not exist!');
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, "User does not exist!");
   }
 
   if (!existingUser.isActive) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is not verified!');
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, "Email is not verified!");
   }
 
   if (!existingUser.isApproved) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User is not approved by admin!');
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, "User is not approved by admin!");
   }
 
   return existingUser;
 };
 
-const User = mongoose.model<IUser, UserModel>('User', userSchema);
+const User = mongoose.model<IUser, UserModel>("User", userSchema);
 export default User;
