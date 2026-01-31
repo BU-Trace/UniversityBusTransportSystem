@@ -31,7 +31,7 @@ const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   driver: ['bio', 'licenseNumber'],
   admin: ['bio'],  
   superadmin: ['bio'],  
-  staff: ['bio', 'department', 'designation'],
+  // staff: ['bio', 'department', 'designation'],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
@@ -136,13 +136,13 @@ const registerUser = async (userData: Partial<IUser>) =>
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
     }
-  if (role === 'staff') {
-      const department = (userData.clientInfo as any)?.department?.toString().trim();
-      const designation = (userData.clientInfo as any)?.designation?.toString().trim();
+  // if (role === 'staff') {
+  //     const department = (userData.clientInfo as any)?.department?.toString().trim();
+  //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
 
-      if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
-      if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
-    }
+  //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+  //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
+  //   }
 
     const OTP = Math.floor(100000 + Math.random() * 900000);
     const otpToken = String(OTP);

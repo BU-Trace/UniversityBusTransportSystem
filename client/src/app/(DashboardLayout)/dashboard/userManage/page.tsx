@@ -315,6 +315,10 @@ function HeaderModal({
 export default function UserManagementPage() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const displayName = getDisplayName(session);
+  const profilePhoto = getProfilePhoto(session);
+  const initial = getInitial(displayName);
+
 
   // role + accessToken from next-auth session (adjust if your session shape differs)
   const staffRole = toStaffRole(session?.user?.role ?? null);
@@ -395,7 +399,29 @@ export default function UserManagementPage() {
     };
   }, [isOpen, isModalOpen, pendingOpen, approvalOpen, assignBusOpen]);
 
-  const admin = { name: 'Admin 1', role: 'Admin' };
+  function getInitial(name?: string) {
+    const n = (name || "").trim();
+    return n ? n[0].toUpperCase() : "U";
+  }
+
+  function getDisplayName(session: any) {
+    return (
+      session?.user?.name ||
+      session?.user?.fullName ||
+      session?.user?.username ||
+      "User"
+    );
+  }
+
+  function getProfilePhoto(session: any) {
+    return (
+      session?.user?.photoUrl ||
+      session?.user?.profileImage ||
+      session?.user?.image ||
+      ""
+    );
+  }
+
 
   const menuItems = [
     { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
@@ -803,14 +829,33 @@ export default function UserManagementPage() {
                 CAMPUS<span className="text-white/70">CONNECT</span>
               </h1>
               <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold italic opacity-50">ADMIN</span>
+                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
+                  {profilePhoto ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={profilePhoto}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-black italic text-white/80">
+                      {initial}
+                    </span>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md">
+
+                <Link
+                  href="/dashboard/editProfile"
+                  title="Edit Profile"
+                  className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md hover:scale-105 transition-transform"
+                >
                   <MdEdit size={12} />
-                </button>
+                </Link>
               </div>
-              <h2 className="font-bold text-base uppercase tracking-widest">{admin.name}</h2>
+
+              <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
+                {displayName}
+              </h2>
             </div>
 
             <nav className="flex-1 mt-4 px-4 space-y-1">

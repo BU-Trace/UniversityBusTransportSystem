@@ -1,7 +1,7 @@
 import { Document, Model, Types } from 'mongoose';
 
 // --- Roles ----------------------------------------------------
-export const USER_ROLES = ['superadmin', 'admin', 'student', 'driver','staff'] as const;
+export const USER_ROLES = ['superadmin', 'admin', 'student', 'driver'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export type IUserRole = {
@@ -9,7 +9,6 @@ export type IUserRole = {
   ADMIN: 'admin';
   STUDENT: 'student';
   DRIVER: 'driver';
-  STAFF: 'staff';
 };
 
 // --- Client IT info (device/browser/ip etc.) ------------------
@@ -28,7 +27,7 @@ type BaseClientInfo = {
   department?: string;
   rollNumber?: string;
   licenseNumber?: string;
-  designation?: string;
+  // designation?: string;
 };
 
 type StudentClientInfo = BaseClientInfo & {
@@ -39,10 +38,10 @@ type StudentClientInfo = BaseClientInfo & {
 type DriverClientInfo = BaseClientInfo & {
   licenseNumber?: string;
 };
-type StaffClientInfo = BaseClientInfo & {
-  department?: string;
-  designation?: string;
-};
+// type StaffClientInfo = BaseClientInfo & {
+//   department?: string;
+//   designation?: string;
+// };
 
 interface UserCommon {
   _id: Types.ObjectId;
@@ -77,10 +76,10 @@ export type UserDoc =
       role: 'student';
       clientInfo: StudentClientInfo; // required for students
     })
-  | (UserCommon & {
-      role: 'staff'; // ✅ Update: Added Staff Role Block
-      clientInfo: StaffClientInfo; // required for staff
-    })
+  // | (UserCommon & {
+  //     role: 'staff'; // ✅ Update: Added Staff Role Block
+  //     clientInfo: StaffClientInfo; // required for staff
+  //   })
   | (UserCommon & {
       role: 'driver';
       clientInfo: DriverClientInfo; // required for drivers

@@ -272,7 +272,6 @@ const RegisterPageComponent = () => {
           }}
           placeholder="6-Digit Code"
           error={errors.verify}
-          className="text-center text-2xl tracking-widest"
         />
 
         <button
