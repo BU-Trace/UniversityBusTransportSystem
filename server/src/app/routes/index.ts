@@ -9,7 +9,6 @@ import IssueRoutes from '../modules/Issue/issue.routes';
 import LocationRoutes from '../modules/location/location.routes';
 import chatbotRoutes from "../modules/Chatbot/chatbot.routes";
 
-
 const router = Router();
 
 const moduleRoutes = [
