@@ -1,3 +1,4 @@
+
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
@@ -16,6 +17,7 @@ const updateDriverStatus = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   await UserServices.registerUser(req.body);

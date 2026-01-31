@@ -3,7 +3,7 @@ import { ClientITInfo } from '@/type/User';
 const RAW_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_BASE_API ||
-  'http://localhost:5000/api/v1';
+  'http://localhost:5001/api/v1';
 
 // remove trailing slashes
 const API_BASE = RAW_BASE.replace(/\/+$/, '');
@@ -18,12 +18,13 @@ export type RegisterUserPayload = {
   name: string;
   email: string;
   password: string;
-  role: 'student' | 'driver' | 'admin';
+  role: 'student' | 'driver' | 'admin'| 'staff';
   clientInfo?: {
     bio?: string;
     department?: string;
     rollNumber?: string;
     licenseNumber?: string;
+    designation?: string;
   };
   clientITInfo: ClientITInfo;
 };

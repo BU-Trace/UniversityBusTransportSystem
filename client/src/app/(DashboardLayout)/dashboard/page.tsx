@@ -164,12 +164,12 @@ export default function MergedDashboard() {
                 </Link>
               </div>
 
-              {}
+              { }
               <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
                 {displayName}
               </h2>
 
-              {}
+              { }
               <Link
                 href="/dashboard/editProfile"
                 onClick={() => setIsOpen(false)}
@@ -188,10 +188,9 @@ export default function MergedDashboard() {
                   onClick={() => setIsOpen(false)}
                   className={`
                     flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all
-                    ${
-                      pathname === item.href
-                        ? 'bg-white text-[#E31E24] shadow-md'
-                        : 'hover:bg-white/10 text-white/90'
+                    ${pathname === item.href
+                      ? 'bg-white text-[#E31E24] shadow-md'
+                      : 'hover:bg-white/10 text-white/90'
                     }
                   `}
                 >
