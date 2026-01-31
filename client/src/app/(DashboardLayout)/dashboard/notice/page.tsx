@@ -64,6 +64,37 @@ type INotice = {
   isPublished?: boolean;
 };
 
+// Raw shape returned by backend (partial to accept varied fields)
+type RawNotice = Partial<{
+  _id: string;
+  id: string;
+  title: string;
+  type: NoticeType;
+  body: string;
+  text: string;
+  fileUrl: string;
+  pdfUrl: string;
+  attachmentUrl: string;
+  createdAt: string;
+  publishedAt: string;
+  isPublished: boolean;
+  published: boolean;
+}>;
+
+// Generic API response wrapper
+type ApiResponse<T> = {
+  data: T;
+  message?: string;
+  success?: boolean;
+};
+
+// Minimal session shape used in this component
+type SessionWithAccess = {
+  accessToken?: string;
+  user?: { role?: UserRole } | null;
+  role?: UserRole;
+};
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
 
@@ -109,9 +140,12 @@ async function apiFetch<T>(
     cache: "no-store",
   });
 
-  const json = await res.json().catch(() => ({} as any));
-  if (!res.ok) throw new Error(json?.message || "Request failed");
-  return json as T;
+  const json = await res.json().catch(() => ({} as Record<string, unknown>));
+  const message = typeof (json as Record<string, unknown>)['message'] === 'string'
+    ? (json as Record<string, unknown>)['message'] as string
+    : undefined;
+  if (!res.ok) throw new Error(message || "Request failed");
+  return json as unknown as T;
 }
 
 async function uploadToCloudinary(file: File): Promise<string> {
@@ -199,8 +233,8 @@ export default function NoticeManagementPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  const myRole = ((session as any)?.user?.role || (session as any)?.role) as
+  const accessToken = (session as SessionWithAccess)?.accessToken;
+  const myRole = ((session as SessionWithAccess)?.user?.role || (session as SessionWithAccess)?.role) as
     | UserRole
     | undefined;
 
@@ -264,8 +298,8 @@ export default function NoticeManagementPage() {
     { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
   ];
 
-  const normalizeNotice = (n: any): INotice => ({
-    id: n?._id || n?.id,
+  const normalizeNotice = (n: RawNotice): INotice => ({
+    id: n?._id || n?.id || "",
     title: n?.title || "",
     type: n?.type || (n?.fileUrl ? "pdf" : "text"),
     body: n?.body || n?.text || "",
@@ -278,7 +312,7 @@ export default function NoticeManagementPage() {
   const loadNotices = async () => {
     setLoading(true);
     try {
-      const json = await apiFetch<any>(API.getAll, {}, accessToken);
+      const json = await apiFetch<ApiResponse<RawNotice[]>>(API.getAll, {}, accessToken);
       const list = (json?.data || []).map(normalizeNotice);
       setNotices(list);
     } catch (e) {
@@ -390,7 +424,7 @@ export default function NoticeManagementPage() {
       if (modalType === "edit" && selectedId) {
         // If you don't have update endpoint, you can remove edit feature.
         // This uses publish endpoint as update OR you can create a dedicated update route.
-        const json = await apiFetch<any>(
+        const json = await apiFetch<ApiResponse<RawNotice>>(
           API.publish(selectedId),
           { method: "PUT", body: JSON.stringify(payload) },
           accessToken
@@ -398,7 +432,7 @@ export default function NoticeManagementPage() {
         saved = normalizeNotice(json?.data);
         setNotices((prev) => prev.map((x) => (x.id === selectedId ? saved : x)));
       } else {
-        const json = await apiFetch<any>(
+        const json = await apiFetch<ApiResponse<RawNotice>>(
           API.create,
           { method: "POST", body: JSON.stringify(payload) },
           accessToken
@@ -410,7 +444,7 @@ export default function NoticeManagementPage() {
       // Notify all devices/users (push/websocket/etc.)
       // If you already do this inside create/publish, you can delete this call.
       try {
-        await apiFetch<any>(API.notifyAll(saved.id), { method: "POST" }, accessToken);
+        await apiFetch<ApiResponse<unknown>>(API.notifyAll(saved.id), { method: "POST" }, accessToken);
       } catch (notifyErr) {
         // Don't block notice creation if notification fails, but show warning
         toast.error(`Notice saved, but notification failed: ${getErrorMessage(notifyErr)}`);
@@ -427,7 +461,7 @@ export default function NoticeManagementPage() {
     if (!window.confirm("Delete this notice from notice board?")) return;
     try {
       toast.message("Deleting...");
-      await apiFetch<any>(API.delete(id), { method: "DELETE" }, accessToken);
+      await apiFetch<ApiResponse<null>>(API.delete(id), { method: "DELETE" }, accessToken);
       setNotices((prev) => prev.filter((n) => n.id !== id));
       toast.success("Notice deleted.");
     } catch (e) {
@@ -489,11 +523,10 @@ export default function NoticeManagementPage() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
-                    pathname === item.href
-                      ? "bg-white text-[#E31E24] shadow-md"
-                      : "hover:bg-white/10 text-white/90"
-                  }`}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
+                    ? "bg-white text-[#E31E24] shadow-md"
+                    : "hover:bg-white/10 text-white/90"
+                    }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
                 </Link>
@@ -614,11 +647,10 @@ export default function NoticeManagementPage() {
 
                         <td className="py-4">
                           <span
-                            className={`text-[11px] px-2 py-1 rounded-full border font-black uppercase ${
-                              n.type === "pdf"
-                                ? "bg-blue-50 border-blue-100 text-blue-700"
-                                : "bg-gray-100 border-gray-200 text-gray-700"
-                            }`}
+                            className={`text-[11px] px-2 py-1 rounded-full border font-black uppercase ${n.type === "pdf"
+                              ? "bg-blue-50 border-blue-100 text-blue-700"
+                              : "bg-gray-100 border-gray-200 text-gray-700"
+                              }`}
                           >
                             {n.type}
                           </span>
@@ -752,11 +784,10 @@ export default function NoticeManagementPage() {
                         type="button"
                         onClick={pickFile}
                         disabled={uploading}
-                        className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
-                          uploading
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                            : "bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200"
-                        }`}
+                        className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploading
+                          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                          : "bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200"
+                          }`}
                       >
                         <Upload size={16} /> {uploading ? "Uploading..." : "Upload PDF"}
                       </button>
@@ -803,9 +834,8 @@ export default function NoticeManagementPage() {
                   <button
                     type="submit"
                     disabled={uploading}
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${
-                      uploading ? "bg-gray-300 cursor-not-allowed" : "bg-[#E31E24] hover:bg-red-700"
-                    }`}
+                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploading ? "bg-gray-300 cursor-not-allowed" : "bg-[#E31E24] hover:bg-red-700"
+                      }`}
                   >
                     <Save size={18} />
                     {modalType === "add" ? "Publish Notice" : "Save Changes"}
