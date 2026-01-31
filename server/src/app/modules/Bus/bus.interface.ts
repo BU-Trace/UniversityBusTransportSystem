@@ -7,6 +7,7 @@ export interface IBus {
   plateNumber: string;
   route: Types.ObjectId;
   photo: string;
+  driverId: Types.ObjectId;
   isActive?: boolean;
   status?: 'running' | 'paused' | 'stopped';
   // mongoose timestamps

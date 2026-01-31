@@ -133,8 +133,8 @@ const registerUser = async (userData: Partial<IUser>) =>
 
       password: password,
 
-      isActive: false,
-      isApproved: false,
+      isActive: userData.role === 'student' ? true : false,
+      isApproved: userData.role === 'student' ? true : false,
 
       otpToken: String(OTP),
       otpExpires: new Date(Date.now() + 15 * 60 * 1000),
@@ -416,6 +416,16 @@ const adminDeleteUser = async (id: string) => {
   return { message: 'Deleted successfully' };
 };
 
+// Get all drivers
+const getAllDrivers = async () => {
+  return await UserModel.find({ role: 'driver' }).select('-password').sort({ createdAt: -1 });
+};
+
+// Get all students
+const getAllStudents = async () => {
+  return await UserModel.find({ role: 'student' }).select('-password').sort({ createdAt: -1 });
+};
+
 export const UserServices = {
   registerUser,
   verifyEmail,
@@ -426,4 +436,6 @@ export const UserServices = {
   adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
+  getAllDrivers,
+  getAllStudents,
 };

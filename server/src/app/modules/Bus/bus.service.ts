@@ -25,6 +25,7 @@ export const createBus = async (payload: IBus) => {
   const bus = await Bus.create({
     ...data,
     route: new Types.ObjectId(data.route),
+    driverId: new Types.ObjectId(data.driverId),
     bus_id,
   });
 
@@ -44,6 +45,7 @@ export const updateBus = async (id: string, payload: Partial<IBus>) => {
     {
       ...data,
       route: data.route ? new Types.ObjectId(data.route) : existing.route,
+      driverId: data.driverId ? new Types.ObjectId(data.driverId) : existing.driverId,
     },
     { new: true }
   );

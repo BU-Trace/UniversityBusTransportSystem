@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -59,6 +59,38 @@ const API = {
   deleteRoute: (id: string) => `${BASE_URL}/route/delete-route/${id}`,
 };
 
+type RawStop = {
+  name?: string;
+  stopName?: string;
+  mapUrl?: string;
+  locationUrl?: string;
+  googleMapUrl?: string;
+};
+
+type RawRoute = {
+  _id?: string;
+  id?: string;
+  routeName?: string;
+  name?: string;
+  startPointName?: string;
+  startPoint?: { name?: string; mapUrl?: string };
+  startPointUrl?: string;
+  startPointMapUrl?: string;
+  endPointName?: string;
+  endPoint?: { name?: string; mapUrl?: string };
+  endPointUrl?: string;
+  endPointMapUrl?: string;
+  stops?: RawStop[];
+  stopPoints?: RawStop[];
+  createdAt?: string;
+};
+
+type ApiResponse<T> = {
+  data?: T;
+  message?: string;
+  success?: boolean;
+};
+
 function getErrorMessage(e: unknown) {
   if (e instanceof Error) return e.message;
   if (typeof e === 'string') return e;
@@ -80,8 +112,9 @@ async function apiFetch<T>(
     cache: 'no-store',
   });
 
-  const json = await res.json().catch(() => ({}) as any);
-  if (!res.ok) throw new Error(json?.message || 'Request failed');
+  const json = (await res.json().catch(() => ({}))) as unknown;
+  const message = (json as { message?: string }).message;
+  if (!res.ok) throw new Error(message || 'Request failed');
   return json as T;
 }
 
@@ -95,6 +128,11 @@ function formatDate(d?: string) {
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return d;
   return dt.toLocaleString();
+}
+
+function toUserRole(role?: string | null): UserRole | undefined {
+  const allowed: UserRole[] = ['student', 'driver', 'admin', 'superadmin'];
+  return allowed.includes(role as UserRole) ? (role as UserRole) : undefined;
 }
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -153,8 +191,8 @@ export default function RouteManagementPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  const myRole = ((session as any)?.user?.role || (session as any)?.role) as UserRole | undefined;
+  const accessToken = session?.accessToken;
+  const myRole = toUserRole(session?.user?.role || null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -227,15 +265,21 @@ export default function RouteManagementPage() {
     });
   }, [routes, query]);
 
-  const normalizeRoute = (r: any): IRoute => {
+  const toStops = (raw: unknown): RawStop[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((s) => (typeof s === 'object' && s ? (s as RawStop) : {}));
+  };
+
+  const normalizeRoute = (r: RawRoute): IRoute => {
+    const stopsSource = toStops(r?.stops || r?.stopPoints);
     return {
-      id: r?._id || r?.id,
+      id: r?._id || r?.id || '',
       routeName: r?.routeName || r?.name || '',
-      startPointName: r?.startPointName || r?.startPoint?.name || r?.startPoint || '',
+      startPointName: r?.startPointName || r?.startPoint?.name || '',
       startPointMapUrl: r?.startPointMapUrl || r?.startPoint?.mapUrl || r?.startPointUrl || '',
-      endPointName: r?.endPointName || r?.endPoint?.name || r?.endPoint || '',
+      endPointName: r?.endPointName || r?.endPoint?.name || '',
       endPointMapUrl: r?.endPointMapUrl || r?.endPoint?.mapUrl || r?.endPointUrl || '',
-      stops: (r?.stops || r?.stopPoints || []).map((s: any) => ({
+      stops: stopsSource.map((s) => ({
         name: s?.name || s?.stopName || '',
         mapUrl: s?.mapUrl || s?.locationUrl || s?.googleMapUrl || '',
       })),
@@ -246,8 +290,8 @@ export default function RouteManagementPage() {
   const loadRoutes = async () => {
     setLoading(true);
     try {
-      const json = await apiFetch<any>(API.getAllRoutes, {}, accessToken);
-      const list = (json?.data || []).map(normalizeRoute);
+      const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
+      const list = (json.data || []).map(normalizeRoute);
       setRoutes(list);
     } catch (e) {
       toast.error(getErrorMessage(e));
@@ -351,23 +395,23 @@ export default function RouteManagementPage() {
       toast.message('Saving route...');
 
       if (modalType === 'edit' && selectedId) {
-        const json = await apiFetch<any>(
+        const json = await apiFetch<ApiResponse<RawRoute>>(
           API.updateRoute(selectedId),
           { method: 'PUT', body: JSON.stringify(payload) },
           accessToken
         );
 
-        const updated = normalizeRoute(json?.data);
+        const updated = normalizeRoute(json.data || {});
         setRoutes((prev) => prev.map((x) => (x.id === selectedId ? updated : x)));
         toast.success('Route updated');
       } else {
-        const json = await apiFetch<any>(
+        const json = await apiFetch<ApiResponse<RawRoute>>(
           API.createRoute,
           { method: 'POST', body: JSON.stringify(payload) },
           accessToken
         );
 
-        const created = normalizeRoute(json?.data);
+        const created = normalizeRoute(json.data || {});
         setRoutes((prev) => [created, ...prev]);
         toast.success('Route created');
       }
@@ -382,7 +426,7 @@ export default function RouteManagementPage() {
     if (!window.confirm('Delete this route permanently?')) return;
     try {
       toast.message('Deleting route...');
-      await apiFetch<any>(API.deleteRoute(id), { method: 'DELETE' }, accessToken);
+      await apiFetch<ApiResponse<null>>(API.deleteRoute(id), { method: 'DELETE' }, accessToken);
       setRoutes((prev) => prev.filter((r) => r.id !== id));
       toast.success('Route deleted');
     } catch (e) {

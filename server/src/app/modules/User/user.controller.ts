@@ -114,6 +114,26 @@ const adminDeleteUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllDrivers = catchAsync(async (_req: Request, res: Response) => {
+  const result = await UserServices.getAllDrivers();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Drivers fetched successfully',
+    data: result,
+  });
+});
+
+const getAllStudents = catchAsync(async (_req: Request, res: Response) => {
+  const result = await UserServices.getAllStudents();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
 export const UserController = {
   registerUser,
   verifyEmail,
@@ -127,4 +147,6 @@ export const UserController = {
   adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
+  getAllDrivers,
+  getAllStudents,
 };

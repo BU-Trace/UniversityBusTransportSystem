@@ -25,6 +25,11 @@ const BusSchema = new Schema(
       ref: 'Route',
       required: true,
     },
+    driverId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     // Photo URL or path
     photo: {
       type: String,

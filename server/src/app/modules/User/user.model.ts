@@ -48,8 +48,18 @@ const userSchema = new Schema<IUser, UserModel>(
     },
 
     lastLogin: { type: Date },
-    isActive: { type: Boolean, default: false },
-    isApproved: { type: Boolean, default: false },
+    isActive: {
+      type: Boolean,
+      default: function () {
+        return this.role === 'student' ? true : false;
+      },
+    },
+    isApproved: {
+      type: Boolean,
+      default: function () {
+        return this.role === 'student' ? true : false;
+      },
+    },
 
     otpToken: { type: String, default: null },
     otpExpires: { type: Date, default: null },

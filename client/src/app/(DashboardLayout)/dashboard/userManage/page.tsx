@@ -81,6 +81,45 @@ type ApiFetchOptions = RequestInit & { headers?: Record<string, string> };
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
 
+type ApiResponse<T> = {
+  data?: T;
+  message?: string;
+  success?: boolean;
+  accessToken?: string;
+};
+
+type RawBus = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  plateNumber?: string;
+};
+
+type RawUser = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: UserRole;
+  studentId?: string;
+  licenseNumber?: string;
+  clientInfo?: {
+    rollNumber?: string;
+    licenseNumber?: string;
+  };
+  profileImage?: string;
+  photoUrl?: string;
+  photo?: string;
+  approvalLetter?: string;
+  approvalLetterUrl?: string;
+  assignedBus?: string;
+  assignedBusId?: string;
+  assignedBusName?: string;
+  createdAt?: string;
+};
+
+type RawPending = RawUser;
+
 function joinUrl(pathOrUrl: string) {
   const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
   if (isFullUrl) return pathOrUrl;
@@ -113,12 +152,12 @@ async function refreshAccessToken(): Promise<string> {
     credentials: 'include',
   });
 
-  const json = await res.json().catch(() => ({}) as any);
+  const json = (await res.json().catch(() => ({}))) as ApiResponse<{ accessToken?: string }>;
   if (!res.ok) {
     throw new Error(json?.message || 'Session expired. Please login again.');
   }
 
-  const newToken: string | undefined = json?.data?.accessToken || json?.accessToken;
+  const newToken: string | undefined = json?.data?.accessToken || json.accessToken;
   if (!newToken) {
     throw new Error('Refresh succeeded but no access token returned.');
   }
@@ -147,7 +186,7 @@ async function apiFetchAuth<T>(
       },
       credentials: 'include',
     });
-    const json = await res.json().catch(() => ({}) as any);
+    const json = (await res.json().catch(() => ({}))) as unknown;
     return { res, json };
   };
 
@@ -157,7 +196,7 @@ async function apiFetchAuth<T>(
   // 2) if unauthorized and looks expired -> refresh and retry once
   if (!res.ok) {
     const unauthorized = res.status === 401 || res.status === 403;
-    const msg = json?.message || '';
+    const msg = (json as { message?: string })?.message || '';
 
     if (unauthorized && isTokenExpiredMessage(msg)) {
       const newToken = await refreshAccessToken();
@@ -170,7 +209,8 @@ async function apiFetchAuth<T>(
   }
 
   if (!res.ok) {
-    throw new Error(json?.message || 'Request failed');
+    const message = (json as { message?: string })?.message;
+    throw new Error(message || 'Request failed');
   }
 
   return json as T;
@@ -227,6 +267,10 @@ function safeOpen(url?: string) {
   window.open(url, '_blank', 'noopener,noreferrer');
 }
 
+function toStaffRole(role?: string | null): StaffRole | undefined {
+  return role === 'admin' || role === 'superadmin' ? role : undefined;
+}
+
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <motion.div
@@ -273,11 +317,9 @@ export default function UserManagementPage() {
   const { data: session } = useSession();
 
   // role + accessToken from next-auth session (adjust if your session shape differs)
-  const staffRole = ((session as any)?.user?.role || (session as any)?.role) as
-    | StaffRole
-    | undefined;
+  const staffRole = toStaffRole(session?.user?.role ?? null);
 
-  const accessTokenFromSession = (session as any)?.accessToken as string | undefined;
+  const accessTokenFromSession = session?.accessToken;
 
   // keep latest access token in ref so refresh can update it
   const accessTokenRef = useRef<string | undefined>(accessTokenFromSession);
@@ -369,11 +411,15 @@ export default function UserManagementPage() {
 
   const loadBuses = async () => {
     try {
-      const json = await apiFetchAuth<any>(API.buses, { method: 'GET' }, accessTokenRef);
-      const busList = (json?.data || []).map((b: any) => ({
-        id: b._id,
-        name: b.name,
-        plateNumber: b.plateNumber,
+      const json = await apiFetchAuth<ApiResponse<RawBus[]>>(
+        API.buses,
+        { method: 'GET' },
+        accessTokenRef
+      );
+      const busList = (json.data || []).map((b) => ({
+        id: b._id || b.id || '',
+        name: b.name || '',
+        plateNumber: b.plateNumber || '',
       }));
       setBuses(busList);
     } catch (e) {
@@ -383,13 +429,17 @@ export default function UserManagementPage() {
 
   const loadUsers = async () => {
     try {
-      const json = await apiFetchAuth<any>(API.usersAll, { method: 'GET' }, accessTokenRef);
+      const json = await apiFetchAuth<ApiResponse<RawUser[]>>(
+        API.usersAll,
+        { method: 'GET' },
+        accessTokenRef
+      );
 
-      const list: IUser[] = (json?.data || []).map((u: any) => ({
-        id: u._id || u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role,
+      const list: IUser[] = (json.data || []).map((u) => ({
+        id: u._id || u.id || '',
+        name: u.name || '',
+        email: u.email || '',
+        role: u.role || 'student',
         studentId: u.studentId || u.clientInfo?.rollNumber,
         licenseNumber: u.licenseNumber || u.clientInfo?.licenseNumber,
         photoUrl: u.profileImage || u.photoUrl || u.photo,
@@ -440,7 +490,11 @@ export default function UserManagementPage() {
     if (!window.confirm('Are you sure you want to delete this user permanently?')) return;
 
     try {
-      await apiFetchAuth<any>(API.userDelete(id), { method: 'DELETE' }, accessTokenRef);
+      await apiFetchAuth<ApiResponse<null>>(
+        API.userDelete(id),
+        { method: 'DELETE' },
+        accessTokenRef
+      );
       setUsers((prev) => prev.filter((x) => x.id !== id));
       toast.success('User deleted successfully.');
     } catch (e) {
@@ -536,47 +590,47 @@ export default function UserManagementPage() {
       toast.message('Saving to server...');
 
       if (modalType === 'edit') {
-        const json = await apiFetchAuth<any>(
+        const json = await apiFetchAuth<ApiResponse<RawUser>>(
           API.userUpdate(selectedId as string),
           { method: 'PUT', body: JSON.stringify(payload) },
           accessTokenRef
         );
 
         const updated: IUser = {
-          id: json?.data?._id || json?.data?.id || (selectedId as string),
-          name: json?.data?.name,
-          email: json?.data?.email,
-          role: json?.data?.role,
-          studentId: json?.data?.studentId || json?.data?.clientInfo?.rollNumber,
-          licenseNumber: json?.data?.licenseNumber || json?.data?.clientInfo?.licenseNumber,
-          photoUrl: json?.data?.profileImage || json?.data?.photoUrl || json?.data?.photo,
-          approvalLetterUrl: json?.data?.approvalLetter || json?.data?.approvalLetterUrl,
-          assignedBusId: json?.data?.assignedBus || json?.data?.assignedBusId,
-          assignedBusName: json?.data?.assignedBusName,
-          createdAt: json?.data?.createdAt,
+          id: json.data?._id || json.data?.id || (selectedId as string),
+          name: json.data?.name || '',
+          email: json.data?.email || '',
+          role: json.data?.role || form.role || 'student',
+          studentId: json.data?.studentId || json.data?.clientInfo?.rollNumber,
+          licenseNumber: json.data?.licenseNumber || json.data?.clientInfo?.licenseNumber,
+          photoUrl: json.data?.profileImage || json.data?.photoUrl || json.data?.photo,
+          approvalLetterUrl: json.data?.approvalLetter || json.data?.approvalLetterUrl,
+          assignedBusId: json.data?.assignedBus || json.data?.assignedBusId,
+          assignedBusName: json.data?.assignedBusName,
+          createdAt: json.data?.createdAt,
         };
 
         setUsers((prev) => prev.map((x) => (x.id === selectedId ? updated : x)));
         toast.success('User updated successfully.');
       } else {
-        const json = await apiFetchAuth<any>(
+        const json = await apiFetchAuth<ApiResponse<RawUser>>(
           API.userAdd,
           { method: 'POST', body: JSON.stringify(payload) },
           accessTokenRef
         );
 
         const created: IUser = {
-          id: json?.data?._id || json?.data?.id,
-          name: json?.data?.name,
-          email: json?.data?.email,
-          role: json?.data?.role,
-          studentId: json?.data?.studentId || json?.data?.clientInfo?.rollNumber,
-          licenseNumber: json?.data?.licenseNumber || json?.data?.clientInfo?.licenseNumber,
-          photoUrl: json?.data?.profileImage || json?.data?.photoUrl || json?.data?.photo,
-          approvalLetterUrl: json?.data?.approvalLetter || json?.data?.approvalLetterUrl,
-          assignedBusId: json?.data?.assignedBus || json?.data?.assignedBusId,
-          assignedBusName: json?.data?.assignedBusName,
-          createdAt: json?.data?.createdAt,
+          id: json.data?._id || json.data?.id || '',
+          name: json.data?.name || '',
+          email: json.data?.email || '',
+          role: json.data?.role || form.role || 'student',
+          studentId: json.data?.studentId || json.data?.clientInfo?.rollNumber,
+          licenseNumber: json.data?.licenseNumber || json.data?.clientInfo?.licenseNumber,
+          photoUrl: json.data?.profileImage || json.data?.photoUrl || json.data?.photo,
+          approvalLetterUrl: json.data?.approvalLetter || json.data?.approvalLetterUrl,
+          assignedBusId: json.data?.assignedBus || json.data?.assignedBusId,
+          assignedBusName: json.data?.assignedBusName,
+          createdAt: json.data?.createdAt,
         };
 
         setUsers((prev) => [...prev, created]);
@@ -592,14 +646,18 @@ export default function UserManagementPage() {
   const loadPending = async () => {
     setPendingLoading(true);
     try {
-      const json = await apiFetchAuth<any>(API.pendingAll, { method: 'GET' }, accessTokenRef);
+      const json = await apiFetchAuth<ApiResponse<RawPending[]>>(
+        API.pendingAll,
+        { method: 'GET' },
+        accessTokenRef
+      );
 
       setPending(
-        (json?.data || []).map((r: any) => ({
-          id: r._id,
-          name: r.name,
-          email: r.email,
-          role: r.role,
+        (json.data || []).map((r) => ({
+          id: r._id || r.id || '',
+          name: r.name || '',
+          email: r.email || '',
+          role: r.role || 'student',
           studentId: r.clientInfo?.rollNumber || r.studentId,
           licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
           photoUrl: r.profileImage || r.photoUrl,
@@ -653,7 +711,7 @@ export default function UserManagementPage() {
     try {
       toast.message('Approving...');
 
-      const json = await apiFetchAuth<any>(
+      const json = await apiFetchAuth<ApiResponse<RawUser>>(
         API.approvePending(approvalItem.id),
         {
           method: 'POST',
@@ -664,24 +722,23 @@ export default function UserManagementPage() {
         accessTokenRef
       );
 
-      const created = json?.data;
+      const created = (json as ApiResponse<RawUser>)?.data;
 
-      setUsers((prev) => [
-        ...prev,
-        {
-          id: created?._id,
-          name: created?.name,
-          email: created?.email,
-          role: created?.role,
-          licenseNumber: created?.clientInfo?.licenseNumber,
-          studentId: created?.clientInfo?.rollNumber,
-          photoUrl: created?.profileImage,
-          approvalLetterUrl: created?.approvalLetter,
-          assignedBusId: created?.assignedBus,
-          assignedBusName: created?.assignedBusName,
-          createdAt: created?.createdAt,
-        },
-      ]);
+      const newUser: IUser = {
+        id: created?._id || created?.id || approvalItem.id,
+        name: created?.name || approvalItem.name,
+        email: created?.email || approvalItem.email,
+        role: created?.role || approvalItem.role,
+        licenseNumber: created?.clientInfo?.licenseNumber || approvalItem.licenseNumber,
+        studentId: created?.clientInfo?.rollNumber || approvalItem.studentId,
+        photoUrl: created?.profileImage || created?.photoUrl,
+        approvalLetterUrl: created?.approvalLetter || created?.approvalLetterUrl,
+        assignedBusId: created?.assignedBus || created?.assignedBusId,
+        assignedBusName: created?.assignedBusName,
+        createdAt: created?.createdAt,
+      };
+
+      setUsers((prev) => [...prev, newUser]);
 
       setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
 
@@ -699,7 +756,11 @@ export default function UserManagementPage() {
     if (!window.confirm('Reject this registration request?')) return;
 
     try {
-      await apiFetchAuth<any>(API.rejectPending(id), { method: 'DELETE' }, accessTokenRef);
+      await apiFetchAuth<ApiResponse<null>>(
+        API.rejectPending(id),
+        { method: 'DELETE' },
+        accessTokenRef
+      );
 
       setPending((prev) => prev.filter((p) => p.id !== id));
       toast.success('Request rejected.');

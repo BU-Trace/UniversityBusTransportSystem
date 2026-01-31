@@ -18,6 +18,20 @@ router.post('/verify-email', UserController.verifyEmail);
 // Get all users
 router.get('/get-all-users', auth(UserRole.ADMIN, UserRole.SUPERADMIN), UserController.getAllUsers);
 
+// Get all drivers
+router.get(
+  '/get-all-drivers',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.getAllDrivers
+);
+
+// Get all students
+router.get(
+  '/get-all-students',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.getAllStudents
+);
+
 // Admin adds a driver (dedicated)
 router.post(
   '/add-driver',

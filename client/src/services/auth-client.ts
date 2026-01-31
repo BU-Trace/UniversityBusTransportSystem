@@ -39,13 +39,18 @@ const safeJson = async (response: Response) => {
 };
 
 const parseResponse = async <T>(response: Response): Promise<ApiResponse<T>> => {
-  const data = (await safeJson(response)) as any;
+  const data = (await safeJson(response)) as unknown;
+  const parsed = data as Partial<ApiResponse<T>> & { message?: string; success?: boolean };
 
-  if (!response.ok || data?.success === false) {
-    throw new Error(data?.message || `Request failed (${response.status})`);
+  if (!response.ok || parsed.success === false) {
+    throw new Error(parsed.message || `Request failed (${response.status})`);
   }
 
-  return data as ApiResponse<T>;
+  return {
+    success: parsed.success ?? true,
+    message: parsed.message ?? 'OK',
+    data: parsed.data as T,
+  };
 };
 
 async function apiFetch<T>(path: string, init: RequestInit) {
@@ -63,10 +68,13 @@ async function apiFetch<T>(path: string, init: RequestInit) {
     });
 
     return await parseResponse<T>(response);
-  } catch (err: any) {
+  } catch (err: unknown) {
     // This is the important part: real network errors land here
     console.error('FETCH FAILED:', { url, err });
-    throw new Error(err?.message || 'fetch failed');
+    if (err instanceof Error) {
+      throw new Error(err.message || 'fetch failed');
+    }
+    throw new Error('fetch failed');
   }
 }
 
@@ -97,14 +105,14 @@ export const requestPasswordReset = async (email: string) => {
   });
 
   if (!response.ok) {
-    const errorBody = await safeJson(response);
-    throw new Error((errorBody as any)?.message || 'Unable to process request');
+    const errorBody = (await safeJson(response)) as { message?: string };
+    throw new Error(errorBody?.message || 'Unable to process request');
   }
 
-  const data = await safeJson(response);
+  const data = (await safeJson(response)) as { success?: boolean; message?: string };
   return {
-    success: (data as any)?.success !== false,
-    message: (data as any)?.message || 'If an account exists, a reset link was sent.',
+    success: data?.success !== false,
+    message: data?.message || 'If an account exists, a reset link was sent.',
     data: null,
   } as ApiResponse<null>;
 };

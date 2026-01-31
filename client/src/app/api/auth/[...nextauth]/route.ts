@@ -1,4 +1,11 @@
-import NextAuth, { type NextAuthOptions } from 'next-auth';
+import NextAuth, {
+  type Account,
+  type NextAuthOptions,
+  type Profile,
+  type Session,
+  type User,
+} from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth-options';
 
 /**
@@ -10,41 +17,50 @@ const enhancedAuthOptions: NextAuthOptions = {
   callbacks: {
     ...authOptions.callbacks,
 
-    async jwt(params) {
-      // Run your existing jwt callback first (if any)
-      const base = authOptions.callbacks?.jwt
-        ? await authOptions.callbacks.jwt(params as any)
-        : params.token;
+    async jwt({ token, user, account, profile, trigger, session }): Promise<JWT> {
+      const baseJwtCb = authOptions.callbacks?.jwt;
+      const base = baseJwtCb
+        ? await baseJwtCb({ token, user, account, profile, trigger, session })
+        : token;
 
-      const { user } = params as any;
+      const nextToken: JWT = { ...base };
 
-      // When user logs in (Credentials provider), `user` is available
       if (user) {
-        (base as any).userId = user.userId || user.id || user._id || (base as any).userId;
-        (base as any).role = user.role ?? (base as any).role;
-        (base as any).isApproved = user.isApproved ?? (base as any).isApproved;
-        (base as any).isActive = user.isActive ?? (base as any).isActive;
-        (base as any).email = user.email ?? (base as any).email;
-        (base as any).name = user.name ?? (base as any).name;
+        nextToken.userId =
+          (user as User & { userId?: string; _id?: string }).userId ||
+          (user as { _id?: string })._id ||
+          (user as User).id ||
+          nextToken.userId;
+        nextToken.role = (user as { role?: string }).role ?? nextToken.role;
+        nextToken.isApproved =
+          (user as { isApproved?: boolean }).isApproved ?? nextToken.isApproved;
+        nextToken.isActive = (user as { isActive?: boolean }).isActive ?? nextToken.isActive;
+        nextToken.email = user.email ?? nextToken.email;
+        nextToken.name = user.name ?? nextToken.name;
       }
 
-      return base;
+      return nextToken;
     },
 
-    async session(params) {
-      // Run your existing session callback first (if any)
-      const base = authOptions.callbacks?.session
-        ? await authOptions.callbacks.session(params as any)
-        : params.session;
+    async session({ session, token, user, trigger, newSession }): Promise<Session> {
+      const baseSessionCb = authOptions.callbacks?.session;
+      const base = baseSessionCb
+        ? await baseSessionCb({ session, token, user, trigger, newSession })
+        : session;
 
-      const { token } = params as any;
-
-      // Ensure these exist on session.user
       if (base?.user) {
-        (base.user as any).userId = (token as any)?.userId ?? (base.user as any).userId;
-        (base.user as any).role = (token as any)?.role ?? (base.user as any).role;
-        (base.user as any).isApproved = (token as any)?.isApproved ?? (base.user as any).isApproved;
-        (base.user as any).isActive = (token as any)?.isActive ?? (base.user as any).isActive;
+        base.user = {
+          ...base.user,
+          userId:
+            (token as { userId?: string }).userId ?? (base.user as { userId?: string }).userId,
+          role: (token as { role?: string }).role ?? (base.user as { role?: string }).role,
+          isApproved:
+            (token as { isApproved?: boolean }).isApproved ??
+            (base.user as { isApproved?: boolean }).isApproved,
+          isActive:
+            (token as { isActive?: boolean }).isActive ??
+            (base.user as { isActive?: boolean }).isActive,
+        } as Session['user'];
       }
 
       return base;
