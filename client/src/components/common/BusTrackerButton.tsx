@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Route, X } from 'lucide-react';
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
 import { useIntro } from '@/context/IntroContext';
 
@@ -93,7 +93,6 @@ const BusTrackerButton: React.FC = () => {
   const [ripples, setRipples] = useState<{ id: number }[]>([]);
   const [routes, setRoutes] = useState(mockRoutes);
   const router = useRouter();
-
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -231,55 +230,60 @@ const BusTrackerButton: React.FC = () => {
                     UBTS Live Bus Tracker
                   </h2>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-  {routes.map((bus, index) => (
-    <motion.div
-      key={index}
-      onClick={() => {
-  setShowTracker(false);                 // modal close
-  router.push(`/track-bus?route=${bus.routeId}`); // route to map page
-}}
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      whileHover={{
-        scale: 1.03,
-        rotate: [0, 1.5, -1.5, 0],
-      }}
-      className="cursor-pointer bg-white/70 border border-red-200 shadow-lg rounded-2xl p-5 backdrop-blur-sm hover:shadow-red-300 transition"
-    >
-      {/* route ID show */}
-      <h3 className="text-xl font-bold text-red-700 mb-2 flex items-center gap-2">
-        <MapPin className="w-4 h-4 text-red-600" /> {bus.routeId}
-      </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {routes.map((bus, index) => (
+                      <motion.div
+                        key={index}
+                        onClick={() => {
+                          setShowTracker(false); // modal close
+                          router.push(`/track-bus?route=${bus.routeId}`); // route to map page
+                        }}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{
+                          scale: 1.03,
+                          rotate: [0, 1.5, -1.5, 0],
+                        }}
+                        className="cursor-pointer bg-white/70 border border-red-200 shadow-lg rounded-2xl p-5 backdrop-blur-sm hover:shadow-red-300 transition"
+                      >
+                        {/* route ID show */}
+                        <h3 className="text-xl font-bold text-red-700 mb-2 flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-red-600" /> {bus.routeId}
+                        </h3>
 
-      <p className="text-gray-700 text-sm mb-1">
-        <span className="font-semibold">From:</span> {bus.departure}
-      </p>
-      <p className="text-gray-700 text-sm mb-1">
-        <span className="font-semibold">To:</span> {bus.destination}
-      </p>
-      <p className="text-gray-700 text-sm mb-3 flex items-center gap-2">
-        <Clock className="w-4 h-4 text-red-600" /> Departure: {bus.departureTime}
-      </p>
+                        <p className="text-gray-700 text-sm mb-1">
+                          <span className="font-semibold">From:</span> {bus.departure}
+                        </p>
+                        <p className="text-gray-700 text-sm mb-1">
+                          <span className="font-semibold">To:</span> {bus.destination}
+                        </p>
+                        <p className="text-gray-700 text-sm mb-3 flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-red-600" /> Departure: {bus.departureTime}
+                        </p>
 
-      <div className="space-y-2">
-        <div className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.studentBus)}`}>
-          Student Bus: {bus.studentBus}
-        </div>
-        <br />
-        <div className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.teacherBus)}`}>
-          Teacher Bus: {bus.teacherBus}
-        </div>
-        <br />
-        <div className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.staffBus)}`}>
-          Staff Bus: {bus.staffBus}
-        </div>
-      </div>
-    </motion.div>
-  ))}
-</div>
-
+                        <div className="space-y-2">
+                          <div
+                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.studentBus)}`}
+                          >
+                            Student Bus: {bus.studentBus}
+                          </div>
+                          <br />
+                          <div
+                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.teacherBus)}`}
+                          >
+                            Teacher Bus: {bus.teacherBus}
+                          </div>
+                          <br />
+                          <div
+                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.staffBus)}`}
+                          >
+                            Staff Bus: {bus.staffBus}
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
 
                   <motion.button
                     whileHover={{ scale: 1.1 }}

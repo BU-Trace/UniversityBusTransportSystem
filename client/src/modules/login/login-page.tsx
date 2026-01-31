@@ -201,8 +201,6 @@
 
 // export default LoginPageComponent;
 
-
-
 'use client';
 
 import React, { useState } from 'react';
@@ -357,7 +355,6 @@ const LoginPageComponent = () => {
             className="w-full h-full object-cover transition-transform duration-[2s] ease-in-out group-hover:scale-105"
           />
 
-
           <div className="absolute inset-0 z-20 lg:hidden flex items-end justify-center pb-8">
             <h3 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
               Welcome Back
@@ -398,7 +395,6 @@ const LoginPageComponent = () => {
               />
             </div>
 
-
             {errors.form && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -409,16 +405,16 @@ const LoginPageComponent = () => {
               </motion.div>
             )}
 
-
             <button
               type="submit"
               disabled={isSubmitting}
               className={`
                 w-full py-4 rounded-xl font-bold text-white tracking-wide shadow-lg flex items-center justify-center gap-2
                 transition-all duration-300 transform
-                ${isSubmitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#E31E24] hover:bg-red-700 hover:shadow-red-500/30 hover:-translate-y-0.5 active:scale-95'
+                ${
+                  isSubmitting
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-[#E31E24] hover:bg-red-700 hover:shadow-red-500/30 hover:-translate-y-0.5 active:scale-95'
                 }
               `}
             >

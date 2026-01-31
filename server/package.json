@@ -16,6 +16,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/genai": "^0.3.0",
+    "@google/generative-ai": "^0.24.1",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
@@ -47,6 +49,7 @@
     "@types/node": "^24.3.1",
     "@types/nodemailer": "^7.0.1",
     "@types/pdfkit": "^0.17.3",
+    "@types/socket.io": "^3.0.1",
     "@types/ua-parser-js": "^0.7.39",
     "eslint": "^8.50.0",
     "eslint-config-prettier": "^9.0.0",

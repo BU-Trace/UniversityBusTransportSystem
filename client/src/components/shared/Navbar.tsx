@@ -46,7 +46,6 @@ export default function Navbar() {
   return (
     <header className="w-full bg-white border-b-2 border-red-600 fixed left-0 right-0 top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 h-16">
-
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <span className="text-2xl font-bold text-red-600">Campus Connect</span>
@@ -54,17 +53,34 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <nav className="hidden md:flex items-center gap-6">
-          <Link href="/home" className={getLinkClasses('/home')}>Home</Link>
-          <Link href="/routes" className={getLinkClasses('/routes')}>Routes</Link>
-          <Link href="/schedules" className={getLinkClasses('/schedules')}>Schedules</Link>
-          <Link href="/buses" className={getLinkClasses('/buses')}>Buses</Link>
-          <Link href="/transport" className={getLinkClasses('/transport')}>Transportation Pool</Link>
-          <Link href="/about" className={getLinkClasses('/about')}>About Us</Link>
-          <Link href="/contact" className={getLinkClasses('/contact')}>Contact Us</Link>
+          <Link href="/home" className={getLinkClasses('/home')}>
+            Home
+          </Link>
+          <Link href="/routes" className={getLinkClasses('/routes')}>
+            Routes
+          </Link>
+          <Link href="/schedules" className={getLinkClasses('/schedules')}>
+            Schedules
+          </Link>
+          <Link href="/buses" className={getLinkClasses('/buses')}>
+            Buses
+          </Link>
+          <Link href="/transport" className={getLinkClasses('/transport')}>
+            Transportation Pool
+          </Link>
+          <Link href="/about" className={getLinkClasses('/about')}>
+            About Us
+          </Link>
+          <Link href="/contact" className={getLinkClasses('/contact')}>
+            Contact Us
+          </Link>
 
           {/* Auth */}
           {status === 'loading' ? null : !session?.user ? (
-            <Link href="/login" className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition">
+            <Link
+              href="/login"
+              className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition"
+            >
               Log In
             </Link>
           ) : (
@@ -80,7 +96,10 @@ export default function Navbar() {
                 <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:bg-red-50">
                   Dashboard
                 </Link>
-                <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50">
+                <button
+                  onClick={handleLogout}
+                  className="w-full text-left px-4 py-2 text-gray-700 hover:bg-red-50"
+                >
                   Log Out
                 </button>
               </div>
@@ -96,8 +115,9 @@ export default function Navbar() {
 
       {/* ================= MOBILE SLIDE MENU ================= */}
       <div
-        className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${menuOpen ? 'visible opacity-100' : 'invisible opacity-0'
-          }`}
+        className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${
+          menuOpen ? 'visible opacity-100' : 'invisible opacity-0'
+        }`}
       >
         {/* Overlay */}
         <div
@@ -107,8 +127,9 @@ export default function Navbar() {
 
         {/* Slide Panel */}
         <div
-          className={`absolute top-0 right-0 h-full w-72 bg-white shadow-xl p-6 flex flex-col gap-3 transform transition-transform duration-500 ease-in-out ${menuOpen ? 'translate-x-0' : 'translate-x-full'
-            }`}
+          className={`absolute top-0 right-0 h-full w-72 bg-white shadow-xl p-6 flex flex-col gap-3 transform transition-transform duration-500 ease-in-out ${
+            menuOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
         >
           {/* Fixed Close Button inside menu */}
           <button
@@ -119,13 +140,35 @@ export default function Navbar() {
           </button>
 
           {/* Links */}
-          <Link href="/home" onClick={toggleMenu} className={getMobileLinkClasses('/home')}>Home</Link>
-          <Link href="/routes" onClick={toggleMenu} className={getMobileLinkClasses('/routes')}>Routes</Link>
-          <Link href="/schedules" onClick={toggleMenu} className={getMobileLinkClasses('/schedules')}>Schedules</Link>
-          <Link href="/buses" onClick={toggleMenu} className={getMobileLinkClasses('/buses')}>Buses</Link>
-          <Link href="/transport" onClick={toggleMenu} className={getMobileLinkClasses('/transport')}>Transportation Pool</Link>
-          <Link href="/about" onClick={toggleMenu} className={getMobileLinkClasses('/about')}>About Us</Link>
-          <Link href="/contact" onClick={toggleMenu} className={getMobileLinkClasses('/contact')}>Contact Us</Link>
+          <Link href="/home" onClick={toggleMenu} className={getMobileLinkClasses('/home')}>
+            Home
+          </Link>
+          <Link href="/routes" onClick={toggleMenu} className={getMobileLinkClasses('/routes')}>
+            Routes
+          </Link>
+          <Link
+            href="/schedules"
+            onClick={toggleMenu}
+            className={getMobileLinkClasses('/schedules')}
+          >
+            Schedules
+          </Link>
+          <Link href="/buses" onClick={toggleMenu} className={getMobileLinkClasses('/buses')}>
+            Buses
+          </Link>
+          <Link
+            href="/transport"
+            onClick={toggleMenu}
+            className={getMobileLinkClasses('/transport')}
+          >
+            Transportation Pool
+          </Link>
+          <Link href="/about" onClick={toggleMenu} className={getMobileLinkClasses('/about')}>
+            About Us
+          </Link>
+          <Link href="/contact" onClick={toggleMenu} className={getMobileLinkClasses('/contact')}>
+            Contact Us
+          </Link>
 
           {/* Auth Section */}
           <div className="mt-4 pt-4 border-t">
@@ -139,10 +182,18 @@ export default function Navbar() {
               </Link>
             ) : (
               <>
-                <Link href="/profile" onClick={toggleMenu} className="block py-2 text-gray-700 hover:text-red-600">
+                <Link
+                  href="/profile"
+                  onClick={toggleMenu}
+                  className="block py-2 text-gray-700 hover:text-red-600"
+                >
                   Profile
                 </Link>
-                <Link href="/dashboard" onClick={toggleMenu} className="block py-2 text-gray-700 hover:text-red-600">
+                <Link
+                  href="/dashboard"
+                  onClick={toggleMenu}
+                  className="block py-2 text-gray-700 hover:text-red-600"
+                >
                   Dashboard
                 </Link>
                 <button
@@ -158,7 +209,6 @@ export default function Navbar() {
             )}
           </div>
         </div>
-
       </div>
     </header>
   );

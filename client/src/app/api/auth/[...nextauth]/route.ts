@@ -1,5 +1,5 @@
-import NextAuth, { type NextAuthOptions } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
+import NextAuth, { type NextAuthOptions } from 'next-auth';
+import { authOptions } from '@/lib/auth-options';
 
 /**
  * We wrap your existing authOptions and safely extend callbacks
@@ -12,8 +12,9 @@ const enhancedAuthOptions: NextAuthOptions = {
 
     async jwt(params) {
       // Run your existing jwt callback first (if any)
-      const base =
-        authOptions.callbacks?.jwt ? await authOptions.callbacks.jwt(params as any) : params.token;
+      const base = authOptions.callbacks?.jwt
+        ? await authOptions.callbacks.jwt(params as any)
+        : params.token;
 
       const { user } = params as any;
 
@@ -32,10 +33,9 @@ const enhancedAuthOptions: NextAuthOptions = {
 
     async session(params) {
       // Run your existing session callback first (if any)
-      const base =
-        authOptions.callbacks?.session
-          ? await authOptions.callbacks.session(params as any)
-          : params.session;
+      const base = authOptions.callbacks?.session
+        ? await authOptions.callbacks.session(params as any)
+        : params.session;
 
       const { token } = params as any;
 
@@ -43,8 +43,7 @@ const enhancedAuthOptions: NextAuthOptions = {
       if (base?.user) {
         (base.user as any).userId = (token as any)?.userId ?? (base.user as any).userId;
         (base.user as any).role = (token as any)?.role ?? (base.user as any).role;
-        (base.user as any).isApproved =
-          (token as any)?.isApproved ?? (base.user as any).isApproved;
+        (base.user as any).isApproved = (token as any)?.isApproved ?? (base.user as any).isApproved;
         (base.user as any).isActive = (token as any)?.isActive ?? (base.user as any).isActive;
       }
 

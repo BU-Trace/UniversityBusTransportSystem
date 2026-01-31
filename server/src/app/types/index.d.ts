@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import "express";
+import 'express';
 
 declare global {
   namespace Express {
@@ -8,7 +8,7 @@ declare global {
         userId: string;
         name: string;
         email: string;
-        role: "student" | "driver" | "admin" | "superadmin";
+        role: 'student' | 'driver' | 'admin' | 'superadmin';
         isActive: boolean;
         iat?: number;
         exp?: number;

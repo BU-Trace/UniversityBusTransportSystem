@@ -57,10 +57,11 @@ function MapController({
 
 /* ================= COMPONENT ================= */
 export default function Map({ userLocation, busLocation }: MapProps) {
-  const center = userLocation ?? busLocation ?? {
-    lat: 23.8103,
-    lng: 90.4125,
-  };
+  const center = userLocation ??
+    busLocation ?? {
+      lat: 23.8103,
+      lng: 90.4125,
+    };
 
   return (
     <MapContainer
@@ -73,27 +74,18 @@ export default function Map({ userLocation, busLocation }: MapProps) {
       <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
       {userLocation && (
-        <Marker
-          position={[userLocation.lat, userLocation.lng]}
-          icon={userIcon}
-        >
+        <Marker position={[userLocation.lat, userLocation.lng]} icon={userIcon}>
           <Popup>Your Location</Popup>
         </Marker>
       )}
 
       {busLocation && (
-        <Marker
-          position={[busLocation.lat, busLocation.lng]}
-          icon={busIcon}
-        >
+        <Marker position={[busLocation.lat, busLocation.lng]} icon={busIcon}>
           <Popup>Bus Live Location</Popup>
         </Marker>
       )}
 
-      <MapController
-        userLocation={userLocation}
-        busLocation={busLocation}
-      />
+      <MapController userLocation={userLocation} busLocation={busLocation} />
     </MapContainer>
   );
 }

@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import { useEffect, useState, useMemo, useRef } from "react"; // Added useRef
-import { useSearchParams } from "next/navigation";
-import { getBusTimingInfo, calculateDistance } from "@/utils/locationHelpers";
-import { requestNotificationPermission, checkAndNotify } from "@/utils/notificationHelpers"; // Added notification helpers
-import { io } from "socket.io-client";
-import "leaflet/dist/leaflet.css";
-import BusMarker from "./BusMarker";
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import { useEffect, useState, useMemo, useRef } from 'react'; // Added useRef
+import { useSearchParams } from 'next/navigation';
+import { getBusTimingInfo, calculateDistance } from '@/utils/locationHelpers';
+import { requestNotificationPermission, checkAndNotify } from '@/utils/notificationHelpers'; // Added notification helpers
+import { io } from 'socket.io-client';
+import 'leaflet/dist/leaflet.css';
+import BusMarker from './BusMarker';
 
-const socket = io("http://localhost:5000");
+const socket = io('http://localhost:5000');
 
 const studentIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
   iconSize: [35, 35],
   iconAnchor: [17, 35],
 });
@@ -25,13 +25,13 @@ type Bus = {
   lng: number;
   speed: number;
   eta?: string;
-  status: "running" | "paused" | "stopped";
+  status: 'running' | 'paused' | 'stopped';
   time: string;
 };
 
 export default function MapView({ busId: propBusId }: { busId: string | null }) {
   const params = useSearchParams();
-  const routeId = params.get("route");
+  const routeId = params.get('route');
 
   const [buses, setBuses] = useState<Bus[]>([]);
   const [studentPos, setStudentPos] = useState<[number, number] | null>(null);
@@ -49,14 +49,14 @@ export default function MapView({ busId: propBusId }: { busId: string | null }) 
     if (!routeId) return;
 
     setBuses([]);
-    socket.emit("joinRoute", { routeId });
+    socket.emit('joinRoute', { routeId });
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setStudentPos([pos.coords.latitude, pos.coords.longitude]);
         },
-        (err) => console.error("GPS Error:", err)
+        (err) => console.error('GPS Error:', err)
       );
     }
 
@@ -75,12 +75,12 @@ export default function MapView({ busId: propBusId }: { busId: string | null }) 
       });
     };
 
-    socket.on("receiveLocation", handleBusUpdate);
-    socket.on("receiveBusStatus", handleBusUpdate);
+    socket.on('receiveLocation', handleBusUpdate);
+    socket.on('receiveBusStatus', handleBusUpdate);
 
     return () => {
-      socket.off("receiveLocation", handleBusUpdate);
-      socket.off("receiveBusStatus", handleBusUpdate);
+      socket.off('receiveLocation', handleBusUpdate);
+      socket.off('receiveBusStatus', handleBusUpdate);
     };
   }, [routeId]);
 
@@ -91,7 +91,7 @@ export default function MapView({ busId: propBusId }: { busId: string | null }) 
     buses.forEach((bus) => {
       // Calculate real-time distance
       const dist = calculateDistance(studentPos[0], studentPos[1], bus.lat, bus.lng);
-      
+
       // Check distance and trigger sound/alert if within 100m
       checkAndNotify(bus.busId, dist, notifiedBuses.current);
     });
@@ -106,11 +106,7 @@ export default function MapView({ busId: propBusId }: { busId: string | null }) 
 
   return (
     <div className="h-full w-full relative">
-      <MapContainer
-        center={[22.7, 90.35]}
-        zoom={14}
-        className="h-full w-full z-0"
-      >
+      <MapContainer center={[22.7, 90.35]} zoom={14} className="h-full w-full z-0">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
         {studentPos && (

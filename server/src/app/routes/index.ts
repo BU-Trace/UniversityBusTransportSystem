@@ -7,6 +7,7 @@ import BusRoutes from '../modules/Bus/bus.routes';
 import NotificationRoutes from '../modules/Notification/notification.routes';
 import IssueRoutes from '../modules/Issue/issue.routes';
 import LocationRoutes from '../modules/location/location.routes';
+import AiRoutes from '../modules/AI/ai.routes';
 
 const router = Router();
 
@@ -42,6 +43,10 @@ const moduleRoutes = [
   {
     path: '/location',
     route: LocationRoutes,
+  },
+  {
+    path: '/ai',
+    route: AiRoutes,
   },
 ];
 

@@ -1,11 +1,11 @@
-import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload, TokenExpiredError } from "jsonwebtoken";
-import config from "../config";
-import catchAsync from "../utils/catchAsync";
-import { StatusCodes } from "http-status-codes";
-import { UserRole } from "../modules/User/user.interface";
-import User from "../modules/User/user.model";
-import AppError from "../errors/appError";
+import { NextFunction, Request, Response } from 'express';
+import jwt, { JwtPayload, TokenExpiredError } from 'jsonwebtoken';
+import config from '../config';
+import catchAsync from '../utils/catchAsync';
+import { StatusCodes } from 'http-status-codes';
+import { UserRole } from '../modules/User/user.interface';
+import User from '../modules/User/user.model';
+import AppError from '../errors/appError';
 
 interface AuthPayload extends JwtPayload {
   email: string;
@@ -20,45 +20,40 @@ const auth = (...requiredRoles: UserRole[]) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
     }
 
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : authHeader;
+    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
     try {
       const decoded = jwt.verify(token, config.jwt_access_secret as string) as AuthPayload;
 
       const email = decoded?.email?.trim().toLowerCase();
       if (!email) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, "Invalid token!");
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token!');
       }
 
       // ✅ IMPORTANT FIX: don't query by role here
       const user = await User.findOne({ email });
 
       if (!user) {
-        throw new AppError(StatusCodes.NOT_FOUND, "This user is not found!");
+        throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
       }
 
       if (!user.isActive) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, "Your account is not active!");
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'Your account is not active!');
       }
 
       // ✅ role authorization check using DB role (source of truth)
       // Some routes pass enum-like roles ("ADMIN", "STUDENT"...). Your DB uses lowercase.
       // Normalize both sides so authorization works consistently.
-      const normalizedRequiredRoles = requiredRoles.map((r) =>
-        String(r).toLowerCase()
-      );
+      const normalizedRequiredRoles = requiredRoles.map((r) => String(r).toLowerCase());
 
       const userRole = String(user.role).toLowerCase();
 
       if (normalizedRequiredRoles.length > 0 && !normalizedRequiredRoles.includes(userRole)) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, "You are not authorized!");
+        throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
       }
-
 
       // ✅ attach user info from DB (prevents token/db mismatch issues)
       req.user = {
@@ -75,10 +70,10 @@ const auth = (...requiredRoles: UserRole[]) => {
     } catch (error) {
       if (error instanceof TokenExpiredError) {
         return next(
-          new AppError(StatusCodes.UNAUTHORIZED, "Token has expired! Please login again.")
+          new AppError(StatusCodes.UNAUTHORIZED, 'Token has expired! Please login again.')
         );
       }
-      return next(new AppError(StatusCodes.UNAUTHORIZED, "Invalid token!"));
+      return next(new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token!'));
     }
   });
 };

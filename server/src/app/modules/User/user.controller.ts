@@ -79,6 +79,18 @@ const adminCreateUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// POST /user/add-driver (admin only)
+const adminCreateDriver = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserServices.adminCreateDriver(req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.CREATED,
+    success: true,
+    message: 'Driver created successfully',
+    data: result,
+  });
+});
+
 // PUT /user/update-user/:id
 const adminUpdateUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.adminUpdateUser(req.params.id, req.body);
@@ -112,6 +124,7 @@ export const UserController = {
 
   getAllUsers,
   adminCreateUser,
+  adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
 };
