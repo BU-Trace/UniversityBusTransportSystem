@@ -1,3 +1,18 @@
+// Update driver status (active/inactive or custom status)
+const updateDriverStatus = async (driverId: string, status: any) => {
+  const driver = await UserModel.findById(driverId);
+  if (!driver || driver.role !== 'driver') {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Driver not found');
+  }
+  // Only allow updating isActive (boolean)
+  if (typeof status === 'boolean') {
+    driver.isActive = status;
+  } else {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Status must be a boolean (active/inactive)');
+  }
+  await driver.save();
+  return driver;
+};
 import AppError from '../../errors/appError';
 import { StatusCodes } from 'http-status-codes';
 import UserModel from './user.model';
@@ -11,16 +26,15 @@ type ClientInfo = NonNullable<IUser['clientInfo']>;
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   student: ['bio', 'department', 'rollNumber'],
   driver: ['bio', 'licenseNumber'],
-  admin: ['bio'], // ✅ admin should not include licenseNumber
-  superadmin: ['bio'], // ✅ superadmin should not include licenseNumber
+  admin: ['bio'],  
+  superadmin: ['bio'],  
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
-    // If your DB allows null clientInfo, initialize it
+   
     user.clientInfo = {} as ClientInfo;
 
-    // BUT for required roles, ensure it exists at least
     if (role === 'student') {
       user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
@@ -195,7 +209,6 @@ const registerUser = async (userData: Partial<IUser>) =>
         'Your Campus Connect OTP'
       );
     } catch (e) {
-      // don't block registration if email fails
     }
 
     return null;
@@ -242,7 +255,6 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
    DASHBOARD CRUD (Admin)
 ========================================================= */
 
-// GET all users (dashboard)
 const getAllUsers = async () => {
   const users = await UserModel.find().select('-password').sort({ createdAt: -1 });
 
@@ -438,4 +450,5 @@ export const UserServices = {
   adminDeleteUser,
   getAllDrivers,
   getAllStudents,
+  updateDriverStatus,
 };
