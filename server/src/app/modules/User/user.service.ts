@@ -124,24 +124,21 @@ const registerUser = async (userData: Partial<IUser>) =>
     const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
 
     const user = new UserModel({
-  name: userData.name,
-  email: userData.email,
-  role: userData.role,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
 
-  clientInfo: userData.clientInfo,
-  clientITInfo: userData.clientITInfo,
+      clientInfo: userData.clientInfo,
+      clientITInfo: userData.clientITInfo,
 
-  
-  password: password,
+      password: password,
 
+      isActive: userData.role === 'student' ? true : false,
+      isApproved: userData.role === 'student' ? true : false,
 
-  isActive: false,
-  isApproved: false,
-
-  otpToken: String(OTP),
-  otpExpires: new Date(Date.now() + 15 * 60 * 1000),
-});
-
+      otpToken: String(OTP),
+      otpExpires: new Date(Date.now() + 15 * 60 * 1000),
+    });
 
     await user.save({ session });
 
@@ -247,9 +244,7 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
 
 // GET all users (dashboard)
 const getAllUsers = async () => {
-  const users = await UserModel.find()
-    .select('-password')
-    .sort({ createdAt: -1 });
+  const users = await UserModel.find().select('-password').sort({ createdAt: -1 });
 
   return users;
 };
@@ -317,6 +312,68 @@ const adminCreateUser = async (payload: any) => {
   return safe;
 };
 
+// Admin creates a driver (dedicated flow)
+const adminCreateDriver = async (payload: any) => {
+  const email = payload.email?.trim().toLowerCase();
+  if (!email) throw new AppError(StatusCodes.BAD_REQUEST, 'Email is required');
+
+  const exists = await UserModel.findOne({ email });
+  if (exists) {
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
+  }
+
+  const tempPassword = generateTempPassword(10);
+
+  const userDoc: Partial<IUser> = {
+    email,
+    password: tempPassword,
+    name: payload.name,
+    role: 'driver',
+    isActive: true,
+    isApproved: true,
+    needPasswordChange: true,
+
+    profileImage: payload.profileImage,
+    approvalLetter: payload.approvalLetter,
+
+    assignedBus: payload.assignedBus,
+    assignedBusName: payload.assignedBusName ?? null,
+
+    clientInfo: payload.clientInfo ?? {},
+  };
+
+  if (!userDoc.profileImage) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Driver photo is required');
+  }
+  if (!userDoc.approvalLetter) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Approval letter is required');
+  }
+  if (!userDoc.assignedBus) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver');
+  }
+
+  const created = await UserModel.create(userDoc);
+
+  try {
+    await EmailHelper.sendEmail(
+      created.email,
+      `
+      <div style="font-family: Arial, sans-serif; line-height:1.6;">
+        <h3>Campus Connect - Driver Account Created</h3>
+        <p>Hello ${created.name || ''},</p>
+        <p>An admin has created your driver account.</p>
+        <p><b>Temporary Password:</b> ${tempPassword}</p>
+        <p>Please login and change your password immediately.</p>
+      </div>
+      `,
+      'Campus Connect Driver Account Created'
+    );
+  } catch (e) {}
+
+  const safe = await UserModel.findById(created._id).select('-password');
+  return safe;
+};
+
 // Admin updates user (dashboard edit)
 const adminUpdateUser = async (id: string, payload: any) => {
   const user = await UserModel.findById(id);
@@ -359,6 +416,16 @@ const adminDeleteUser = async (id: string) => {
   return { message: 'Deleted successfully' };
 };
 
+// Get all drivers
+const getAllDrivers = async () => {
+  return await UserModel.find({ role: 'driver' }).select('-password').sort({ createdAt: -1 });
+};
+
+// Get all students
+const getAllStudents = async () => {
+  return await UserModel.find({ role: 'student' }).select('-password').sort({ createdAt: -1 });
+};
+
 export const UserServices = {
   registerUser,
   verifyEmail,
@@ -366,6 +433,9 @@ export const UserServices = {
 
   getAllUsers,
   adminCreateUser,
+  adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
+  getAllDrivers,
+  getAllStudents,
 };

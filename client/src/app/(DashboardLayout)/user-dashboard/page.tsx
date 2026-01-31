@@ -62,8 +62,8 @@ export default function Page() {
           lng: pos.coords.longitude,
         });
 
-        setTracking(true);      // ✅ SHOW MAP
-        setSidebarOpen(false);  // ✅ HIDE SIDEBAR
+        setTracking(true); // ✅ SHOW MAP
+        setSidebarOpen(false); // ✅ HIDE SIDEBAR
       },
       (err) => {
         console.error(err);
@@ -90,7 +90,6 @@ export default function Page() {
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-gray-50">
-
       {/* ================= SIDEBAR ================= */}
       {!tracking && (
         <aside
@@ -100,22 +99,14 @@ export default function Page() {
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           {/* Close */}
-          <button
-            onClick={() => setSidebarOpen(false)}
-            className="absolute top-4 right-4 text-2xl"
-          >
+          <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-2xl">
             ✕
           </button>
 
           {/* Logo */}
           <div className="flex items-center mb-10">
             <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center">
-              <Image
-                src="/static/BUTracelogo-modified.png"
-                alt="Logo"
-                width={40}
-                height={40}
-              />
+              <Image src="/static/BUTracelogo-modified.png" alt="Logo" width={40} height={40} />
             </div>
             <span className="ml-3 font-bold text-xl uppercase">BUTrace</span>
           </div>
@@ -130,17 +121,11 @@ export default function Page() {
               )}
             </div>
 
-            <h2 className="mt-4 text-lg font-black uppercase text-center">
-              {user.name}
-            </h2>
+            <h2 className="mt-4 text-lg font-black uppercase text-center">{user.name}</h2>
 
-            <p className="text-xs text-red-200 text-center mt-1">
-              {user.department}
-            </p>
+            <p className="text-xs text-red-200 text-center mt-1">{user.department}</p>
 
-            <p className="text-[10px] uppercase tracking-widest text-red-300 mt-1">
-              ID: {user.id}
-            </p>
+            <p className="text-[10px] uppercase tracking-widest text-red-300 mt-1">ID: {user.id}</p>
           </div>
 
           {/* BUS SELECT */}
@@ -167,7 +152,6 @@ export default function Page() {
 
       {/* ================= MAIN ================= */}
       <main className="relative flex-1">
-
         {/* Sidebar toggle */}
         {!tracking && !sidebarOpen && (
           <button
@@ -184,10 +168,7 @@ export default function Page() {
             <div className="relative w-32 h-32 flex items-center justify-center">
               <div className="absolute inset-0 rounded-full bg-red-500/30 animate-ping"></div>
               <div className="relative w-20 h-20 rounded-full bg-white shadow-2xl flex items-center justify-center">
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-10 h-10 text-red-600 fill-current"
-                >
+                <svg viewBox="0 0 24 24" className="w-10 h-10 text-red-600 fill-current">
                   <path d="M12 2C8.13 2 5.13 5.13 5.13 9c0 5.25 6.87 13 6.87 13s6.87-7.75 6.87-13c0-3.87-3.13-7-6.87-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
                 </svg>
               </div>
@@ -198,10 +179,7 @@ export default function Page() {
         {/* ================= MAP ================= */}
         {tracking && (
           <div className="absolute inset-0 z-0">
-            <UserMap
-              userLocation={userLocation}
-              busLocation={busLocation}
-            />
+            <UserMap userLocation={userLocation} busLocation={busLocation} />
           </div>
         )}
 

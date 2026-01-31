@@ -98,7 +98,7 @@ const NearestStopButton: React.FC = () => {
               }}
               className="text-2xl relative z-10"
             >
-              <Network/>
+              <Network />
             </motion.div>
 
             {}

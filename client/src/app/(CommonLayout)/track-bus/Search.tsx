@@ -1,10 +1,10 @@
-"use client";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+'use client';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function SearchBar() {
   const [open, setOpen] = useState(false);
-  const [busId, setBusId] = useState("");
+  const [busId, setBusId] = useState('');
   const router = useRouter();
 
   const handleSearch = () => {
@@ -27,7 +27,6 @@ export default function SearchBar() {
       {open && (
         <div className="fixed inset-0 bg-black/40 z-9998 flex items-center justify-center">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-[90%] max-w-sm relative">
-            
             {/* Close Button */}
             <button
               onClick={() => setOpen(false)}
@@ -43,7 +42,7 @@ export default function SearchBar() {
               placeholder="Enter Bus ID (BRTC-10)"
               value={busId}
               onChange={(e) => setBusId(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
 
             <button

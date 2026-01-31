@@ -1,12 +1,12 @@
-"use client";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
-import { useEffect } from "react";
-import "leaflet/dist/leaflet.css";
+'use client';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { useEffect } from 'react';
+import 'leaflet/dist/leaflet.css';
 
 // Red Location Pointer Icon
 const redPointerIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
   iconSize: [40, 40],
   iconAnchor: [20, 40],
 });
@@ -21,7 +21,7 @@ function MapController({ pos }: { pos: [number, number] }) {
 }
 
 export default function StudentMap({ location }: { location: { lat: number; lng: number } }) {
-  if (typeof window === "undefined") return null;
+  if (typeof window === 'undefined') return null;
 
   const position: [number, number] = [location.lat, location.lng];
 

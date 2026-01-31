@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname, useRouter } from "next/navigation";
-import Link from "next/link";
-import { signOut, useSession } from "next-auth/react";
-import { toast } from "sonner";
+import React, { useEffect, useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { signOut, useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 
 import {
   Plus,
@@ -18,7 +18,7 @@ import {
   Route as RouteIcon,
   Waypoints,
   ExternalLink,
-} from "lucide-react";
+} from 'lucide-react';
 
 import {
   MdDashboard,
@@ -30,9 +30,9 @@ import {
   MdMenu,
   MdClose,
   MdEdit,
-} from "react-icons/md";
+} from 'react-icons/md';
 
-type UserRole = "student" | "driver" | "admin" | "superadmin";
+type UserRole = 'student' | 'driver' | 'admin' | 'superadmin';
 
 type IStop = {
   name: string;
@@ -50,8 +50,7 @@ type IRoute = {
   createdAt?: string;
 };
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 const API = {
   getAllRoutes: `${BASE_URL}/route/get-all-routes`,
@@ -60,10 +59,42 @@ const API = {
   deleteRoute: (id: string) => `${BASE_URL}/route/delete-route/${id}`,
 };
 
+type RawStop = {
+  name?: string;
+  stopName?: string;
+  mapUrl?: string;
+  locationUrl?: string;
+  googleMapUrl?: string;
+};
+
+type RawRoute = {
+  _id?: string;
+  id?: string;
+  routeName?: string;
+  name?: string;
+  startPointName?: string;
+  startPoint?: { name?: string; mapUrl?: string };
+  startPointUrl?: string;
+  startPointMapUrl?: string;
+  endPointName?: string;
+  endPoint?: { name?: string; mapUrl?: string };
+  endPointUrl?: string;
+  endPointMapUrl?: string;
+  stops?: RawStop[];
+  stopPoints?: RawStop[];
+  createdAt?: string;
+};
+
+type ApiResponse<T> = {
+  data?: T;
+  message?: string;
+  success?: boolean;
+};
+
 function getErrorMessage(e: unknown) {
   if (e instanceof Error) return e.message;
-  if (typeof e === "string") return e;
-  return "Something went wrong";
+  if (typeof e === 'string') return e;
+  return 'Something went wrong';
 }
 
 async function apiFetch<T>(
@@ -74,37 +105,37 @@ async function apiFetch<T>(
   const res = await fetch(url, {
     ...options,
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...(options.headers || {}),
     },
-    cache: "no-store",
+    cache: 'no-store',
   });
 
-  const json = await res.json().catch(() => ({} as any));
-  if (!res.ok) throw new Error(json?.message || "Request failed");
+  const json = (await res.json().catch(() => ({}))) as unknown;
+  const message = (json as { message?: string }).message;
+  if (!res.ok) throw new Error(message || 'Request failed');
   return json as T;
 }
 
 function safeOpen(url?: string) {
   if (!url) return;
-  window.open(url, "_blank", "noopener,noreferrer");
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 function formatDate(d?: string) {
-  if (!d) return "—";
+  if (!d) return '—';
   const dt = new Date(d);
   if (Number.isNaN(dt.getTime())) return d;
   return dt.toLocaleString();
 }
 
-function Overlay({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
+function toUserRole(role?: string | null): UserRole | undefined {
+  const allowed: UserRole[] = ['student', 'driver', 'admin', 'superadmin'];
+  return allowed.includes(role as UserRole) ? (role as UserRole) : undefined;
+}
+
+function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -132,12 +163,8 @@ function HeaderModal({
   return (
     <div className="p-6 border-b border-gray-100 flex justify-between items-start gap-4 sticky top-0 bg-white z-10">
       <div>
-        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">
-          {title}
-        </h2>
-        {subtitle ? (
-          <p className="text-xs text-gray-500 mt-1 font-medium">{subtitle}</p>
-        ) : null}
+        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">{title}</h2>
+        {subtitle ? <p className="text-xs text-gray-500 mt-1 font-medium">{subtitle}</p> : null}
       </div>
       <button
         onClick={onClose}
@@ -149,12 +176,12 @@ function HeaderModal({
   );
 }
 
-const initialForm: Omit<IRoute, "id"> = {
-  routeName: "",
-  startPointName: "",
-  startPointMapUrl: "",
-  endPointName: "",
-  endPointMapUrl: "",
+const initialForm: Omit<IRoute, 'id'> = {
+  routeName: '',
+  startPointName: '',
+  startPointMapUrl: '',
+  endPointName: '',
+  endPointMapUrl: '',
   stops: [],
   createdAt: undefined,
 };
@@ -164,10 +191,8 @@ export default function RouteManagementPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const accessToken = (session as any)?.accessToken as string | undefined;
-  const myRole = ((session as any)?.user?.role || (session as any)?.role) as
-    | UserRole
-    | undefined;
+  const accessToken = session?.accessToken;
+  const myRole = toUserRole(session?.user?.role || null);
 
   const [mounted, setMounted] = useState(false);
 
@@ -179,13 +204,13 @@ export default function RouteManagementPage() {
   const [loading, setLoading] = useState(false);
 
   // search
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState('');
 
   // modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<"add" | "edit" | null>(null);
+  const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [form, setForm] = useState<Omit<IRoute, "id">>({ ...initialForm });
+  const [form, setForm] = useState<Omit<IRoute, 'id'>>({ ...initialForm });
 
   // dynamic stops count
   const [stopCount, setStopCount] = useState<number>(0);
@@ -196,9 +221,9 @@ export default function RouteManagementPage() {
 
   useEffect(() => {
     const lock = isOpen || isModalOpen;
-    document.body.style.overflow = lock ? "hidden" : "auto";
+    document.body.style.overflow = lock ? 'hidden' : 'auto';
     return () => {
-      document.body.style.overflow = "auto";
+      document.body.style.overflow = 'auto';
     };
   }, [isOpen, isModalOpen]);
 
@@ -207,27 +232,30 @@ export default function RouteManagementPage() {
 
     if (!session) return;
 
-    if (myRole !== "admin" && myRole !== "superadmin") {
-      toast.error("Not authorized");
-      router.replace("/");
+    if (myRole !== 'admin' && myRole !== 'superadmin') {
+      toast.error('Not authorized');
+      router.replace('/');
     }
   }, [mounted, session, myRole, router]);
 
-  const admin = { name: "Admin", role: myRole === "superadmin" ? "Super Admin" : "Admin" };
+  const admin = { name: 'Admin', role: myRole === 'superadmin' ? 'Super Admin' : 'Admin' };
 
   const menuItems = [
-    { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
-    { label: "Bus Management", href: "/dashboard/busManage", icon: MdDirectionsBus },
-    { label: "User Management", href: "/dashboard/userManage", icon: MdPeople },
-    { label: "Route Management", href: "/dashboard/routeManage", icon: MdMap },
-    { label: "Notice Publish", href: "/dashboard/notice", icon: MdNotifications },
+    { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
+    { label: 'Bus Management', href: '/dashboard/busManage', icon: MdDirectionsBus },
+    { label: 'User Management', href: '/dashboard/userManage', icon: MdPeople },
+    { label: 'Route Management', href: '/dashboard/routeManage', icon: MdMap },
+    { label: 'Notice Publish', href: '/dashboard/notice', icon: MdNotifications },
   ];
 
   const filteredRoutes = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return routes;
     return routes.filter((r) => {
-      const stopText = r.stops.map((s) => s.name).join(" ").toLowerCase();
+      const stopText = r.stops
+        .map((s) => s.name)
+        .join(' ')
+        .toLowerCase();
       return (
         r.routeName.toLowerCase().includes(q) ||
         r.startPointName.toLowerCase().includes(q) ||
@@ -237,18 +265,23 @@ export default function RouteManagementPage() {
     });
   }, [routes, query]);
 
-  const normalizeRoute = (r: any): IRoute => {
+  const toStops = (raw: unknown): RawStop[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw.map((s) => (typeof s === 'object' && s ? (s as RawStop) : {}));
+  };
+
+  const normalizeRoute = (r: RawRoute): IRoute => {
+    const stopsSource = toStops(r?.stops || r?.stopPoints);
     return {
-      id: r?._id || r?.id,
-      routeName: r?.routeName || r?.name || "",
-      startPointName: r?.startPointName || r?.startPoint?.name || r?.startPoint || "",
-      startPointMapUrl:
-        r?.startPointMapUrl || r?.startPoint?.mapUrl || r?.startPointUrl || "",
-      endPointName: r?.endPointName || r?.endPoint?.name || r?.endPoint || "",
-      endPointMapUrl: r?.endPointMapUrl || r?.endPoint?.mapUrl || r?.endPointUrl || "",
-      stops: (r?.stops || r?.stopPoints || []).map((s: any) => ({
-        name: s?.name || s?.stopName || "",
-        mapUrl: s?.mapUrl || s?.locationUrl || s?.googleMapUrl || "",
+      id: r?._id || r?.id || '',
+      routeName: r?.routeName || r?.name || '',
+      startPointName: r?.startPointName || r?.startPoint?.name || '',
+      startPointMapUrl: r?.startPointMapUrl || r?.startPoint?.mapUrl || r?.startPointUrl || '',
+      endPointName: r?.endPointName || r?.endPoint?.name || '',
+      endPointMapUrl: r?.endPointMapUrl || r?.endPoint?.mapUrl || r?.endPointUrl || '',
+      stops: stopsSource.map((s) => ({
+        name: s?.name || s?.stopName || '',
+        mapUrl: s?.mapUrl || s?.locationUrl || s?.googleMapUrl || '',
       })),
       createdAt: r?.createdAt,
     };
@@ -257,8 +290,8 @@ export default function RouteManagementPage() {
   const loadRoutes = async () => {
     setLoading(true);
     try {
-      const json = await apiFetch<any>(API.getAllRoutes, {}, accessToken);
-      const list = (json?.data || []).map(normalizeRoute);
+      const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
+      const list = (json.data || []).map(normalizeRoute);
       setRoutes(list);
     } catch (e) {
       toast.error(getErrorMessage(e));
@@ -269,12 +302,12 @@ export default function RouteManagementPage() {
 
   useEffect(() => {
     if (!mounted) return;
-    if (myRole !== "admin" && myRole !== "superadmin") return;
+    if (myRole !== 'admin' && myRole !== 'superadmin') return;
     loadRoutes();
   }, [mounted, myRole]);
 
   const openAdd = () => {
-    setModalType("add");
+    setModalType('add');
     setSelectedId(null);
     setForm({ ...initialForm });
     setStopCount(0);
@@ -282,7 +315,7 @@ export default function RouteManagementPage() {
   };
 
   const openEdit = (r: IRoute) => {
-    setModalType("edit");
+    setModalType('edit');
     setSelectedId(r.id);
     setForm({
       routeName: r.routeName,
@@ -304,7 +337,7 @@ export default function RouteManagementPage() {
 
       if (count > nextStops.length) {
         for (let i = nextStops.length; i < count; i++) {
-          nextStops.push({ name: "", mapUrl: "" });
+          nextStops.push({ name: '', mapUrl: '' });
         }
       } else if (count < nextStops.length) {
         nextStops.splice(count);
@@ -323,11 +356,11 @@ export default function RouteManagementPage() {
   };
 
   const validate = () => {
-    if (!form.routeName.trim()) return "Route name is required";
-    if (!form.startPointName.trim()) return "Start point name is required";
-    if (!form.startPointMapUrl.trim()) return "Start point map url is required";
-    if (!form.endPointName.trim()) return "End point name is required";
-    if (!form.endPointMapUrl.trim()) return "End point map url is required";
+    if (!form.routeName.trim()) return 'Route name is required';
+    if (!form.startPointName.trim()) return 'Start point name is required';
+    if (!form.startPointMapUrl.trim()) return 'Start point map url is required';
+    if (!form.endPointName.trim()) return 'End point name is required';
+    if (!form.endPointMapUrl.trim()) return 'End point map url is required';
 
     if (stopCount > 0) {
       for (let i = 0; i < stopCount; i++) {
@@ -359,28 +392,28 @@ export default function RouteManagementPage() {
     };
 
     try {
-      toast.message("Saving route...");
+      toast.message('Saving route...');
 
-      if (modalType === "edit" && selectedId) {
-        const json = await apiFetch<any>(
+      if (modalType === 'edit' && selectedId) {
+        const json = await apiFetch<ApiResponse<RawRoute>>(
           API.updateRoute(selectedId),
-          { method: "PUT", body: JSON.stringify(payload) },
+          { method: 'PUT', body: JSON.stringify(payload) },
           accessToken
         );
 
-        const updated = normalizeRoute(json?.data);
+        const updated = normalizeRoute(json.data || {});
         setRoutes((prev) => prev.map((x) => (x.id === selectedId ? updated : x)));
-        toast.success("Route updated");
+        toast.success('Route updated');
       } else {
-        const json = await apiFetch<any>(
+        const json = await apiFetch<ApiResponse<RawRoute>>(
           API.createRoute,
-          { method: "POST", body: JSON.stringify(payload) },
+          { method: 'POST', body: JSON.stringify(payload) },
           accessToken
         );
 
-        const created = normalizeRoute(json?.data);
+        const created = normalizeRoute(json.data || {});
         setRoutes((prev) => [created, ...prev]);
-        toast.success("Route created");
+        toast.success('Route created');
       }
 
       setIsModalOpen(false);
@@ -390,12 +423,12 @@ export default function RouteManagementPage() {
   };
 
   const deleteRoute = async (id: string) => {
-    if (!window.confirm("Delete this route permanently?")) return;
+    if (!window.confirm('Delete this route permanently?')) return;
     try {
-      toast.message("Deleting route...");
-      await apiFetch<any>(API.deleteRoute(id), { method: "DELETE" }, accessToken);
+      toast.message('Deleting route...');
+      await apiFetch<ApiResponse<null>>(API.deleteRoute(id), { method: 'DELETE' }, accessToken);
       setRoutes((prev) => prev.filter((r) => r.id !== id));
-      toast.success("Route deleted");
+      toast.success('Route deleted');
     } catch (e) {
       toast.error(getErrorMessage(e));
     }
@@ -417,12 +450,12 @@ export default function RouteManagementPage() {
 
       {/* sidebar */}
       <AnimatePresence>
-        {(isOpen || (typeof window !== "undefined" && window.innerWidth >= 1024)) && (
+        {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
           <motion.aside
-            initial={{ x: "-100%" }}
+            initial={{ x: '-100%' }}
             animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'tween', duration: 0.3 }}
             className="fixed lg:sticky top-0 left-0 z-50 bg-[#E31E24] text-white flex flex-col shadow-2xl w-full lg:w-72 h-screen overflow-hidden"
           >
             <button
@@ -457,8 +490,8 @@ export default function RouteManagementPage() {
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
                     pathname === item.href
-                      ? "bg-white text-[#E31E24] shadow-md"
-                      : "hover:bg-white/10 text-white/90"
+                      ? 'bg-white text-[#E31E24] shadow-md'
+                      : 'hover:bg-white/10 text-white/90'
                   }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
@@ -468,7 +501,7 @@ export default function RouteManagementPage() {
 
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
-                onClick={() => signOut({ callbackUrl: "/" })}
+                onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
               >
                 <MdLogout size={20} /> <span className="text-sm">Log Out</span>
@@ -529,18 +562,14 @@ export default function RouteManagementPage() {
                 <MdMap className="text-[#E31E24]" /> Routes List
               </h3>
               <div className="text-xs font-black text-gray-400">
-                Total:{" "}
-                <span className="text-gray-700">
-                  {loading ? "..." : filteredRoutes.length}
-                </span>
+                Total:{' '}
+                <span className="text-gray-700">{loading ? '...' : filteredRoutes.length}</span>
               </div>
             </div>
 
             <div className="p-6 overflow-x-auto">
               {loading ? (
-                <div className="text-center py-20 text-gray-500 font-bold">
-                  Loading routes...
-                </div>
+                <div className="text-center py-20 text-gray-500 font-bold">Loading routes...</div>
               ) : filteredRoutes.length === 0 ? (
                 <div className="text-center py-20">
                   <div className="mx-auto w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
@@ -610,9 +639,7 @@ export default function RouteManagementPage() {
                             <div className="space-y-1">
                               {r.stops.slice(0, 3).map((s, idx) => (
                                 <div key={`${r.id}-s-${idx}`} className="flex items-center gap-2">
-                                  <span className="font-black text-gray-500">
-                                    {idx + 1}.
-                                  </span>
+                                  <span className="font-black text-gray-500">{idx + 1}.</span>
                                   <span className="font-semibold">{s.name}</span>
                                   {s.mapUrl ? (
                                     <button
@@ -636,9 +663,7 @@ export default function RouteManagementPage() {
                           )}
                         </td>
 
-                        <td className="py-4 text-xs text-gray-600">
-                          {formatDate(r.createdAt)}
-                        </td>
+                        <td className="py-4 text-xs text-gray-600">{formatDate(r.createdAt)}</td>
 
                         <td className="py-4 text-right">
                           <div className="flex justify-end gap-2">
@@ -674,11 +699,11 @@ export default function RouteManagementPage() {
               initial={{ scale: 0.96, y: 24 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
-                title={modalType === "add" ? "Add Route" : "Update Route"}
+                title={modalType === 'add' ? 'Add Route' : 'Update Route'}
                 subtitle="Set start/end + dynamic stops with Google Maps URLs."
                 onClose={() => setIsModalOpen(false)}
               />
@@ -716,9 +741,7 @@ export default function RouteManagementPage() {
                       </label>
                       <input
                         value={form.startPointName}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, startPointName: e.target.value }))
-                        }
+                        onChange={(e) => setForm((p) => ({ ...p, startPointName: e.target.value }))}
                         placeholder="Example: Main Gate"
                         className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                       />
@@ -744,9 +767,7 @@ export default function RouteManagementPage() {
                       </label>
                       <input
                         value={form.endPointName}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, endPointName: e.target.value }))
-                        }
+                        onChange={(e) => setForm((p) => ({ ...p, endPointName: e.target.value }))}
                         placeholder="Example: City Center"
                         className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                       />
@@ -758,9 +779,7 @@ export default function RouteManagementPage() {
                       </label>
                       <input
                         value={form.endPointMapUrl}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, endPointMapUrl: e.target.value }))
-                        }
+                        onChange={(e) => setForm((p) => ({ ...p, endPointMapUrl: e.target.value }))}
                         placeholder="https://maps.google.com/..."
                         className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                       />
@@ -797,9 +816,7 @@ export default function RouteManagementPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-black text-gray-500">
-                        Number of stops
-                      </span>
+                      <span className="text-[11px] font-black text-gray-500">Number of stops</span>
                       <select
                         value={stopCount}
                         onChange={(e) => setStopsCountAndResize(Number(e.target.value))}
@@ -821,16 +838,14 @@ export default function RouteManagementPage() {
                       </div>
                     ) : (
                       Array.from({ length: stopCount }).map((_, idx) => {
-                        const stop = form.stops?.[idx] || { name: "", mapUrl: "" };
+                        const stop = form.stops?.[idx] || { name: '', mapUrl: '' };
                         return (
                           <div
                             key={`stop-${idx}`}
                             className="rounded-2xl border border-gray-200 p-4"
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <div className="font-black text-gray-900">
-                                Stop #{idx + 1}
-                              </div>
+                              <div className="font-black text-gray-900">Stop #{idx + 1}</div>
                               <button
                                 type="button"
                                 onClick={() => safeOpen(stop.mapUrl)}
@@ -848,7 +863,7 @@ export default function RouteManagementPage() {
                                 </label>
                                 <input
                                   value={stop.name}
-                                  onChange={(e) => updateStop(idx, "name", e.target.value)}
+                                  onChange={(e) => updateStop(idx, 'name', e.target.value)}
                                   placeholder="Example: Library"
                                   className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                                 />
@@ -860,7 +875,7 @@ export default function RouteManagementPage() {
                                 </label>
                                 <input
                                   value={stop.mapUrl}
-                                  onChange={(e) => updateStop(idx, "mapUrl", e.target.value)}
+                                  onChange={(e) => updateStop(idx, 'mapUrl', e.target.value)}
                                   placeholder="https://maps.google.com/..."
                                   className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                                 />
@@ -887,7 +902,7 @@ export default function RouteManagementPage() {
                     className="flex-1 py-4 rounded-2xl font-black text-white bg-[#E31E24] hover:bg-red-700 transition-colors shadow-lg flex justify-center items-center gap-2"
                   >
                     <Save size={18} />
-                    {modalType === "add" ? "Save Route" : "Save Changes"}
+                    {modalType === 'add' ? 'Save Route' : 'Save Changes'}
                   </button>
                 </div>
               </form>

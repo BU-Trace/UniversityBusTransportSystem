@@ -7,7 +7,7 @@ import BusRoutes from '../modules/Bus/bus.routes';
 import NotificationRoutes from '../modules/Notification/notification.routes';
 import IssueRoutes from '../modules/Issue/issue.routes';
 import LocationRoutes from '../modules/location/location.routes';
-import chatbotRoutes from "../modules/Chatbot/chatbot.routes";
+import AiRoutes from '../modules/AI/ai.routes';
 
 const router = Router();
 
@@ -45,9 +45,9 @@ const moduleRoutes = [
     route: LocationRoutes,
   },
   {
-    path: '/chatbot',
-    route: chatbotRoutes,
-  }
+    path: '/ai',
+    route: AiRoutes,
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

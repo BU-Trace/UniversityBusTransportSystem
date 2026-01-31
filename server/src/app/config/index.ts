@@ -26,6 +26,7 @@ export default {
   sender_app_password: process.env.SENDER_APP_PASS,
   client_url: process.env.CLIENT_PORT,
   pdf_logo_url: process.env.PDF_LOGO_URL,
+  gemini_api_key: process.env.GEMINI_API_KEY,
   ssl: {
     store_name: process.env.STORE_NAME,
     payment_api: process.env.PAYMENT_API,

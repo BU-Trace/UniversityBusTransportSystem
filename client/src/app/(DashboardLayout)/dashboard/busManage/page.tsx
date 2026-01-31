@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
@@ -493,9 +494,11 @@ export default function BusManagementOnlyPage() {
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
                               {}
-                              <img
+                              <Image
                                 src={bus.photo}
                                 alt={bus.name}
+                                width={48}
+                                height={48}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                               />
                             </div>
@@ -563,7 +566,7 @@ export default function BusManagementOnlyPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-100 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
           >
             <motion.div
               initial={{ scale: 0.96, y: 24 }}
@@ -710,9 +713,11 @@ export default function BusManagementOnlyPage() {
                       <div className="flex items-center gap-4">
                         <div className="w-24 h-20 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
                           {}
-                          <img
+                          <Image
                             src={busForm.photo}
                             alt="Bus preview"
+                            width={96}
+                            height={80}
                             className="w-full h-full object-cover"
                           />
                         </div>

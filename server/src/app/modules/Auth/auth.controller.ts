@@ -4,7 +4,7 @@ import config from '../../config';
 import AppError from '../../errors/appError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { AuthService } from './auth.service';
+import { AuthService, type ReqUser } from './auth.service';
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
@@ -53,7 +53,7 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
 });
 
 const forgetPassword = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.forgetPassword(req.body.email);
+  const result = await AuthService.forgetPassword(req.body);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -72,8 +72,8 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getPendingRegistrations = catchAsync(async (_req: Request, res: Response) => {
-  const result = await AuthService.getPendingRegistrations();
+const getPendingRegistrations = catchAsync(async (req: Request, res: Response) => {
+  const result = await AuthService.getPendingRegistrations(req.user as ReqUser);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -83,8 +83,11 @@ const getPendingRegistrations = catchAsync(async (_req: Request, res: Response) 
 });
 
 const approveRegistration = catchAsync(async (req: Request, res: Response) => {
-  const actorRole = (req.user as any)?.role; // admin or superadmin (auth middleware guarantees)
-  const result = await AuthService.approveRegistration(req.params.id, req.body, actorRole);
+  const result = await AuthService.approveRegistration(
+    req.params.id,
+    req.body,
+    req.user as ReqUser
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -95,8 +98,7 @@ const approveRegistration = catchAsync(async (req: Request, res: Response) => {
 });
 
 const rejectRegistration = catchAsync(async (req: Request, res: Response) => {
-  const actorRole = (req.user as any)?.role;
-  const result = await AuthService.rejectRegistration(req.params.id, actorRole);
+  const result = await AuthService.rejectRegistration(req.params.id, req.user as ReqUser);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

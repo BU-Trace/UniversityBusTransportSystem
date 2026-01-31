@@ -1,93 +1,134 @@
-"use client";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
-import L from "leaflet";
-import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
-import "leaflet/dist/leaflet.css";
+'use client';
 
-const socket = io("http://localhost:5000");
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import { useEffect, useState, useMemo, useRef } from 'react'; // Added useRef
+import { useSearchParams } from 'next/navigation';
+import { getBusTimingInfo, calculateDistance } from '@/utils/locationHelpers';
+import { requestNotificationPermission, checkAndNotify } from '@/utils/notificationHelpers'; // Added notification helpers
+import { io } from 'socket.io-client';
+import 'leaflet/dist/leaflet.css';
+import BusMarker from './BusMarker';
 
-const busIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
-  iconSize: [40, 40],
-  iconAnchor: [20, 40],
-});
+const socket = io('http://localhost:5000');
 
 const studentIcon = new L.Icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149071.png",
+  iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149071.png',
   iconSize: [35, 35],
   iconAnchor: [17, 35],
 });
 
 type Bus = {
+  routeId: string;
   busId: string;
   lat: number;
   lng: number;
   speed: number;
   eta?: string;
+  status: 'running' | 'paused' | 'stopped';
+  time: string;
 };
 
-export default function MapView({ busId }: { busId: string | null }) {
+export default function MapView({ busId: propBusId }: { busId: string | null }) {
+  const params = useSearchParams();
+  const routeId = params.get('route');
+
   const [buses, setBuses] = useState<Bus[]>([]);
   const [studentPos, setStudentPos] = useState<[number, number] | null>(null);
-  const [activeBus, setActiveBus] = useState<Bus | null>(null);
+  const [activeBusId, setActiveBusId] = useState<string | null>(null);
+
+  // Keep track of which buses have already sent an alert
+  const notifiedBuses = useRef<Set<string>>(new Set());
+
+  // 1. Request permission on component mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition((pos) => {
-      setStudentPos([pos.coords.latitude, pos.coords.longitude]);
-    });
+    if (!routeId) return;
 
-    socket.emit("joinRoute", "Route-1");
+    setBuses([]);
+    socket.emit('joinRoute', { routeId });
 
-    const handler = (data: Bus) => {
-      setBuses((prev) => {
-        const rest = prev.filter((b) => b.busId !== data.busId);
-        return [...rest, data];
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setStudentPos([pos.coords.latitude, pos.coords.longitude]);
+        },
+        (err) => console.error('GPS Error:', err)
+      );
+    }
+
+    const handleBusUpdate = (data: Bus) => {
+      if (data.routeId !== routeId) return;
+
+      setBuses((prevBuses) => {
+        const existingBusIndex = prevBuses.findIndex((b) => b.busId === data.busId);
+        if (existingBusIndex > -1) {
+          const updatedList = [...prevBuses];
+          updatedList[existingBusIndex] = data;
+          return updatedList;
+        } else {
+          return [...prevBuses, data];
+        }
       });
     };
 
-    socket.on("receiveLocation", handler);
+    socket.on('receiveLocation', handleBusUpdate);
+    socket.on('receiveBusStatus', handleBusUpdate);
+
     return () => {
-      socket.off("receiveLocation", handler);
+      socket.off('receiveLocation', handleBusUpdate);
+      socket.off('receiveBusStatus', handleBusUpdate);
     };
-  }, []);
+  }, [routeId]);
+
+  // 2. Notification logic: Check distance every time buses update
+  useEffect(() => {
+    if (!studentPos || buses.length === 0) return;
+
+    buses.forEach((bus) => {
+      // Calculate real-time distance
+      const dist = calculateDistance(studentPos[0], studentPos[1], bus.lat, bus.lng);
+
+      // Check distance and trigger sound/alert if within 100m
+      checkAndNotify(bus.busId, dist, notifiedBuses.current);
+    });
+  }, [buses, studentPos]);
+
+  const filteredBuses = useMemo(() => {
+    if (propBusId) {
+      return buses.filter((b) => b.busId === propBusId);
+    }
+    return buses;
+  }, [buses, propBusId]);
 
   return (
-    <div className="relative h-full w-full">
-      {/* Custom Red Popup */}
-      {activeBus && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-9999 bg-red-600 text-white rounded-2xl shadow-2xl p-4 w-[300px]">
-          <button
-            onClick={() => setActiveBus(null)}
-            className="absolute top-2 right-2 text-white font-bold"
-          >
-            ✕
-          </button>
-          <h3 className="font-black text-lg">{activeBus.busId}</h3>
-          <p>Speed: {activeBus.speed} km/h</p>
-          <p>ETA: {activeBus.eta || "Calculating..."}</p>
-        </div>
-      )}
-
+    <div className="h-full w-full relative">
       <MapContainer center={[22.7, 90.35]} zoom={14} className="h-full w-full z-0">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-        {/* Student Marker */}
-        {studentPos && <Marker position={studentPos} icon={studentIcon} />}
+        {studentPos && (
+          <Marker position={studentPos} icon={studentIcon}>
+            <Popup className="rounded-lg">
+              <span className="font-bold">You are here</span>
+            </Popup>
+          </Marker>
+        )}
 
-        {/* Bus Markers */}
-        {buses
-          .filter((b) => !busId || b.busId === busId)
-          .map((bus) => (
-            <Marker
+        {filteredBuses.map((bus) => {
+          const timing = getBusTimingInfo(studentPos, bus.lat, bus.lng, bus.speed);
+
+          return (
+            <BusMarker
               key={bus.busId}
-              position={[bus.lat, bus.lng]}
-              icon={busIcon}
-              eventHandlers={{
-                click: () => setActiveBus(bus),
-              }}
+              bus={{ ...bus, ...timing }}
+              isActive={activeBusId === bus.busId}
+              onMarkerClick={(id) => setActiveBusId(id)}
             />
-          ))}
+          );
+        })}
       </MapContainer>
     </div>
   );

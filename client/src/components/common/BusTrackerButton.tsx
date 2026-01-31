@@ -3,12 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Clock, Route, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
 import { useIntro } from '@/context/IntroContext';
 
 type BusStatus = 'Running' | 'Waiting' | 'Arrived';
 
 interface BusInfo {
-  route: string;
+  routeId: string;
   departure: string;
   destination: string;
   departureTime: string;
@@ -19,7 +21,7 @@ interface BusInfo {
 
 const mockRoutes: BusInfo[] = [
   {
-    route: 'Barishal Club',
+    routeId: 'Route-1',
     departure: 'University',
     destination: 'Barishal Club',
     departureTime: '8:30 AM',
@@ -28,7 +30,7 @@ const mockRoutes: BusInfo[] = [
     staffBus: 'Arrived',
   },
   {
-    route: 'Nothullabad',
+    routeId: 'Route-2',
     departure: 'University',
     destination: 'Nothullabad',
     departureTime: '9:00 AM',
@@ -37,7 +39,7 @@ const mockRoutes: BusInfo[] = [
     staffBus: 'Waiting',
   },
   {
-    route: 'Natun Bazar',
+    routeId: 'Route-3',
     departure: 'University',
     destination: 'Natun Bazar',
     departureTime: '8:45 AM',
@@ -46,7 +48,7 @@ const mockRoutes: BusInfo[] = [
     staffBus: 'Running',
   },
   {
-    route: 'Barishal Cantonment',
+    routeId: 'Route-4',
     departure: 'University',
     destination: 'Cantonment',
     departureTime: '8:00 AM (Sunday)',
@@ -55,7 +57,7 @@ const mockRoutes: BusInfo[] = [
     staffBus: 'Running',
   },
   {
-    route: 'Ichladi Toll Plaza',
+    routeId: 'Route-5',
     departure: 'University',
     destination: 'Ichladi Toll Plaza',
     departureTime: '8:00 AM',
@@ -64,7 +66,7 @@ const mockRoutes: BusInfo[] = [
     staffBus: 'Running',
   },
   {
-    route: 'Jhalokathi Sadar',
+    routeId: 'Route-6',
     departure: 'University',
     destination: 'Jhalokathi Sadar',
     departureTime: '9:15 AM',
@@ -90,6 +92,7 @@ const BusTrackerButton: React.FC = () => {
   const [showTracker, setShowTracker] = useState(false);
   const [ripples, setRipples] = useState<{ id: number }[]>([]);
   const [routes, setRoutes] = useState(mockRoutes);
+  const router = useRouter();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -122,7 +125,7 @@ const BusTrackerButton: React.FC = () => {
             initial={{ y: 120, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 120 }}
-            className="fixed bottom-28 right-8 z-[1000]"
+            className="fixed bottom-28 right-8 z-1000"
           >
             <motion.div
               animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0.1, 0.4] }}
@@ -141,7 +144,7 @@ const BusTrackerButton: React.FC = () => {
               style={{
                 backgroundSize: '200% 200%',
               }}
-              className="absolute inset-0 rounded-full blur-lg opacity-40 bg-gradient-to-r from-[#9b111e] via-[#b91c1c] to-[#9b111e]"
+              className="absolute inset-0 rounded-full blur-lg opacity-40 bg-linear-to-r from-[#9b111e] via-[#b91c1c] to-[#9b111e]"
             />
 
             <motion.button
@@ -152,7 +155,7 @@ const BusTrackerButton: React.FC = () => {
               whileHover={{ scale: 1.1, rotate: [0, -2, 2, 0] }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
-              className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-2xl bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
+              className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-2xl bg-linear-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
               aria-label="Bus Tracker"
             >
               {ripples.map((r) => (
@@ -214,7 +217,7 @@ const BusTrackerButton: React.FC = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-[1100]"
+                className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center z-1100"
               >
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
@@ -231,6 +234,10 @@ const BusTrackerButton: React.FC = () => {
                     {routes.map((bus, index) => (
                       <motion.div
                         key={index}
+                        onClick={() => {
+                          setShowTracker(false); // modal close
+                          router.push(`/track-bus?route=${bus.routeId}`); // route to map page
+                        }}
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
@@ -238,11 +245,13 @@ const BusTrackerButton: React.FC = () => {
                           scale: 1.03,
                           rotate: [0, 1.5, -1.5, 0],
                         }}
-                        className="bg-white/70 border border-red-200 shadow-lg rounded-2xl p-5 backdrop-blur-sm hover:shadow-red-300 transition"
+                        className="cursor-pointer bg-white/70 border border-red-200 shadow-lg rounded-2xl p-5 backdrop-blur-sm hover:shadow-red-300 transition"
                       >
+                        {/* route ID show */}
                         <h3 className="text-xl font-bold text-red-700 mb-2 flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-red-600" /> {bus.route}
+                          <MapPin className="w-4 h-4 text-red-600" /> {bus.routeId}
                         </h3>
+
                         <p className="text-gray-700 text-sm mb-1">
                           <span className="font-semibold">From:</span> {bus.departure}
                         </p>
@@ -255,25 +264,19 @@ const BusTrackerButton: React.FC = () => {
 
                         <div className="space-y-2">
                           <div
-                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(
-                              bus.studentBus
-                            )}`}
+                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.studentBus)}`}
                           >
                             Student Bus: {bus.studentBus}
                           </div>
                           <br />
                           <div
-                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(
-                              bus.teacherBus
-                            )}`}
+                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.teacherBus)}`}
                           >
                             Teacher Bus: {bus.teacherBus}
                           </div>
                           <br />
                           <div
-                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(
-                              bus.staffBus
-                            )}`}
+                            className={`text-sm px-3 py-1 rounded-full font-semibold inline-block ${getStatusColor(bus.staffBus)}`}
                           >
                             Staff Bus: {bus.staffBus}
                           </div>

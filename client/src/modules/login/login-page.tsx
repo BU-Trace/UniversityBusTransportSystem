@@ -201,8 +201,6 @@
 
 // export default LoginPageComponent;
 
-
-
 'use client';
 
 import React, { useState } from 'react';
@@ -312,7 +310,7 @@ const LoginPageComponent = () => {
 
       // Pull session after successful sign-in (important for role-based routing)
       const session = await getSession();
-      const role = (session?.user as any)?.role as UserRole | undefined;
+      const role = (session?.user as { role?: UserRole })?.role as UserRole | undefined;
 
       const safeDefault = defaultRouteForRole(role);
 
@@ -323,8 +321,16 @@ const LoginPageComponent = () => {
 
       toast.success('Signed in successfully');
       router.replace(nextPath);
-    } catch (err: any) {
-      const message = err?.message || 'Sign in failed (network error).';
+    } catch (err: unknown) {
+      let message = 'Sign in failed (network error).';
+      if (
+        err &&
+        typeof err === 'object' &&
+        'message' in err &&
+        typeof (err as Record<string, unknown>).message === 'string'
+      ) {
+        message = (err as { message: string }).message;
+      }
       setErrors({ form: message });
       toast.error(message);
     } finally {
@@ -333,7 +339,7 @@ const LoginPageComponent = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
       {/* blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
@@ -346,7 +352,7 @@ const LoginPageComponent = () => {
       >
         {/* Left banner */}
         <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
+          <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
 
           <Image
             width={1000}
@@ -356,7 +362,6 @@ const LoginPageComponent = () => {
             priority
             className="w-full h-full object-cover transition-transform duration-[2s] ease-in-out group-hover:scale-105"
           />
-
 
           <div className="absolute inset-0 z-20 lg:hidden flex items-end justify-center pb-8">
             <h3 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
@@ -398,7 +403,6 @@ const LoginPageComponent = () => {
               />
             </div>
 
-
             {errors.form && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
@@ -409,16 +413,16 @@ const LoginPageComponent = () => {
               </motion.div>
             )}
 
-
             <button
               type="submit"
               disabled={isSubmitting}
               className={`
                 w-full py-4 rounded-xl font-bold text-white tracking-wide shadow-lg flex items-center justify-center gap-2
                 transition-all duration-300 transform
-                ${isSubmitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#E31E24] hover:bg-red-700 hover:shadow-red-500/30 hover:-translate-y-0.5 active:scale-95'
+                ${
+                  isSubmitting
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-[#E31E24] hover:bg-red-700 hover:shadow-red-500/30 hover:-translate-y-0.5 active:scale-95'
                 }
               `}
             >

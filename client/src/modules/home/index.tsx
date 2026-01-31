@@ -87,7 +87,7 @@ const HomePageComponent: React.FC = () => {
         <div className="absolute w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,rgba(246, 59, 59, 0.08)_0%,transparent_70%)] animate-[wave_8s_ease-in-out_infinite_alternate]" />
       </div>
 
-      { }
+      {}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -112,7 +112,7 @@ const HomePageComponent: React.FC = () => {
         </div>
       </motion.div>
 
-      { }
+      {}
       <div className="max-w-6xl mx-auto px-4 md:px-12 lg:px-20 py-12 -mt-16 relative z-10 flex flex-col">
         <div className="grid grid-cols-2 sm:grid-cols-3 order-3 lg:order-2 lg:grid-cols-4 gap-3 mb-16">
           <StatCard
@@ -252,8 +252,9 @@ const HomePageComponent: React.FC = () => {
                       key={bus.route}
                       whileHover={{ scale: 1.02, backgroundColor: '#f0f9ff' }}
                       transition={{ duration: 0.3 }}
-                      className={`${idx % 2 === 0 ? 'bg-white/80' : 'bg-red-50/70'
-                        } border-b border-gray-100 backdrop-blur-sm`}
+                      className={`${
+                        idx % 2 === 0 ? 'bg-white/80' : 'bg-red-50/70'
+                      } border-b border-gray-100 backdrop-blur-sm`}
                     >
                       <td className="py-4 px-2 font-semibold text-gray-800 flex items-center gap-2">
                         <MapPin className="w-4 h-4 text-red-500" /> {bus.route}

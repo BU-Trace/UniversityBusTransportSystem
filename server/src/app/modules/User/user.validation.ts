@@ -164,6 +164,20 @@ export const adminCreateUserSchema = z.discriminatedUnion('role', [
   }),
 ]);
 
+// Dedicated admin-only driver creation (forces role=driver)
+export const adminCreateDriverSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  clientInfo: z.object({
+    licenseNumber: z.string().min(1),
+    bio: z.string().optional(),
+  }),
+  profileImage: z.string().url(),
+  approvalLetter: z.string().url(),
+  assignedBus: z.string().min(1),
+  assignedBusName: z.string().optional(),
+});
+
 export const adminUpdateUserSchema = z.discriminatedUnion('role', [
   z.object({
     role: z.literal('student'),
@@ -213,5 +227,6 @@ export const UserValidation = {
   loginUserSchema,
   customerInfoValidationSchema,
   adminCreateUserSchema,
+  adminCreateDriverSchema,
   adminUpdateUserSchema,
 };
