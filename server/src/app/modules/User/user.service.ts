@@ -1,3 +1,12 @@
+import AppError from '../../errors/appError';
+import { StatusCodes } from 'http-status-codes';
+import UserModel from './user.model';
+import { IUser, UserRole } from './user.interface';
+
+import { EmailHelper } from '../../utils/emailHelper';
+import { runWithTransaction } from '../../utils/transaction';
+
+
 // Update driver status (active/inactive or custom status)
 const updateDriverStatus = async (driverId: string, status: any) => {
   const driver = await UserModel.findById(driverId);
@@ -13,13 +22,7 @@ const updateDriverStatus = async (driverId: string, status: any) => {
   await driver.save();
   return driver;
 };
-import AppError from '../../errors/appError';
-import { StatusCodes } from 'http-status-codes';
-import UserModel from './user.model';
-import { IUser, UserRole } from './user.interface';
 
-import { EmailHelper } from '../../utils/emailHelper';
-import { runWithTransaction } from '../../utils/transaction';
 
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
@@ -28,6 +31,7 @@ const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   driver: ['bio', 'licenseNumber'],
   admin: ['bio'],  
   superadmin: ['bio'],  
+  staff: ['bio', 'department', 'designation'],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
@@ -132,6 +136,13 @@ const registerUser = async (userData: Partial<IUser>) =>
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
     }
+  if (role === 'staff') {
+      const department = (userData.clientInfo as any)?.department?.toString().trim();
+      const designation = (userData.clientInfo as any)?.designation?.toString().trim();
+
+      if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+      if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
+    }
 
     const OTP = Math.floor(100000 + Math.random() * 900000);
     const otpToken = String(OTP);
@@ -146,9 +157,8 @@ const registerUser = async (userData: Partial<IUser>) =>
       clientITInfo: userData.clientITInfo,
 
       password: password,
-
-      isActive: userData.role === 'student' ? true : false,
-      isApproved: userData.role === 'student' ? true : false,
+      isActive: false, 
+      isApproved: false,
 
       otpToken: String(OTP),
       otpExpires: new Date(Date.now() + 15 * 60 * 1000),
@@ -241,6 +251,7 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
     }
 
     user.isActive = true;
+    user.isApproved = true;
     user.otpToken = null;
     user.otpExpires = null;
 

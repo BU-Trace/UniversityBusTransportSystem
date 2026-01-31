@@ -1,3 +1,10 @@
+
+import { Request, Response } from 'express';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { StatusCodes } from 'http-status-codes';
+import { UserServices } from './user.service';
+
 // PATCH /user/driver/:id/status
 const updateDriverStatus = catchAsync(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -10,11 +17,6 @@ const updateDriverStatus = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-import { Request, Response } from 'express';
-import catchAsync from '../../utils/catchAsync';
-import sendResponse from '../../utils/sendResponse';
-import { StatusCodes } from 'http-status-codes';
-import { UserServices } from './user.service';
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   await UserServices.registerUser(req.body);
