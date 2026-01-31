@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { Home } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,10 +21,29 @@ import {
   MdBarChart,
 } from 'react-icons/md';
 
+function getInitial(name?: string) {
+  const n = (name || '').trim();
+  return n ? n[0].toUpperCase() : 'U';
+}
+
+function getDisplayName(session: any) {
+  return session?.user?.name || session?.user?.fullName || session?.user?.username || 'User';
+}
+
+function getProfilePhoto(session: any) {
+  return session?.user?.photoUrl || session?.user?.profileImage || session?.user?.image || '';
+}
+
 export default function MergedDashboard() {
+  const { data: session } = useSession();
+
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
+
+  const displayName = getDisplayName(session);
+  const profilePhoto = getProfilePhoto(session);
+  const initial = getInitial(displayName);
 
   useEffect(() => {
     setMounted(true);
@@ -39,11 +58,6 @@ export default function MergedDashboard() {
       document.body.style.overflow = 'auto';
     };
   }, [isOpen]);
-
-  const admin = {
-    name: 'Admin 1',
-    role: 'Admin',
-  };
 
   const menuItems = [
     { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
@@ -126,19 +140,43 @@ export default function MergedDashboard() {
                 CAMPUS<span className="text-white/70">CONNECT</span>
               </h1>
 
+              {/*Avatar*/}
               <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold italic opacity-50">ADMIN</span>
+                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-black italic text-white/80">{initial}</span>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md">
+
+                <Link
+                  href="/dashboard/editProfile"
+                  title="Edit Profile"
+                  className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md hover:scale-105 transition-transform"
+                  onClick={() => setIsOpen(false)}
+                >
                   <MdEdit size={12} />
-                </button>
+                </Link>
               </div>
 
-              <h2 className="font-bold text-base uppercase tracking-widest">{admin.name}</h2>
-              <button className="text-[10px] opacity-70 underline mt-0.5 hover:opacity-100">
+              {}
+              <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
+                {displayName}
+              </h2>
+
+              {}
+              <Link
+                href="/dashboard/editProfile"
+                onClick={() => setIsOpen(false)}
+                className="text-[10px] opacity-70 underline mt-0.5 hover:opacity-100"
+              >
                 Edit Profile
-              </button>
+              </Link>
             </div>
 
             {/*Nav*/}
@@ -177,12 +215,9 @@ export default function MergedDashboard() {
         )}
       </AnimatePresence>
 
-      {}
       <main className="flex-1 flex flex-col min-w-0">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full">
-          {}
           <div className="space-y-8">
-            {}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -201,7 +236,6 @@ export default function MergedDashboard() {
               </div>
             </motion.div>
 
-            {}
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
               {stats.map((stat, i) => (
                 <motion.div
@@ -235,7 +269,6 @@ export default function MergedDashboard() {
               ))}
             </div>
 
-            {}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -254,7 +287,6 @@ export default function MergedDashboard() {
               </div>
             </motion.div>
           </div>
-          {}
         </div>
       </main>
 
