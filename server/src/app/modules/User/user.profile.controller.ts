@@ -1,50 +1,43 @@
-import { Request, Response, RequestHandler } from "express";
-import { HydratedDocument } from "mongoose";
+import { RequestHandler } from "express";
 import User from "./user.model";
-import { UpdateMyProfileBody, UpdateMyProfileResponse, UserRole } from "./user.profile.types";
 
-type AuthPayload = {
-  userId: string;                 
+type UserRole = "student" | "driver" | "admin" | "superadmin";
+
+type UpdateMyProfileBody = {
   name: string;
-  email: string;
-  role: UserRole;
-  isActive: boolean;
-  iat?: number;
-  exp?: number;
+  photoUrl: string;
 };
 
-type AuthedRequest = Request & { user?: AuthPayload };
-
-type IUserDoc = {
-  name: string;
-  email: string;
-  role: UserRole;
-  profileImage?: string;          
+type UpdateMyProfileResponse = {
+  success: true;
+  message: string;
+  data: {
+    id: string;
+    name: string;
+    email: string;
+    role: UserRole;
+    photoUrl: string | null;
+  };
 };
 
-export const updateMyProfile: RequestHandler = async (req, res) => {
+export const updateMyProfile: RequestHandler<{}, unknown, UpdateMyProfileBody> = async (req, res) => {
   try {
-    const r = req as AuthedRequest;
-
-    const userId = r.user?.userId;
+    const userId = req.user?.userId; 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const body = r.body as Partial<UpdateMyProfileBody>;
-
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const photoUrl = typeof body.photoUrl === "string" ? body.photoUrl.trim() : "";
+    const name = typeof req.body?.name === "string" ? req.body.name.trim() : "";
+    const photoUrl = typeof req.body?.photoUrl === "string" ? req.body.photoUrl.trim() : "";
 
     if (!name) {
       return res.status(400).json({ success: false, message: "Name is required" });
     }
-
     if (!photoUrl) {
-      return res.status(400).json({ success: false, message: "Photo URL is required" });
+      return res.status(400).json({ success: false, message: "Photo is required" });
     }
 
-    const updated: HydratedDocument<IUserDoc> | null = await User.findByIdAndUpdate(
+    const updated = await User.findByIdAndUpdate(
       userId,
       { name, profileImage: photoUrl },
       { new: true }
@@ -61,7 +54,7 @@ export const updateMyProfile: RequestHandler = async (req, res) => {
         id: String(updated._id),
         name: updated.name,
         email: updated.email,
-        role: updated.role,
+        role: updated.role as UserRole,
         photoUrl: updated.profileImage ?? null,
       },
     };
