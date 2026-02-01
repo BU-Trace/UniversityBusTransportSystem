@@ -33,22 +33,6 @@ import {
   MdEdit,
 } from "react-icons/md";
 
-/**
- * FILE PATH (put this file here):
- * client/src/app/(DashboardLayout)/dashboard/notice/page.tsx
- *
- * Admin + SuperAdmin:
- * - Create notice (text OR pdf)
- * - Publish notice (immediately visible for all users)
- * - Delete notice (remove from notice board)
- *
- * Also calls backend "notify all devices" endpoint after publish.
- *
- * IMPORTANT:
- * You MUST align API paths below with your backend.
- * If your backend already uses different endpoints, just change API.* urls.
- */
-
 type UserRole = "student" | "driver" | "admin" | "superadmin";
 
 type NoticeType = "text" | "pdf";
@@ -67,15 +51,6 @@ type INotice = {
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000/api/v1";
 
-/**
- * 🔧 CHANGE THESE to match your backend routes
- * Suggested minimal backend endpoints:
- * - GET    /notice/get-all-notices
- * - POST   /notice/create-notice
- * - PUT    /notice/publish-notice/:id     (optional if create already publishes)
- * - DELETE /notice/delete-notice/:id
- * - POST   /notice/notify-all/:id         (send push/websocket/whatever you use)
- */
 const API = {
   getAll: `${BASE_URL}/notice/get-all-notices`,
   create: `${BASE_URL}/notice/create-notice`,
@@ -84,7 +59,6 @@ const API = {
   notifyAll: (id: string) => `${BASE_URL}/notice/notify-all/${id}`,
 };
 
-// Cloudinary (optional) for PDF upload
 const CLOUD_NAME = "dpiofecgs";
 const UPLOAD_PRESET = "butrace";
 
@@ -125,7 +99,6 @@ async function uploadToCloudinary(file: File): Promise<string> {
   const data = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    // Cloudinary returns useful error object
     throw new Error(data?.error?.message || "Cloudinary upload failed");
   }
   return data.secure_url as string;
@@ -198,6 +171,9 @@ export default function NoticeManagementPage() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
+  const displayName = getDisplayName(session);
+  const profilePhoto = getProfilePhoto(session);
+  const initial = getInitial(displayName);
 
   const accessToken = (session as any)?.accessToken as string | undefined;
   const myRole = ((session as any)?.user?.role || (session as any)?.role) as
@@ -251,10 +227,29 @@ export default function NoticeManagementPage() {
     }
   }, [mounted, session, myRole, router]);
 
-  const admin = {
-    name: "Admin",
-    role: myRole === "superadmin" ? "Super Admin" : "Admin",
-  };
+  function getInitial(name?: string) {
+  const n = (name || "").trim();
+  return n ? n[0].toUpperCase() : "U";
+}
+
+function getDisplayName(session: any) {
+  return (
+    session?.user?.name ||
+    session?.user?.fullName ||
+    session?.user?.username ||
+    "User"
+  );
+}
+
+function getProfilePhoto(session: any) {
+  return (
+    session?.user?.photoUrl ||
+    session?.user?.profileImage ||
+    session?.user?.image ||
+    ""
+  );
+}
+
 
   const menuItems = [
     { label: "Dashboard Overview", href: "/dashboard", icon: MdDashboard },
@@ -292,7 +287,6 @@ export default function NoticeManagementPage() {
     if (!mounted) return;
     if (myRole !== "admin" && myRole !== "superadmin") return;
     loadNotices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, myRole]);
 
   const filteredNotices = useMemo(() => {
@@ -332,7 +326,6 @@ export default function NoticeManagementPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // You asked for pdf or text. This upload field is for pdf.
     const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
     if (!isPdf) {
       toast.error("Please upload a PDF file.");
@@ -364,10 +357,6 @@ export default function NoticeManagementPage() {
     return null;
   };
 
-  /**
-   * Create notice + publish + notify all
-   * If your backend auto-publishes on create, the "publish" call may be unnecessary.
-   */
   const saveNotice = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -388,8 +377,6 @@ export default function NoticeManagementPage() {
       let saved: INotice;
 
       if (modalType === "edit" && selectedId) {
-        // If you don't have update endpoint, you can remove edit feature.
-        // This uses publish endpoint as update OR you can create a dedicated update route.
         const json = await apiFetch<any>(
           API.publish(selectedId),
           { method: "PUT", body: JSON.stringify(payload) },
@@ -407,12 +394,9 @@ export default function NoticeManagementPage() {
         setNotices((prev) => [saved, ...prev]);
       }
 
-      // Notify all devices/users (push/websocket/etc.)
-      // If you already do this inside create/publish, you can delete this call.
       try {
         await apiFetch<any>(API.notifyAll(saved.id), { method: "POST" }, accessToken);
       } catch (notifyErr) {
-        // Don't block notice creation if notification fails, but show warning
         toast.error(`Notice saved, but notification failed: ${getErrorMessage(notifyErr)}`);
       }
 
@@ -471,16 +455,33 @@ export default function NoticeManagementPage() {
                 CAMPUS<span className="text-white/70">CONNECT</span>
               </h1>
               <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-sm font-bold italic opacity-70">
-                    {admin.role?.toUpperCase()}
-                  </span>
+                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-black italic text-white/80">
+                      {initial}
+                    </span>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md">
+
+                <Link
+                  href="/dashboard/editProfile"
+                  title="Edit Profile"
+                  className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md hover:scale-105 transition-transform"
+                >
                   <MdEdit size={12} />
-                </button>
+                </Link>
               </div>
-              <h2 className="font-bold text-base uppercase tracking-widest">{admin.name}</h2>
+
+              <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
+                {displayName}
+              </h2>
+
             </div>
 
             <nav className="flex-1 mt-4 px-4 space-y-1">
@@ -701,7 +702,6 @@ export default function NoticeManagementPage() {
                       onChange={(e) => {
                         const t = e.target.value as NoticeType;
                         setNoticeType(t);
-                        // clear other field when switching types
                         if (t === "text") setFileUrl("");
                         if (t === "pdf") setBody("");
                       }}
