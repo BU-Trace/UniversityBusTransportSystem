@@ -9,6 +9,8 @@ import { parseBody } from '../../middleware/bodyParser';
 import { UserValidation } from './user.validation';
 import { UserController } from './user.controller';
 import { UserRole } from './user.utils';
+import { updateMyProfile } from "./user.profile.controller";
+
 
 const router = Router();
 router.patch(
@@ -98,5 +100,6 @@ router.patch(
   validateRequest(UserValidation.driverProfileValidationSchema),
   UserController.updateDriverProfile
 );
+router.put("/me", auth(), updateMyProfile);
 
 export const UserRoutes = router;
