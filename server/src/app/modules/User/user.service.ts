@@ -6,7 +6,6 @@ import { IUser, UserRole } from './user.interface';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
 
-
 // Update driver status (active/inactive or custom status)
 const updateDriverStatus = async (driverId: string, status: any) => {
   const driver = await UserModel.findById(driverId);
@@ -23,20 +22,18 @@ const updateDriverStatus = async (driverId: string, status: any) => {
   return driver;
 };
 
-
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   student: ['bio', 'department', 'rollNumber'],
   driver: ['bio', 'licenseNumber'],
-  admin: ['bio'],  
-  superadmin: ['bio'],  
+  admin: ['bio'],
+  superadmin: ['bio'],
   // staff: ['bio', 'department', 'designation'],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
-   
     user.clientInfo = {} as ClientInfo;
 
     if (role === 'student') {
@@ -136,13 +133,13 @@ const registerUser = async (userData: Partial<IUser>) =>
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
     }
-  // if (role === 'staff') {
-  //     const department = (userData.clientInfo as any)?.department?.toString().trim();
-  //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
+    // if (role === 'staff') {
+    //     const department = (userData.clientInfo as any)?.department?.toString().trim();
+    //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
 
-  //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
-  //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
-  //   }
+    //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+    //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
+    //   }
 
     const OTP = Math.floor(100000 + Math.random() * 900000);
     const otpToken = String(OTP);
@@ -157,7 +154,7 @@ const registerUser = async (userData: Partial<IUser>) =>
       clientITInfo: userData.clientITInfo,
 
       password: password,
-      isActive: false, 
+      isActive: false,
       isApproved: false,
 
       otpToken: String(OTP),
@@ -218,8 +215,7 @@ const registerUser = async (userData: Partial<IUser>) =>
   `,
         'Your Campus Connect OTP'
       );
-    } catch (e) {
-    }
+    } catch (e) {}
 
     return null;
   });

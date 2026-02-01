@@ -12,7 +12,7 @@ export const requestNotificationPermission = () => {
 // Play a simple notification sound
 export const playAlertSound = () => {
   const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Standard alert sound
-  audio.play().catch((_err) => console.log('Sound blocked: Need user interaction first.'));
+  audio.play().catch(() => console.log('Sound blocked: Need user interaction first.'));
 };
 
 // Show browser push notification

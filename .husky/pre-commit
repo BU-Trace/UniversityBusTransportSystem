@@ -1,5 +1,3 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
 
 echo "🔍 Checking for build errors before commit..."
 npm run build

@@ -319,7 +319,6 @@ export default function UserManagementPage() {
   const profilePhoto = getProfilePhoto(session);
   const initial = getInitial(displayName);
 
-
   // role + accessToken from next-auth session (adjust if your session shape differs)
   const staffRole = toStaffRole(session?.user?.role ?? null);
 
@@ -400,28 +399,17 @@ export default function UserManagementPage() {
   }, [isOpen, isModalOpen, pendingOpen, approvalOpen, assignBusOpen]);
 
   function getInitial(name?: string) {
-    const n = (name || "").trim();
-    return n ? n[0].toUpperCase() : "U";
+    const n = (name || '').trim();
+    return n ? n[0].toUpperCase() : 'U';
   }
 
   function getDisplayName(session: any) {
-    return (
-      session?.user?.name ||
-      session?.user?.fullName ||
-      session?.user?.username ||
-      "User"
-    );
+    return session?.user?.name || session?.user?.fullName || session?.user?.username || 'User';
   }
 
   function getProfilePhoto(session: any) {
-    return (
-      session?.user?.photoUrl ||
-      session?.user?.profileImage ||
-      session?.user?.image ||
-      ""
-    );
+    return session?.user?.photoUrl || session?.user?.profileImage || session?.user?.image || '';
   }
-
 
   const menuItems = [
     { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
@@ -838,9 +826,7 @@ export default function UserManagementPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-3xl font-black italic text-white/80">
-                      {initial}
-                    </span>
+                    <span className="text-3xl font-black italic text-white/80">{initial}</span>
                   )}
                 </div>
 

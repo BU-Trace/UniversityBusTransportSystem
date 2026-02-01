@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
-import { useSession } from "next-auth/react";
-import { toast } from "sonner";
+import React, { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { toast } from 'sonner';
 
 export default function EditProfilePage() {
   const { data: session, update } = useSession();
 
-  const [name, setName] = useState(session?.user?.name || "");
+  const [name, setName] = useState(session?.user?.name || '');
   const [photoUrl, setPhotoUrl] = useState(
-    (session as any)?.user?.photoUrl || (session as any)?.user?.image || ""
+    (session as any)?.user?.photoUrl || (session as any)?.user?.image || ''
   );
 
   const save = async () => {
@@ -25,9 +25,9 @@ export default function EditProfilePage() {
         },
       });
 
-      toast.success("Profile updated.");
+      toast.success('Profile updated.');
     } catch (e: any) {
-      toast.error(e?.message || "Failed to update profile");
+      toast.error(e?.message || 'Failed to update profile');
     }
   };
 
@@ -35,15 +35,11 @@ export default function EditProfilePage() {
     <div className="min-h-screen bg-[#F8F9FA] p-6">
       <div className="max-w-xl mx-auto bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
         <h1 className="text-2xl font-black text-gray-900">Edit Profile</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Update your name and profile photo.
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Update your name and profile photo.</p>
 
         <div className="mt-6 space-y-4">
           <div>
-            <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-              Name
-            </label>
+            <label className="text-xs font-black uppercase text-gray-500 mb-1 block">Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -62,7 +58,8 @@ export default function EditProfilePage() {
               className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white"
             />
             <p className="text-xs text-gray-400 mt-2">
-              Put your photo here within 48 hours of registration and use real photo or account will be terminated.
+              Put your photo here within 48 hours of registration and use real photo or account will
+              be terminated.
             </p>
           </div>
 

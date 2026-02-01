@@ -74,7 +74,9 @@ const RegisterPageComponent = () => {
     setClientInfo((prev) => ({
       ...prev,
       device: isMobile ? 'mobile' : 'pc',
-      browser: (userAgent.match(/(firefox|msie|chrome|safari|trident)/i)?.[0] || 'unknown')?.toLowerCase(),
+      browser: (
+        userAgent.match(/(firefox|msie|chrome|safari|trident)/i)?.[0] || 'unknown'
+      )?.toLowerCase(),
       ipAddress: prev.ipAddress,
       pcName: window.location.hostname,
       os: window.navigator.platform,
@@ -105,7 +107,8 @@ const RegisterPageComponent = () => {
     if (!formData.name.trim()) validationErrors.name = 'Name is required';
     if (!formData.email.trim()) validationErrors.email = 'Email is required';
     if (formData.password.length < 6) validationErrors.password = 'Minimum 6 characters required';
-    if (formData.password !== formData.confirmPassword) validationErrors.confirmPassword = 'Passwords do not match';
+    if (formData.password !== formData.confirmPassword)
+      validationErrors.confirmPassword = 'Passwords do not match';
 
     if (activeRole === 'student') {
       if (!formData.department.trim()) validationErrors.department = 'Department is required';
@@ -139,12 +142,12 @@ const RegisterPageComponent = () => {
       if (activeRole === 'student') {
         roleSpecificInfo = {
           department: formData.department,
-          rollNumber: formData.rollNumber
+          rollNumber: formData.rollNumber,
         };
       } else if (activeRole === 'staff') {
         roleSpecificInfo = {
           department: formData.department,
-          designation: formData.designation
+          designation: formData.designation,
         };
       }
 
@@ -163,7 +166,6 @@ const RegisterPageComponent = () => {
       setVerificationEmail(formData.email.trim().toLowerCase());
       setRegistrationStep('verify');
       toast.success('Account created! Please check your email for the OTP.');
-
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Registration failed';
       setErrors({ form: message });
@@ -206,30 +208,87 @@ const RegisterPageComponent = () => {
   // --- RENDER HELPERS ---
 
   const renderForm = () => (
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4">
+    <form
+      onSubmit={handleSubmit}
+      className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-4"
+    >
       <div className="col-span-full md:col-span-1">
-        <InputField label="Full Name" name="name" value={formData.name} onChange={handleChange} error={errors.name} />
+        <InputField
+          label="Full Name"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          error={errors.name}
+        />
       </div>
       <div className="col-span-full md:col-span-1">
-        <InputField label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} error={errors.email} />
+        <InputField
+          label="Email Address"
+          name="email"
+          type="email"
+          value={formData.email}
+          onChange={handleChange}
+          error={errors.email}
+        />
       </div>
 
       {activeRole === 'student' && (
         <>
-          <InputField label="Department" name="department" value={formData.department} onChange={handleChange} error={errors.department} placeholder="e.g. CSE" />
-          <InputField label="Roll Number" name="rollNumber" value={formData.rollNumber} onChange={handleChange} error={errors.rollNumber} />
+          <InputField
+            label="Department"
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            error={errors.department}
+            placeholder="e.g. CSE"
+          />
+          <InputField
+            label="Roll Number"
+            name="rollNumber"
+            value={formData.rollNumber}
+            onChange={handleChange}
+            error={errors.rollNumber}
+          />
         </>
       )}
 
       {activeRole === 'staff' && (
         <>
-          <InputField label="Department/Office" name="department" value={formData.department} onChange={handleChange} error={errors.department} placeholder="e.g. Admin" />
-          <InputField label="Designation" name="designation" value={formData.designation} onChange={handleChange} error={errors.designation} placeholder="e.g. Lecturer" />
+          <InputField
+            label="Department/Office"
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            error={errors.department}
+            placeholder="e.g. Admin"
+          />
+          <InputField
+            label="Designation"
+            name="designation"
+            value={formData.designation}
+            onChange={handleChange}
+            error={errors.designation}
+            placeholder="e.g. Lecturer"
+          />
         </>
       )}
 
-      <InputField label="Password" type="password" name="password" value={formData.password} onChange={handleChange} error={errors.password} />
-      <InputField label="Confirm Password" type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword} />
+      <InputField
+        label="Password"
+        type="password"
+        name="password"
+        value={formData.password}
+        onChange={handleChange}
+        error={errors.password}
+      />
+      <InputField
+        label="Confirm Password"
+        type="password"
+        name="confirmPassword"
+        value={formData.confirmPassword}
+        onChange={handleChange}
+        error={errors.confirmPassword}
+      />
 
       {errors.form && (
         <div className="col-span-full p-3 bg-red-50 border border-red-100 rounded-lg text-center text-red-600 text-sm">
@@ -243,7 +302,13 @@ const RegisterPageComponent = () => {
           disabled={isSubmitting}
           className={`w-full py-3.5 rounded-xl font-bold text-white tracking-wide shadow-lg flex items-center justify-center gap-2 transition-all duration-300 transform ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#E31E24] hover:bg-red-700 hover:-translate-y-0.5 active:scale-95'}`}
         >
-          {isSubmitting ? <><Loader2 className="animate-spin" size={20} /> Creating Account...</> : 'Create Account'}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="animate-spin" size={20} /> Creating Account...
+            </>
+          ) : (
+            'Create Account'
+          )}
         </button>
       </div>
     </form>
@@ -296,10 +361,19 @@ const RegisterPageComponent = () => {
     <div className="min-h-screen w-full flex bg-white relative overflow-hidden">
       {/* Scrollbar CSS */}
       <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #fff; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #e5e7eb; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #d1d5db; }
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #fff;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #e5e7eb;
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #d1d5db;
+        }
       `}</style>
 
       {/* Main Layout */}
@@ -315,20 +389,29 @@ const RegisterPageComponent = () => {
             <h3 className="text-3xl font-black text-white drop-shadow-md mb-1">BUTrace</h3>
             <p className="text-white/90 text-sm font-medium drop-shadow-sm">Create your account</p>
           </div>
-          <Image width={600} height={300} src="/static/loginpagebanner.png" alt="Mobile Banner" className="w-full h-full object-cover" />
+          <Image
+            width={600}
+            height={300}
+            src="/static/loginpagebanner.png"
+            alt="Mobile Banner"
+            className="w-full h-full object-cover"
+          />
         </div>
 
         {/* LEFT SIDE: FORM or VERIFY VIEW */}
         <div className="w-full lg:w-[40%] xl:w-[35%] h-auto lg:h-full flex flex-col relative bg-white">
           <div className="w-full h-full lg:overflow-y-auto custom-scrollbar p-6 md:p-10 flex flex-col justify-start lg:justify-center">
-
             {registrationStep === 'form' ? (
               <>
                 <div className="mb-6 text-center pt-2">
-                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tighter mb-2 hidden lg:block">Register</h2>
+                  <h2 className="text-2xl md:text-3xl font-black text-gray-900 uppercase tracking-tighter mb-2 hidden lg:block">
+                    Register
+                  </h2>
                   <h2 className="text-2xl font-bold text-gray-800 mb-2 lg:hidden">Sign Up</h2>
                   <div className="h-1.5 w-12 bg-[#E31E24] mx-auto rounded-full hidden lg:block" />
-                  <p className="text-gray-500 text-xs mt-3 font-medium">Select your role to begin</p>
+                  <p className="text-gray-500 text-xs mt-3 font-medium">
+                    Select your role to begin
+                  </p>
                 </div>
 
                 <Tabs selectedIndex={activeTab} onSelect={setActiveTab} className="w-full">
@@ -347,12 +430,17 @@ const RegisterPageComponent = () => {
                       );
                     })}
                   </TabList>
-                  {roles.map((role) => <TabPanel key={role.value}>{renderForm()}</TabPanel>)}
+                  {roles.map((role) => (
+                    <TabPanel key={role.value}>{renderForm()}</TabPanel>
+                  ))}
                 </Tabs>
 
                 <div className="mt-4 pt-4 border-t border-gray-100 text-center">
                   <p className="text-gray-500 text-sm">
-                    Already have an account? <Link href="/login" className="text-[#E31E24] font-bold hover:underline">Sign In</Link>
+                    Already have an account?{' '}
+                    <Link href="/login" className="text-[#E31E24] font-bold hover:underline">
+                      Sign In
+                    </Link>
                   </p>
                 </div>
               </>
@@ -360,25 +448,37 @@ const RegisterPageComponent = () => {
               // Verification View (Step 2)
               renderVerificationView()
             )}
-
           </div>
         </div>
 
         {/* RIGHT SIDE: IMAGE */}
         <div className="hidden lg:block w-full lg:w-[60%] xl:w-[65%] h-full relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10" />
-          <Image width={1920} height={1080} src="/static/loginpagebanner.png" alt="Registration Banner" className="w-full h-full object-cover" priority />
+          <Image
+            width={1920}
+            height={1080}
+            src="/static/loginpagebanner.png"
+            alt="Registration Banner"
+            className="w-full h-full object-cover"
+            priority
+          />
           <div className="absolute bottom-16 left-16 z-20 max-w-xl">
-            <h3 className="text-5xl font-black text-white mb-4 drop-shadow-lg leading-tight">Join <span className="text-[#E31E24]">BUTrace</span></h3>
+            <h3 className="text-5xl font-black text-white mb-4 drop-shadow-lg leading-tight">
+              Join <span className="text-[#E31E24]">BUTrace</span>
+            </h3>
             <p className="text-white/90 font-medium text-xl drop-shadow-md leading-relaxed">
-              Your gateway to seamless university transportation. Register today to access real-time schedules and route updates.
+              Your gateway to seamless university transportation. Register today to access real-time
+              schedules and route updates.
             </p>
           </div>
         </div>
       </motion.div>
 
       {/* Home Button */}
-      <Link href="/" className="fixed top-4 right-4 lg:top-8 lg:right-8 p-3 lg:p-4 bg-white/90 backdrop-blur text-[#E31E24] border border-red-100 rounded-full shadow-lg hover:bg-[#E31E24] hover:text-white transition-all duration-300 transform hover:scale-110 z-50 group">
+      <Link
+        href="/"
+        className="fixed top-4 right-4 lg:top-8 lg:right-8 p-3 lg:p-4 bg-white/90 backdrop-blur text-[#E31E24] border border-red-100 rounded-full shadow-lg hover:bg-[#E31E24] hover:text-white transition-all duration-300 transform hover:scale-110 z-50 group"
+      >
         <Home size={20} className="lg:w-6 lg:h-6 group-hover:animate-pulse" />
       </Link>
     </div>

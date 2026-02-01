@@ -18,7 +18,7 @@ export type RegisterUserPayload = {
   name: string;
   email: string;
   password: string;
-  role: 'student' | 'driver' | 'admin'| 'staff';
+  role: 'student' | 'driver' | 'admin' | 'staff';
   clientInfo?: {
     bio?: string;
     department?: string;

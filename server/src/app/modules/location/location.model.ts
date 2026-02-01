@@ -2,12 +2,12 @@ import mongoose, { Schema } from 'mongoose';
 
 const LocationSchema = new Schema(
   {
-    busId: { 
+    busId: {
       type: String,
       required: true,
-      unique: true 
+      unique: true,
     },
-    routeId: { 
+    routeId: {
       type: String,
       required: true,
     },
@@ -15,14 +15,14 @@ const LocationSchema = new Schema(
       type: Number,
       required: true,
     },
-    lng: { 
+    lng: {
       type: Number,
       required: true,
     },
-    status: { 
+    status: {
       type: String,
       enum: ['running', 'paused', 'stopped'],
-      default: 'running'
+      default: 'running',
     },
     time: {
       type: Date,
