@@ -1,8 +1,10 @@
 import { GoogleGenAI, type GenerateContentResponse } from '@google/genai';
 
 import config from '../../config';
+
 import { ChatRequest, ChatResponse } from './ai.interface';
 import { chatRequestSchema } from './ai.validation';
+import { ChatSession, IChatSession } from './ai.model';
 
 const defaultHistory = [
   { role: 'user' as const, text: 'Hello' },
@@ -61,16 +63,61 @@ const extractText = (response: GenerateContentResponse): string => {
   return '';
 };
 
-export const startChat = async (payload: ChatRequest): Promise<ChatResponse> => {
+
+// Helper to get or create a chat session (by userId or sessionId)
+export const getOrCreateChatSession = async ({ userId, sessionId }: { userId?: string; sessionId?: string; }) => {
+  let session: IChatSession | null = null;
+  if (userId) {
+    session = await ChatSession.findOne({ userId });
+    if (!session) {
+      session = await ChatSession.create({ userId, history: [] });
+    }
+  } else if (sessionId) {
+    session = await ChatSession.findOne({ sessionId });
+    if (!session) {
+      session = await ChatSession.create({ sessionId, history: [] });
+    }
+  }
+  return session;
+};
+
+// Save a chat message to the session
+export const saveChatMessage = async ({ userId, sessionId, role, content }: { userId?: string; sessionId?: string; role: 'user' | 'assistant'; content: string; }) => {
+  const session = await getOrCreateChatSession({ userId, sessionId });
+  if (!session) return;
+  session.history.push({ role, content, timestamp: new Date() });
+  session.updatedAt = new Date();
+  await session.save();
+};
+
+// Main chat logic with persistence
+export const startChat = async (payload: ChatRequest, userId?: string, sessionId?: string): Promise<ChatResponse> => {
   const data = chatRequestSchema.parse(payload);
   const model = data.model || 'gemini-2.5-flash';
 
+  // Save user message
+  await saveChatMessage({ userId, sessionId, role: 'user', content: data.prompt });
+
+  // Build history for model (fetch from DB if available)
+  let history = data.history || defaultHistory;
+  const session = await getOrCreateChatSession({ userId, sessionId });
+  if (session && session.history.length > 0) {
+    // Convert DB history to model format
+    history = session.history.map((item) => ({
+      role: item.role === 'assistant' ? 'model' : 'user',
+      text: item.content,
+    }));
+  }
+
   const response = await getClient().models.generateContent({
     model,
-    contents: buildContents(data.prompt, data.history || defaultHistory),
+    contents: buildContents(data.prompt, history),
   });
 
   const text = extractText(response);
+
+  // Save assistant response
+  await saveChatMessage({ userId, sessionId, role: 'assistant', content: text });
 
   return { response: text };
 };

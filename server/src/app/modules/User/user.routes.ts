@@ -1,3 +1,5 @@
+// Update driver status (active/inactive or custom status)
+
 import { Router } from 'express';
 import clientInfoParser from '../../middleware/clientInfoParser';
 import validateRequest from '../../middleware/validateRequest';
@@ -11,7 +13,11 @@ import { updateMyProfile } from "./user.profile.controller";
 
 
 const router = Router();
-
+router.patch(
+  '/driver/:id/status',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.updateDriverStatus
+);
 router.post('/', clientInfoParser, UserController.registerUser);
 
 // Verify email
