@@ -1,26 +1,29 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { DefaultSession, DefaultUser } from 'next-auth';
-import { JWT } from 'next-auth/jwt';
+import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
+import { JWT } from "next-auth/jwt";
 
-declare module 'next-auth' {
+type UserRole = "student" | "driver" | "admin" | "superadmin";
+
+declare module "next-auth" {
   interface Session {
     accessToken?: string;
     error?: string;
-    user?: DefaultSession['user'] & {
+    user?: DefaultSession["user"] & {
       id?: string;
-      role?: string;
+      role?: UserRole;
+      photoUrl?: string; 
     };
   }
 
   interface User extends DefaultUser {
-    role?: string;
+    role?: UserRole;
+    photoUrl?: string; 
     accessToken?: string;
     refreshToken?: string;
     accessTokenExpires?: number;
   }
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
     refreshToken?: string;
@@ -29,7 +32,8 @@ declare module 'next-auth/jwt' {
       id?: string;
       name?: string | null;
       email?: string | null;
-      role?: string | null;
+      role?: UserRole | null;
+      photoUrl?: string | null; 
     };
     error?: string;
   }
