@@ -24,6 +24,8 @@ const updateDriverStatus = async (driverId: string, status: any) => {
 };
 
 
+
+
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {

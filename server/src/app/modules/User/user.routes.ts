@@ -62,6 +62,7 @@ router.put(
   UserController.adminUpdateUser
 );
 
+
 // Admin deletes a user
 router.delete(
   '/delete-user/:id',

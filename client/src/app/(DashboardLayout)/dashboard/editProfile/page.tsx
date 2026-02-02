@@ -4,12 +4,20 @@ import React, { useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 
+// Minimal typing for session user used in this component
+type SessionUser = {
+  name?: string;
+  photoUrl?: string;
+  image?: string;
+  [key: string]: unknown;
+};
+
 export default function EditProfilePage() {
   const { data: session, update } = useSession();
 
   const [name, setName] = useState(session?.user?.name || "");
   const [photoUrl, setPhotoUrl] = useState(
-    (session as any)?.user?.photoUrl || (session as any)?.user?.image || ""
+    (session?.user as SessionUser)?.photoUrl || (session?.user as SessionUser)?.image || ""
   );
 
   const save = async () => {
@@ -19,15 +27,16 @@ export default function EditProfilePage() {
       await update({
         ...session,
         user: {
-          ...(session as any)?.user,
+          ...(session?.user as SessionUser),
           name,
           photoUrl,
         },
       });
 
       toast.success("Profile updated.");
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to update profile");
+    } catch (e: unknown) {
+      const errMsg = e && typeof e === "object" && "message" in e ? (e as { message?: string }).message : undefined;
+      toast.error(errMsg || "Failed to update profile");
     }
   };
 

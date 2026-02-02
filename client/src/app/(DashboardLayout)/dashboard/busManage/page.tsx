@@ -81,15 +81,17 @@ const initialBuses: BusData[] = [
   },
 ];
 
-const CLOUD_NAME = 'dpiofecgs';
-const UPLOAD_PRESET = 'butrace';
+
 
 async function uploadToCloudinary(file: File): Promise<string> {
-  const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
+  const url = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/image/upload`;
 
   const form = new FormData();
   form.append('file', file);
-  form.append('upload_preset', UPLOAD_PRESET);
+  form.append(
+    'upload_preset',
+    process.env.NEXT_PUBLIC_UPLOAD_PRESET || ''
+  );
 
   const res = await fetch(url, { method: 'POST', body: form });
   const data = await res.json().catch(() => ({}));
@@ -335,7 +337,7 @@ export default function BusManagementOnlyPage() {
 
   return (
     <div className="flex min-h-screen bg-[#F8F9FA] relative font-sans text-gray-800">
-      {}
+      { }
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
@@ -345,7 +347,7 @@ export default function BusManagementOnlyPage() {
         </button>
       )}
 
-      {}
+      { }
       <AnimatePresence>
         {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
           <motion.aside
@@ -383,11 +385,10 @@ export default function BusManagementOnlyPage() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
-                    pathname === item.href
-                      ? 'bg-white text-[#E31E24] shadow-md'
-                      : 'hover:bg-white/10 text-white/90'
-                  }`}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
+                    ? 'bg-white text-[#E31E24] shadow-md'
+                    : 'hover:bg-white/10 text-white/90'
+                    }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
                 </Link>
@@ -406,10 +407,10 @@ export default function BusManagementOnlyPage() {
         )}
       </AnimatePresence>
 
-      {}
+      { }
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
         <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-7xl mx-auto">
-          {}
+          { }
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
               <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
@@ -443,7 +444,7 @@ export default function BusManagementOnlyPage() {
             </div>
           </div>
 
-          {}
+          { }
           <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col">
             <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
               <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2 uppercase tracking-wide">
@@ -493,7 +494,7 @@ export default function BusManagementOnlyPage() {
                         <td className="py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
-                              {}
+                              { }
                               <Image
                                 src={bus.photo}
                                 alt={bus.name}
@@ -559,7 +560,7 @@ export default function BusManagementOnlyPage() {
         </div>
       </main>
 
-      {}
+      { }
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -588,7 +589,7 @@ export default function BusManagementOnlyPage() {
               </div>
 
               <form onSubmit={handleSave} className="p-8 space-y-6">
-                {}
+                { }
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-bold uppercase text-gray-500 mb-1 block">
@@ -617,7 +618,7 @@ export default function BusManagementOnlyPage() {
                   </div>
                 </div>
 
-                {}
+                { }
                 <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div>
@@ -675,7 +676,7 @@ export default function BusManagementOnlyPage() {
                   )}
                 </div>
 
-                {}
+                { }
                 <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
                   <div className="p-4 bg-gray-50 flex items-center justify-between">
                     <div>
@@ -689,11 +690,10 @@ export default function BusManagementOnlyPage() {
                       type="button"
                       onClick={handlePickFile}
                       disabled={uploading}
-                      className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${
-                        uploading
-                          ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                          : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                      }`}
+                      className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${uploading
+                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                        : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                        }`}
                     >
                       <Upload size={18} />
                       {uploading ? 'Uploading...' : 'Upload'}
@@ -712,7 +712,7 @@ export default function BusManagementOnlyPage() {
                     {busForm.photo ? (
                       <div className="flex items-center gap-4">
                         <div className="w-24 h-20 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
-                          {}
+                          { }
                           <Image
                             src={busForm.photo}
                             alt="Bus preview"
@@ -739,7 +739,7 @@ export default function BusManagementOnlyPage() {
                   </div>
                 </div>
 
-                {}
+                { }
                 <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
                   <label className="text-xs font-bold uppercase text-blue-600 mb-2 block">
                     Assign Route
@@ -779,7 +779,7 @@ export default function BusManagementOnlyPage() {
                   )}
                 </div>
 
-                {}
+                { }
                 <div className="pt-2 flex gap-3">
                   <button
                     type="button"
@@ -791,9 +791,8 @@ export default function BusManagementOnlyPage() {
                   <button
                     type="submit"
                     disabled={uploading}
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${
-                      uploading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#E31E24] hover:bg-red-700'
-                    }`}
+                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#E31E24] hover:bg-red-700'
+                      }`}
                   >
                     <Save size={18} />
                     {modalType === 'add' ? 'Save Bus' : 'Save Changes'}
