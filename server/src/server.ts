@@ -1,15 +1,13 @@
-import { Server } from 'http';
+import { Server as HttpServer, createServer } from 'http';
 import mongoose from 'mongoose';
 
 import config from './app/config';
 import seedAdmin from './app/DB/seed';
 import app from './app';
 
-import http from 'http';
-import { initSocket } from './socket';
+import { initSocket } from './app/socket';
 
-
-let server: Server | null = null;
+let server: HttpServer | null = null;
 
 // Database connection
 async function connectToDatabase() {
@@ -46,15 +44,14 @@ async function bootstrap() {
     //   console.log(`Application is running on port ${config.port}`);
     // });
 
-    const httpServer = http.createServer(app);
+    const httpServer = createServer(app);
 
-// 🔌 Attach Socket.io
-initSocket(httpServer);
+    // 🔌 Attach Socket.io
+    initSocket(httpServer);
 
-server = httpServer.listen(config.port, () => {
-  console.log(`🚀 Application + Socket running on port ${config.port}`);
-});
-
+    server = httpServer.listen(config.port, () => {
+      console.log(`🚀 Application + Socket running on port ${config.port}`);
+    });
 
     // Listen for termination signals
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

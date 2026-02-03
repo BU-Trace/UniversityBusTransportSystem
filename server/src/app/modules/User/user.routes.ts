@@ -1,3 +1,5 @@
+// Update driver status (active/inactive or custom status)
+
 import { Router } from 'express';
 import clientInfoParser from '../../middleware/clientInfoParser';
 import validateRequest from '../../middleware/validateRequest';
@@ -7,9 +9,15 @@ import { parseBody } from '../../middleware/bodyParser';
 import { UserValidation } from './user.validation';
 import { UserController } from './user.controller';
 import { UserRole } from './user.utils';
+import { updateMyProfile } from "./user.profile.controller";
+
 
 const router = Router();
-
+router.patch(
+  '/driver/:id/status',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.updateDriverStatus
+);
 router.post('/', clientInfoParser, UserController.registerUser);
 
 // Verify email
@@ -17,6 +25,28 @@ router.post('/verify-email', UserController.verifyEmail);
 
 // Get all users
 router.get('/get-all-users', auth(UserRole.ADMIN, UserRole.SUPERADMIN), UserController.getAllUsers);
+
+// Get all drivers
+router.get(
+  '/get-all-drivers',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.getAllDrivers
+);
+
+// Get all students
+router.get(
+  '/get-all-students',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  UserController.getAllStudents
+);
+
+// Admin adds a driver (dedicated)
+router.post(
+  '/add-driver',
+  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
+  validateRequest(UserValidation.adminCreateDriverSchema),
+  UserController.adminCreateDriver
+);
 
 // Admin adds a user (dashboard add)
 router.post(
@@ -70,5 +100,6 @@ router.patch(
   validateRequest(UserValidation.driverProfileValidationSchema),
   UserController.updateDriverProfile
 );
+router.put("/me", auth(), updateMyProfile);
 
 export const UserRoutes = router;

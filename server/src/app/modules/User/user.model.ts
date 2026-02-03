@@ -1,9 +1,9 @@
-import mongoose, { Schema } from "mongoose";
-import bcrypt from "bcrypt";
-import { StatusCodes } from "http-status-codes";
-import config from "../../config";
-import { IUser, USER_ROLES, UserModel } from "./user.interface";
-import AppError from "../../errors/appError";
+import mongoose, { Schema } from 'mongoose';
+import bcrypt from 'bcrypt';
+import { StatusCodes } from 'http-status-codes';
+import config from '../../config';
+import { IUser, USER_ROLES, UserModel } from './user.interface';
+import AppError from '../../errors/appError';
 
 const userSchema = new Schema<IUser, UserModel>(
   {
@@ -21,7 +21,7 @@ const userSchema = new Schema<IUser, UserModel>(
     },
 
     clientITInfo: {
-      device: { type: String, enum: ["pc", "mobile", "tablet"], default: "pc" },
+      device: { type: String, enum: ['pc', 'mobile', 'tablet'], default: 'pc' },
       browser: { type: String, default: null },
       ipAddress: { type: String, default: null },
       pcName: { type: String, default: null },
@@ -38,7 +38,7 @@ const userSchema = new Schema<IUser, UserModel>(
 
     assignedBus: {
       type: Schema.Types.ObjectId,
-      ref: "Bus",
+      ref: 'Bus',
       default: null,
     },
 
@@ -48,8 +48,18 @@ const userSchema = new Schema<IUser, UserModel>(
     },
 
     lastLogin: { type: Date },
-    isActive: { type: Boolean, default: false },
-    isApproved: { type: Boolean, default: false },
+    isActive: {
+      type: Boolean,
+      default: function () {
+        return this.role === 'student' ? true : false;
+      },
+    },
+    isApproved: {
+      type: Boolean,
+      default: function () {
+        return this.role === 'student' ? true : false;
+      },
+    },
 
     otpToken: { type: String, default: null },
     otpExpires: { type: Date, default: null },
@@ -64,10 +74,10 @@ const userSchema = new Schema<IUser, UserModel>(
   { timestamps: true }
 );
 
-userSchema.pre("save", async function (next) {
+userSchema.pre('save', async function (next) {
   const user = this as IUser;
 
-  if (user.isModified("password")) {
+  if (user.isModified('password')) {
     user.password = await bcrypt.hash(user.password, Number(config.bcrypt_salt_rounds));
   }
 
@@ -75,14 +85,14 @@ userSchema.pre("save", async function (next) {
 });
 
 // ✅ keep it (you had it), but do it safely
-userSchema.post("save", function (doc, next) {
+userSchema.post('save', function (doc, next) {
   // doc.password might not exist if not selected
-  (doc as any).password = "";
+  (doc as any).password = '';
   next();
 });
 
 // ✅ safest: always remove password in JSON responses
-userSchema.set("toJSON", {
+userSchema.set('toJSON', {
   transform: (_doc, ret: any) => {
     delete ret.password;
     return ret;
@@ -98,26 +108,26 @@ userSchema.statics.isPasswordMatched = async function (
 
 // ✅ FIX: use `this` (NOT `User`) because User is declared later
 userSchema.statics.isUserExistsByEmail = async function (email: string) {
-  return this.findOne({ email }).select("+password");
+  return this.findOne({ email }).select('+password');
 };
 
 userSchema.statics.checkUserExist = async function (userId: string) {
   const existingUser = await this.findById(userId);
 
   if (!existingUser) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, "User does not exist!");
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User does not exist!');
   }
 
   if (!existingUser.isActive) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, "Email is not verified!");
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is not verified!');
   }
 
   if (!existingUser.isApproved) {
-    throw new AppError(StatusCodes.NOT_ACCEPTABLE, "User is not approved by admin!");
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'User is not approved by admin!');
   }
 
   return existingUser;
 };
 
-const User = mongoose.model<IUser, UserModel>("User", userSchema);
+const User = mongoose.model<IUser, UserModel>('User', userSchema);
 export default User;

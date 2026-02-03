@@ -6,21 +6,39 @@ import { IUser, UserRole } from './user.interface';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
 
+
+// Update driver status (active/inactive or custom status)
+const updateDriverStatus = async (driverId: string, status: any) => {
+  const driver = await UserModel.findById(driverId);
+  if (!driver || driver.role !== 'driver') {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Driver not found');
+  }
+  // Only allow updating isActive (boolean)
+  if (typeof status === 'boolean') {
+    driver.isActive = status;
+  } else {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Status must be a boolean (active/inactive)');
+  }
+  await driver.save();
+  return driver;
+};
+
+
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   student: ['bio', 'department', 'rollNumber'],
   driver: ['bio', 'licenseNumber'],
-  admin: ['bio'], // ✅ admin should not include licenseNumber
-  superadmin: ['bio'], // ✅ superadmin should not include licenseNumber
+  admin: ['bio'],  
+  superadmin: ['bio'],  
+  // staff: ['bio', 'department', 'designation'],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
-    // If your DB allows null clientInfo, initialize it
+   
     user.clientInfo = {} as ClientInfo;
 
-    // BUT for required roles, ensure it exists at least
     if (role === 'student') {
       user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
@@ -118,30 +136,33 @@ const registerUser = async (userData: Partial<IUser>) =>
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
     }
+  // if (role === 'staff') {
+  //     const department = (userData.clientInfo as any)?.department?.toString().trim();
+  //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
+
+  //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+  //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
+  //   }
 
     const OTP = Math.floor(100000 + Math.random() * 900000);
     const otpToken = String(OTP);
     const otpExpires = new Date(Date.now() + 15 * 60 * 1000);
 
     const user = new UserModel({
-  name: userData.name,
-  email: userData.email,
-  role: userData.role,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
 
-  clientInfo: userData.clientInfo,
-  clientITInfo: userData.clientITInfo,
+      clientInfo: userData.clientInfo,
+      clientITInfo: userData.clientITInfo,
 
-  
-  password: password,
+      password: password,
+      isActive: false, 
+      isApproved: false,
 
-
-  isActive: false,
-  isApproved: false,
-
-  otpToken: String(OTP),
-  otpExpires: new Date(Date.now() + 15 * 60 * 1000),
-});
-
+      otpToken: String(OTP),
+      otpExpires: new Date(Date.now() + 15 * 60 * 1000),
+    });
 
     await user.save({ session });
 
@@ -198,7 +219,6 @@ const registerUser = async (userData: Partial<IUser>) =>
         'Your Campus Connect OTP'
       );
     } catch (e) {
-      // don't block registration if email fails
     }
 
     return null;
@@ -231,6 +251,7 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
     }
 
     user.isActive = true;
+    user.isApproved = true;
     user.otpToken = null;
     user.otpExpires = null;
 
@@ -245,11 +266,8 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
    DASHBOARD CRUD (Admin)
 ========================================================= */
 
-// GET all users (dashboard)
 const getAllUsers = async () => {
-  const users = await UserModel.find()
-    .select('-password')
-    .sort({ createdAt: -1 });
+  const users = await UserModel.find().select('-password').sort({ createdAt: -1 });
 
   return users;
 };
@@ -317,6 +335,68 @@ const adminCreateUser = async (payload: any) => {
   return safe;
 };
 
+// Admin creates a driver (dedicated flow)
+const adminCreateDriver = async (payload: any) => {
+  const email = payload.email?.trim().toLowerCase();
+  if (!email) throw new AppError(StatusCodes.BAD_REQUEST, 'Email is required');
+
+  const exists = await UserModel.findOne({ email });
+  if (exists) {
+    throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
+  }
+
+  const tempPassword = generateTempPassword(10);
+
+  const userDoc: Partial<IUser> = {
+    email,
+    password: tempPassword,
+    name: payload.name,
+    role: 'driver',
+    isActive: true,
+    isApproved: true,
+    needPasswordChange: true,
+
+    profileImage: payload.profileImage,
+    approvalLetter: payload.approvalLetter,
+
+    assignedBus: payload.assignedBus,
+    assignedBusName: payload.assignedBusName ?? null,
+
+    clientInfo: payload.clientInfo ?? {},
+  };
+
+  if (!userDoc.profileImage) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Driver photo is required');
+  }
+  if (!userDoc.approvalLetter) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Approval letter is required');
+  }
+  if (!userDoc.assignedBus) {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver');
+  }
+
+  const created = await UserModel.create(userDoc);
+
+  try {
+    await EmailHelper.sendEmail(
+      created.email,
+      `
+      <div style="font-family: Arial, sans-serif; line-height:1.6;">
+        <h3>Campus Connect - Driver Account Created</h3>
+        <p>Hello ${created.name || ''},</p>
+        <p>An admin has created your driver account.</p>
+        <p><b>Temporary Password:</b> ${tempPassword}</p>
+        <p>Please login and change your password immediately.</p>
+      </div>
+      `,
+      'Campus Connect Driver Account Created'
+    );
+  } catch (e) {}
+
+  const safe = await UserModel.findById(created._id).select('-password');
+  return safe;
+};
+
 // Admin updates user (dashboard edit)
 const adminUpdateUser = async (id: string, payload: any) => {
   const user = await UserModel.findById(id);
@@ -359,6 +439,16 @@ const adminDeleteUser = async (id: string) => {
   return { message: 'Deleted successfully' };
 };
 
+// Get all drivers
+const getAllDrivers = async () => {
+  return await UserModel.find({ role: 'driver' }).select('-password').sort({ createdAt: -1 });
+};
+
+// Get all students
+const getAllStudents = async () => {
+  return await UserModel.find({ role: 'student' }).select('-password').sort({ createdAt: -1 });
+};
+
 export const UserServices = {
   registerUser,
   verifyEmail,
@@ -366,6 +456,10 @@ export const UserServices = {
 
   getAllUsers,
   adminCreateUser,
+  adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
+  getAllDrivers,
+  getAllStudents,
+  updateDriverStatus,
 };

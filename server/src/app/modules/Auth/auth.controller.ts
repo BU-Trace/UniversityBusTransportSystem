@@ -1,108 +1,109 @@
-import { Request, Response } from "express";
-import catchAsync from "../../utils/catchAsync";
-import sendResponse from "../../utils/sendResponse";
-import { StatusCodes } from "http-status-codes";
-import { AuthService } from "./auth.service";
+import { Request, Response } from 'express';
+import { StatusCodes } from 'http-status-codes';
+import config from '../../config';
+import AppError from '../../errors/appError';
+import catchAsync from '../../utils/catchAsync';
+import sendResponse from '../../utils/sendResponse';
+import { AuthService, type ReqUser } from './auth.service';
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
+  const { refreshToken, accessToken } = result;
 
-  // set refresh token cookie
-  res.cookie("refreshToken", result.refreshToken, {
+  // ✅ DEV friendly cookie settings
+  res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days (cookie lifetime)
+    secure: config.NODE_ENV === 'production',
+    sameSite: config.NODE_ENV === 'production' ? 'none' : 'lax',
   });
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "User logged in successfully",
-    data: {
-      accessToken: result.accessToken,
-      user: result.user,
-    },
+    message: 'User logged in successfully!',
+    data: { accessToken },
   });
 });
 
+// ✅ NEW: refresh access token using refreshToken cookie
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-  const token = req.cookies?.refreshToken;
+  const refreshTokenFromCookie = req.cookies?.refreshToken;
+  if (!refreshTokenFromCookie) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'Refresh token not found');
+  }
 
-  const result = await AuthService.refreshToken(token);
+  const data = await AuthService.refreshAccessToken(refreshTokenFromCookie);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Access token refreshed",
-    data: {
-      accessToken: result.accessToken,
-    },
+    message: 'Access token refreshed successfully!',
+    data,
   });
 });
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.changePassword(req.body);
-
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: result.message,
-    data: null,
+    message: 'Password changed successfully!',
+    data: result,
   });
 });
 
 const forgetPassword = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.forgetPassword(req.body);
-
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: result.message,
-    data: null,
+    message: 'Reset password link sent successfully!',
+    data: result,
   });
 });
 
 const resetPassword = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.resetPassword(req.body);
-
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: result.message,
-    data: null,
+    message: 'Password reset successfully!',
+    data: result,
   });
 });
 
 const getPendingRegistrations = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.getPendingRegistrations(req.user);
-
+  const result = await AuthService.getPendingRegistrations(req.user as ReqUser);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Pending registrations fetched successfully",
+    message: 'Pending registrations fetched successfully!',
     data: result,
   });
 });
 
 const approveRegistration = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.approveRegistration(req.params.id, req.body, req.user);
+  const result = await AuthService.approveRegistration(
+    req.params.id,
+    req.body,
+    req.user as ReqUser
+  );
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Registration approved successfully",
+    message: 'Registration approved successfully!',
     data: result,
   });
 });
 
 const rejectRegistration = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.rejectRegistration(req.params.id, req.user);
+  const result = await AuthService.rejectRegistration(req.params.id, req.user as ReqUser);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: "Registration rejected successfully",
+    message: 'Registration rejected successfully!',
     data: result,
   });
 });

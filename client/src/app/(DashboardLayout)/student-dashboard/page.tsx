@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
-import { io } from "socket.io-client";
+import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { io } from 'socket.io-client';
 
-const socket = io("http://localhost:5000");
+const socket = io('http://localhost:5000');
 
-const StudentBusMap = dynamic(() => import("./Maap"), {
+const StudentBusMap = dynamic(() => import('./Maap'), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-slate-100 animate-pulse flex items-center justify-center font-bold text-slate-400 uppercase tracking-widest">
@@ -19,12 +19,12 @@ export default function StudentDashboard() {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   useEffect(() => {
-    socket.on("receiveLocation", (data) => {
+    socket.on('receiveLocation', (data) => {
       setLocation({ lat: data.lat, lng: data.lng });
     });
 
     return () => {
-      socket.off("receiveLocation");
+      socket.off('receiveLocation');
     };
   }, []);
 

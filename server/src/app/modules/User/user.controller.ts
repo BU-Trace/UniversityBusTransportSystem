@@ -1,8 +1,23 @@
+
 import { Request, Response } from 'express';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 import { UserServices } from './user.service';
+
+// PATCH /user/driver/:id/status
+const updateDriverStatus = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const result = await UserServices.updateDriverStatus(id, status);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Driver status updated successfully',
+    data: result,
+  });
+});
+
 
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   await UserServices.registerUser(req.body);
@@ -79,6 +94,18 @@ const adminCreateUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// POST /user/add-driver (admin only)
+const adminCreateDriver = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserServices.adminCreateDriver(req.body);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.CREATED,
+    success: true,
+    message: 'Driver created successfully',
+    data: result,
+  });
+});
+
 // PUT /user/update-user/:id
 const adminUpdateUser = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.adminUpdateUser(req.params.id, req.body);
@@ -102,6 +129,26 @@ const adminDeleteUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllDrivers = catchAsync(async (_req: Request, res: Response) => {
+  const result = await UserServices.getAllDrivers();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Drivers fetched successfully',
+    data: result,
+  });
+});
+
+const getAllStudents = catchAsync(async (_req: Request, res: Response) => {
+  const result = await UserServices.getAllStudents();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Students fetched successfully',
+    data: result,
+  });
+});
+
 export const UserController = {
   registerUser,
   verifyEmail,
@@ -110,8 +157,13 @@ export const UserController = {
   updateStudentProfile,
   updateDriverProfile,
 
+  updateDriverStatus,
+
   getAllUsers,
   adminCreateUser,
+  adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
+  getAllDrivers,
+  getAllStudents,
 };

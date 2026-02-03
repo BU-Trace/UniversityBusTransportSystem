@@ -8,7 +8,7 @@ import 'leaflet/dist/leaflet.css';
 // Responsive Red Location Pointer Icon
 const redPointerIcon = new L.Icon({
   iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-  iconSize: [30, 30],        // Smaller for mobile
+  iconSize: [30, 30], // Smaller for mobile
   iconAnchor: [15, 30],
 });
 

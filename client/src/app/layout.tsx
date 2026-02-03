@@ -7,6 +7,8 @@ import { IntroProvider } from '@/context/IntroContext';
 import CallUsButton from '@/components/common/CallUsButton';
 import TeamButton from '@/components/common/TeamButton';
 import BusTrackerButton from '@/components/common/BusTrackerButton';
+import NearestStopButton from '@/components/common/NearestStopButton';
+import HelpChatbot from "@/components/common/HelpChatbot";
 
 export const metadata: Metadata = {
   title: 'UBTS',
@@ -30,6 +32,8 @@ export default function RootLayout({
             <CallUsButton />
             <TeamButton />
             <BusTrackerButton />
+            <NearestStopButton />
+            <HelpChatbot />
           </IntroProvider>
           <ScrollToTopButton />
         </Providers>

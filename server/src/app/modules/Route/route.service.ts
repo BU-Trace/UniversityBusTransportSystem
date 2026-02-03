@@ -1,9 +1,33 @@
+import { Types } from 'mongoose';
+
 import { IRoute } from './route.interface';
 import { Route } from './route.model';
 
+const generateNextRouteId = async (): Promise<string> => {
+  const latest = await Route.findOne({}, {}, { sort: { route_id: -1 } });
+  let nextId = 1;
+
+  if (latest?.route_id) {
+    const match = latest.route_id.match(/route_(\d+)/);
+    if (match) nextId = parseInt(match[1], 10) + 1;
+  }
+
+  return `route_${nextId}`;
+};
+
 export const createRoute = async (payload: IRoute) => {
-  if (!payload.bus) payload.bus = [];
-  const route = await Route.create(payload);
+  const route_id = payload.route_id ?? (await generateNextRouteId());
+
+  const bus = (payload.bus ?? []).map((id) => new Types.ObjectId(id));
+  const stopages = (payload.stopages ?? []).map((id) => new Types.ObjectId(id));
+
+  const route = await Route.create({
+    ...payload,
+    route_id,
+    bus,
+    stopages,
+  });
+
   return route;
 };
 
@@ -14,8 +38,7 @@ export const updateRoute = async (id: string, payload: Partial<IRoute>) => {
 
   // If stopages is provided, handle add/remove logic
   if (payload.stopages) {
-    // If payload.stopages is the full new array, just set it
-    route.stopages = payload.stopages;
+    route.stopages = payload.stopages.map((id) => new Types.ObjectId(id));
   }
 
   // Update other fields if provided
@@ -23,7 +46,7 @@ export const updateRoute = async (id: string, payload: Partial<IRoute>) => {
   if (payload.isActive !== undefined) route.isActive = payload.isActive;
 
   // Update bus field if provided
-  if (payload.bus) route.bus = payload.bus;
+  if (payload.bus) route.bus = payload.bus.map((id) => new Types.ObjectId(id));
 
   await route.save();
   return route;

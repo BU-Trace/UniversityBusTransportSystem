@@ -7,7 +7,6 @@ const BusSchema = new Schema(
       required: true,
       unique: true,
     },
-
     name: {
       type: String,
       required: true,
@@ -26,6 +25,11 @@ const BusSchema = new Schema(
       ref: 'Route',
       required: true,
     },
+    driverId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
     // Photo URL or path
     photo: {
       type: String,
@@ -33,21 +37,14 @@ const BusSchema = new Schema(
       trim: true,
     },
 
-    activeHoursComing: {
-      type: [String],
-      required: true,
-      default: [],
-    },
-
-    activeHoursGoing: {
-      type: [String],
-      required: true,
-      default: [],
-    },
-
     isActive: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ['running', 'paused', 'stopped'],
+      default: 'running',
     },
   },
   { timestamps: true }
