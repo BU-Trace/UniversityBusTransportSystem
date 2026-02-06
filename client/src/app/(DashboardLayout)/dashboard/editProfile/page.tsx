@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -32,7 +32,14 @@ async function uploadToCloudinary(file: File): Promise<string> {
   form.append("upload_preset", UPLOAD_PRESET);
 
   const res = await fetch(url, { method: "POST", body: form });
-  const data = (await res.json().catch(() => ({}))) as { secure_url?: string; error?: any };
+  interface CloudinaryError {
+    message: string;
+  }
+
+  const data = (await res.json().catch(() => ({}))) as {
+    secure_url?: string;
+    error?: CloudinaryError
+  };
 
   if (!res.ok) {
     throw new Error(data?.error?.message || "Cloudinary upload failed");
@@ -143,7 +150,7 @@ export default function EditProfilePage() {
         credentials: "include",
         body: JSON.stringify({
           name: cleanName,
-          photoUrl: uploadedPhotoUrl, 
+          photoUrl: uploadedPhotoUrl,
         }),
       });
 
@@ -211,11 +218,10 @@ export default function EditProfilePage() {
                 type="button"
                 onClick={pickFile}
                 disabled={saving || uploading}
-                className={`px-4 py-2 rounded-xl font-black text-xs transition-all ${
-                  saving || uploading
+                className={`px-4 py-2 rounded-xl font-black text-xs transition-all ${saving || uploading
                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                     : "bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200"
-                }`}
+                  }`}
               >
                 {selectedFile ? "Change Photo" : "Choose Photo"}
               </button>
@@ -231,13 +237,20 @@ export default function EditProfilePage() {
 
             <div className="mt-4 flex items-center gap-4">
               <div className="w-24 h-24 rounded-2xl border border-gray-200 bg-white overflow-hidden flex items-center justify-center">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={previewUrl || currentPhoto || "https://th.bing.com/th/id/R.b42d077f7608ecfe94a08b5d4213eb66?rik=0hx9eqp4xZnIiQ&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f0%2fb%2f5%2f175341.jpg&ehk=EG20ra9%2fkw8bRtQ5LCMLWYQ4lE4GJ7WoUAw3QT7CP3s%3d&risl=&pid=ImgRaw&r=0"}
+                <Image
+                  src={
+                    previewUrl ||
+                    currentPhoto ||
+                    "https://th.bing.com/th/id/R.b42d077f7608ecfe94a08b5d4213eb66?rik=0hx9eqp4xZnIiQ&riu=http%3a%2f%2fgetwallpapers.com%2fwallpaper%2ffull%2f0%2fb%2f5%2f175341.jpg&ehk=EG20ra9%2fkw8bRtQ5LCMLWYQ4lE4GJ7WoUAw3QT7CP3s%3d&risl=&pid=ImgRaw&r=0"
+                  }
                   alt="Profile preview"
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
+                  unoptimized
                 />
               </div>
+
 
               <div className="min-w-0">
                 {selectedFile ? (
@@ -261,11 +274,10 @@ export default function EditProfilePage() {
           <button
             onClick={save}
             disabled={saving || uploading}
-            className={`w-full text-white py-3 rounded-2xl font-black transition-all shadow-lg shadow-red-200 ${
-              saving || uploading
+            className={`w-full text-white py-3 rounded-2xl font-black transition-all shadow-lg shadow-red-200 ${saving || uploading
                 ? "bg-gray-300 cursor-not-allowed"
                 : "bg-[#E31E24] hover:bg-red-700"
-            }`}
+              }`}
           >
             {uploading ? "Uploading..." : saving ? "Saving..." : "Save Changes"}
           </button>
