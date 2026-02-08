@@ -1,16 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Bus, Users, MapPin, Clock, ArrowUpRight, Waves, RefreshCcw } from 'lucide-react';
 import StatCard from './StatCard';
-import { parseTime } from './utils';
-import { RouteSchedule, schedules } from './data';
+import LiveBusSection from './LiveBusSection'; 
 
 const HomePageComponent: React.FC = () => {
-  const [nextBuses, setNextBuses] = useState<RouteSchedule[]>([]);
 
   const featureHighlights = [
     {
@@ -57,37 +54,13 @@ const HomePageComponent: React.FC = () => {
     },
   ];
 
-  useEffect(() => {
-    const now = new Date();
-    const day = now.getDay();
-    const minutesNow = now.getHours() * 60 + now.getMinutes();
-
-    const upcoming = schedules.map((s) => {
-      const toTime = parseTime(s.toUniversity.split(' ').slice(0, 2).join(' '));
-      const fromTime = parseTime(s.fromUniversity.split(' ').slice(0, 2).join(' '));
-      const nextBus =
-        day === 0 && minutesNow < toTime
-          ? s.toUniversity
-          : day === 4 && minutesNow < fromTime
-            ? s.fromUniversity
-            : 'No bus today';
-      return { ...s, nextBus };
-    });
-
-    const timer = setTimeout(() => {
-      setNextBuses(upcoming);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className="relative min-h-screen bg-linear-to-br from-blue-100 via-white to-blue-50 overflow-hidden ">
       <div className="absolute inset-0 overflow-hidden z-0">
         <div className="absolute w-[200%] h-[200%] bg-[radial-gradient(circle_at_center,rgba(246, 59, 59, 0.08)_0%,transparent_70%)] animate-[wave_8s_ease-in-out_infinite_alternate]" />
       </div>
 
-      {}
+      {/* Hero Banner */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -112,8 +85,10 @@ const HomePageComponent: React.FC = () => {
         </div>
       </motion.div>
 
-      {}
+      {/* Main Content Grid */}
       <div className="max-w-6xl mx-auto px-4 md:px-12 lg:px-20 py-12 -mt-16 relative z-10 flex flex-col">
+
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 order-3 lg:order-2 lg:grid-cols-4 gap-3 mb-16">
           <StatCard
             title="Total Trips Today"
@@ -157,12 +132,13 @@ const HomePageComponent: React.FC = () => {
           />
         </div>
 
+        {/* Feature Highlights */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="bg-white/80  backdrop-blur-xl shadow-2xl order-4 lg:order-3 rounded-3xl p-8 border border-red-50 mb-12"
+          className="bg-white/80 backdrop-blur-xl shadow-2xl order-4 lg:order-3 rounded-3xl p-8 border border-red-50 mb-12"
         >
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
             <div>
@@ -195,6 +171,7 @@ const HomePageComponent: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Quick Links */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -220,74 +197,11 @@ const HomePageComponent: React.FC = () => {
           ))}
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="bg-white/70 mb-20 lg:mb-0  backdrop-blur-xl shadow-2xl rounded-3xl p-3 border-t-4 border-red-600 order-2 lg:order-4"
-        >
-          <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4 lg:mb-6 text-center border-b pb-3 flex justify-center items-center gap-2">
-            <Clock className="w-6 h-6 text-red-600" /> Live Next Bus Reminder
-          </h2>
+        {/* LiveBusSection  */}
+        <div className="order-2 lg:order-4">
+            <LiveBusSection />
+        </div>
 
-          <div className="overflow-x-auto rounded-2xl scrollbar-hide">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-linear-to-r from-red-500 to-red-900 text-white text-center  lg:text-left text-sm lg:text-base uppercase tracking-wider">
-                  <th className="py-4 px-2 rounded-tl-xl">Route Location</th>
-                  <th className="py-4 px-2">Next Departure</th>
-                  <th className="py-4 px-2 rounded-tr-xl">Status / Direction</th>
-                </tr>
-              </thead>
-              <tbody>
-                {nextBuses.map((bus, idx) => {
-                  const isActive = bus.nextBus !== 'No bus today';
-                  const direction = bus.nextBus?.includes('University')
-                    ? 'To Varsity'
-                    : 'From Varsity';
-
-                  return (
-                    <motion.tr
-                      key={bus.route}
-                      whileHover={{ scale: 1.02, backgroundColor: '#f0f9ff' }}
-                      transition={{ duration: 0.3 }}
-                      className={`${
-                        idx % 2 === 0 ? 'bg-white/80' : 'bg-red-50/70'
-                      } border-b border-gray-100 backdrop-blur-sm`}
-                    >
-                      <td className="py-4 px-2 font-semibold text-gray-800 flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-red-500" /> {bus.route}
-                      </td>
-                      <td className="py-4 px-2 text-sm font-bold text-red-700">
-                        {bus.nextBus?.split(' ')[0] || 'N/A'}
-                        <span className="text-sm font-medium text-gray-500 ml-2">
-                          {bus.nextBus?.split(' ').slice(1).join(' ') || ''}
-                        </span>
-                      </td>
-                      <td className="py-4 px-2">
-                        {isActive ? (
-                          <span className="bg-green-100 text-green-700 text-sm font-semibold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
-                            {direction}
-                          </span>
-                        ) : (
-                          <span className="bg-gray-200 text-gray-600 text-sm font-semibold px-4 py-1 rounded-full whitespace-nowrap">
-                            {bus.nextBus}
-                          </span>
-                        )}
-                      </td>
-                    </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          <p className="text-center text-sm text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <RefreshCcw className="w-4 h-4" /> Timings are calculated for today,{' '}
-            {new Date().toDateString()}.
-          </p>
-        </motion.div>
       </div>
     </div>
   );
