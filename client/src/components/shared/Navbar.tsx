@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname,} from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useIntro } from '@/context/IntroContext';
 import { Menu, X, User, LayoutDashboard, LogOut } from 'lucide-react';
@@ -14,7 +14,7 @@ export default function Navbar() {
   const { isIntroActive } = useIntro();
   const { data: session, status } = useSession();
   const pathName = usePathname();
-  const router = useRouter();
+  // const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Debugging: See if session is actually loading

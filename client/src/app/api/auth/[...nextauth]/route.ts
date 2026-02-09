@@ -1,7 +1,7 @@
 import NextAuth, {
-  type Account,
+  // type Account,
   type NextAuthOptions,
-  type Profile,
+  // type Profile,
   type Session,
   type User,
 } from 'next-auth';

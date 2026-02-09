@@ -1,5 +1,5 @@
-import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
-import { JWT } from "next-auth/jwt";
+import type { DefaultSession, DefaultUser } from "next-auth";
+// import { JWT as _JWT } from "next-auth/jwt";
 
 type UserRole = "student" | "driver" | "admin" | "superadmin";
 

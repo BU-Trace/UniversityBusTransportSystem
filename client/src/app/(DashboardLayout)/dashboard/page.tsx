@@ -6,7 +6,8 @@ import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { Home } from 'lucide-react';
 import Link from 'next/link';
-
+import { Session } from 'next-auth';
+import Image from 'next/image';
 import {
   MdDashboard,
   MdDirectionsBus,
@@ -25,13 +26,23 @@ function getInitial(name?: string) {
   const n = (name || '').trim();
   return n ? n[0].toUpperCase() : 'U';
 }
+type ExtendedUser = Session["user"] & {
+  photoUrl?: string | null;
+  profileImage?: string | null;
+  fullName?: string | null;
+  username?: string | null;
+};
 
-function getDisplayName(session: any) {
-  return session?.user?.name || session?.user?.fullName || session?.user?.username || 'User';
+function getDisplayName(session: Session | null) {
+  if (!session?.user) return "User";
+  const user = session.user as ExtendedUser;
+  return user.name || user.fullName || user.username || "User";
 }
 
-function getProfilePhoto(session: any) {
-  return session?.user?.photoUrl || session?.user?.profileImage || session?.user?.image || '';
+function getProfilePhoto(session: Session | null) {
+  if (!session?.user) return "";
+  const user = session.user as ExtendedUser;
+  return user.photoUrl || user.profileImage || user.image || "";
 }
 
 export default function MergedDashboard() {
@@ -144,9 +155,11 @@ export default function MergedDashboard() {
               <div className="relative mb-3">
                 <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
                   {profilePhoto ? (
-                    <img
+                    <Image
                       src={profilePhoto}
                       alt={displayName}
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover"
                     />
                   ) : (

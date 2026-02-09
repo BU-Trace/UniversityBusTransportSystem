@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -278,26 +278,39 @@ function getProfilePhoto(session: any) {
       stops: stopNames.map((name) => ({ name, mapUrl: '' })),
       createdAt: r?.createdAt,
     };
-  };
+  }, []);
 
-  const loadRoutes = async () => {
-    setLoading(true);
-    try {
-      const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
-      const list = (json.data || []).map(normalizeRoute);
-      setRoutes(list);
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const loadRoutes = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
+  //     const list = (json.data || []).map(normalizeRoute);
+  //     setRoutes(list);
+  //   } catch (e) {
+  //     toast.error(getErrorMessage(e));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const loadRoutes = useCallback(async () => {
+  setLoading(true);
+  try {
+    const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
+    const list = (json.data || []).map(normalizeRoute);
+    setRoutes(list);
+  } catch (e) {
+    toast.error(getErrorMessage(e));
+  } finally {
+    setLoading(false);
+  }
+}, [accessToken, normalizeRoute]);
 
   useEffect(() => {
     if (!mounted) return;
     if (myRole !== 'admin' && myRole !== 'superadmin') return;
     loadRoutes();
-  }, [mounted, myRole]);
+  }, [mounted, myRole, loadRoutes]);
 
   const openAdd = () => {
     setModalType('add');
