@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname,} from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useIntro } from '@/context/IntroContext';
 import { Menu, X, User, LayoutDashboard, LogOut } from 'lucide-react';
@@ -14,7 +14,7 @@ export default function Navbar() {
   const { isIntroActive } = useIntro();
   const { data: session, status } = useSession();
   const pathName = usePathname();
-  const router = useRouter();
+  // const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Debugging: See if session is actually loading
@@ -69,12 +69,12 @@ export default function Navbar() {
 
   return (
     <header className="w-full bg-white border-b-2 border-red-600 fixed left-0 right-0 top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-4 h-16">
+      <div className="max-w-7xl mx-auto flex items-center justify-between px-2 lg:px-4 h-16">
 
         {/* ================= LOGO SECTION ================= */}
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/" className="flex items-center">
           {/* Fixed: Removed <span> wrapper and used {logoImage} variable correctly */}
-          <NextImage width={60} height={60} alt='Logo' image={logoImage} />
+          <NextImage width={50} height={50} alt='Logo' image={logoImage} />
         </Link>
 
         {/* ================= DESKTOP MENU ================= */}

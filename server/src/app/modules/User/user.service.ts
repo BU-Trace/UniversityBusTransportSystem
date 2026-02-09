@@ -6,21 +6,39 @@ import { IUser, UserRole } from './user.interface';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
 
+
+// Update driver status (active/inactive or custom status)
+const updateDriverStatus = async (driverId: string, status: any) => {
+  const driver = await UserModel.findById(driverId);
+  if (!driver || driver.role !== 'driver') {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Driver not found');
+  }
+  // Only allow updating isActive (boolean)
+  if (typeof status === 'boolean') {
+    driver.isActive = status;
+  } else {
+    throw new AppError(StatusCodes.BAD_REQUEST, 'Status must be a boolean (active/inactive)');
+  }
+  await driver.save();
+  return driver;
+};
+
+
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
   student: ['bio', 'department', 'rollNumber'],
   driver: ['bio', 'licenseNumber'],
-  admin: ['bio'], // ✅ admin should not include licenseNumber
-  superadmin: ['bio'], // ✅ superadmin should not include licenseNumber
+  admin: ['bio'],  
+  superadmin: ['bio'],  
+  // staff: ['bio', 'department', 'designation'],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
-    // If your DB allows null clientInfo, initialize it
+   
     user.clientInfo = {} as ClientInfo;
 
-    // BUT for required roles, ensure it exists at least
     if (role === 'student') {
       user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
@@ -118,6 +136,13 @@ const registerUser = async (userData: Partial<IUser>) =>
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
     }
+  // if (role === 'staff') {
+  //     const department = (userData.clientInfo as any)?.department?.toString().trim();
+  //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
+
+  //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+  //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
+  //   }
 
     const OTP = Math.floor(100000 + Math.random() * 900000);
     const otpToken = String(OTP);
@@ -132,9 +157,8 @@ const registerUser = async (userData: Partial<IUser>) =>
       clientITInfo: userData.clientITInfo,
 
       password: password,
-
-      isActive: userData.role === 'student' ? true : false,
-      isApproved: userData.role === 'student' ? true : false,
+      isActive: false, 
+      isApproved: false,
 
       otpToken: String(OTP),
       otpExpires: new Date(Date.now() + 15 * 60 * 1000),
@@ -195,7 +219,6 @@ const registerUser = async (userData: Partial<IUser>) =>
         'Your Campus Connect OTP'
       );
     } catch (e) {
-      // don't block registration if email fails
     }
 
     return null;
@@ -228,6 +251,7 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
     }
 
     user.isActive = true;
+    user.isApproved = true;
     user.otpToken = null;
     user.otpExpires = null;
 
@@ -242,7 +266,6 @@ const verifyEmail = async (payload: { email: string; otpToken: string }) =>
    DASHBOARD CRUD (Admin)
 ========================================================= */
 
-// GET all users (dashboard)
 const getAllUsers = async () => {
   const users = await UserModel.find().select('-password').sort({ createdAt: -1 });
 
@@ -438,4 +461,5 @@ export const UserServices = {
   adminDeleteUser,
   getAllDrivers,
   getAllStudents,
+  updateDriverStatus,
 };
