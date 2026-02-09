@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -270,7 +270,7 @@ export default function RouteManagementPage() {
     return raw.map((s) => (typeof s === 'object' && s ? (s as RawStop) : {}));
   };
 
-  const normalizeRoute = (r: RawRoute): IRoute => {
+  const normalizeRoute =useCallback((r: RawRoute): IRoute => {
     const stopsSource = toStops(r?.stops || r?.stopPoints);
     return {
       id: r?._id || r?.id || '',
@@ -285,26 +285,39 @@ export default function RouteManagementPage() {
       })),
       createdAt: r?.createdAt,
     };
-  };
+  }, []);
 
-  const loadRoutes = async () => {
-    setLoading(true);
-    try {
-      const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
-      const list = (json.data || []).map(normalizeRoute);
-      setRoutes(list);
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const loadRoutes = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
+  //     const list = (json.data || []).map(normalizeRoute);
+  //     setRoutes(list);
+  //   } catch (e) {
+  //     toast.error(getErrorMessage(e));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+const loadRoutes = useCallback(async () => {
+  setLoading(true);
+  try {
+    const json = await apiFetch<ApiResponse<RawRoute[]>>(API.getAllRoutes, {}, accessToken);
+    const list = (json.data || []).map(normalizeRoute);
+    setRoutes(list);
+  } catch (e) {
+    toast.error(getErrorMessage(e));
+  } finally {
+    setLoading(false);
+  }
+}, [accessToken, normalizeRoute]);
 
   useEffect(() => {
     if (!mounted) return;
     if (myRole !== 'admin' && myRole !== 'superadmin') return;
     loadRoutes();
-  }, [mounted, myRole]);
+  }, [mounted, myRole, loadRoutes]);
 
   const openAdd = () => {
     setModalType('add');

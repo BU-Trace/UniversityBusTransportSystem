@@ -1,5 +1,8 @@
 'use client';
 
+import type { Session } from 'next-auth';
+import Image from 'next/image';
+
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
@@ -311,6 +314,30 @@ function HeaderModal({
     </div>
   );
 }
+type ExtendedUser = Session["user"] & {
+  photoUrl?: string | null;
+  profileImage?: string | null;
+  fullName?: string | null;
+  username?: string | null;
+  role?: UserRole | StaffRole | null;
+};
+function getInitial(name?: string) {
+  const n = (name || '').trim();
+  return n ? n[0].toUpperCase() : 'U';
+}
+
+function getDisplayName(session: Session | null) {
+  const user = session?.user as ExtendedUser | undefined;
+  return user?.name || user?.fullName || user?.username || 'User';
+}
+
+function getProfilePhoto(session: Session | null) {
+  const user = session?.user as ExtendedUser | undefined;
+  return user?.photoUrl || user?.profileImage || user?.image || '';
+}
+
+
+
 
 export default function UserManagementPage() {
   const pathname = usePathname();
@@ -399,28 +426,8 @@ export default function UserManagementPage() {
     };
   }, [isOpen, isModalOpen, pendingOpen, approvalOpen, assignBusOpen]);
 
-  function getInitial(name?: string) {
-    const n = (name || "").trim();
-    return n ? n[0].toUpperCase() : "U";
-  }
 
-  function getDisplayName(session: any) {
-    return (
-      session?.user?.name ||
-      session?.user?.fullName ||
-      session?.user?.username ||
-      "User"
-    );
-  }
 
-  function getProfilePhoto(session: any) {
-    return (
-      session?.user?.photoUrl ||
-      session?.user?.profileImage ||
-      session?.user?.image ||
-      ""
-    );
-  }
 
 
   const menuItems = [
@@ -485,7 +492,6 @@ export default function UserManagementPage() {
     if (!mounted) return;
     loadBuses();
     loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   const openAdd = () => {
@@ -831,11 +837,14 @@ export default function UserManagementPage() {
               <div className="relative mb-3">
                 <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
                   {profilePhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+
+                    <Image
                       src={profilePhoto}
                       alt={displayName}
                       className="w-full h-full object-cover"
+                      width={80}
+                      height={80}
+                      unoptimized
                     />
                   ) : (
                     <span className="text-3xl font-black italic text-white/80">
@@ -864,11 +873,10 @@ export default function UserManagementPage() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
-                    pathname === item.href
-                      ? 'bg-white text-[#E31E24] shadow-md'
-                      : 'hover:bg-white/10 text-white/90'
-                  }`}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
+                    ? 'bg-white text-[#E31E24] shadow-md'
+                    : 'hover:bg-white/10 text-white/90'
+                    }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
                 </Link>
@@ -938,11 +946,10 @@ export default function UserManagementPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as UserRole)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#E31E24] text-white shadow-lg shadow-red-200'
-                    : 'text-gray-500 hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${activeTab === tab.id
+                  ? 'bg-[#E31E24] text-white shadow-lg shadow-red-200'
+                  : 'text-gray-500 hover:bg-gray-50'
+                  }`}
               >
                 <tab.icon size={18} />
                 {tab.label}
@@ -1075,9 +1082,8 @@ export default function UserManagementPage() {
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
-                title={`${modalType === 'add' ? 'Add' : 'Update'} ${
-                  prettyRole(form.role as UserRole) || 'User'
-                }`}
+                title={`${modalType === 'add' ? 'Add' : 'Update'} ${prettyRole(form.role as UserRole) || 'User'
+                  }`}
                 subtitle="Fill the same fields as registration. Admin/Driver require documents."
                 onClose={() => setIsModalOpen(false)}
               />
@@ -1220,11 +1226,10 @@ export default function UserManagementPage() {
                             type="button"
                             onClick={pickPhoto}
                             disabled={uploadingPhoto}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
-                              uploadingPhoto
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                            }`}
+                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingPhoto
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                              }`}
                           >
                             <Upload size={16} /> {uploadingPhoto ? 'Uploading...' : 'Upload'}
                           </button>
@@ -1266,11 +1271,10 @@ export default function UserManagementPage() {
                             type="button"
                             onClick={pickLetter}
                             disabled={uploadingLetter}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
-                              uploadingLetter
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                            }`}
+                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingLetter
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                              }`}
                           >
                             <Upload size={16} /> {uploadingLetter ? 'Uploading...' : 'Upload'}
                           </button>
@@ -1319,11 +1323,10 @@ export default function UserManagementPage() {
                   <button
                     type="submit"
                     disabled={uploadingPhoto || uploadingLetter}
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${
-                      uploadingPhoto || uploadingLetter
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-[#E31E24] hover:bg-red-700'
-                    }`}
+                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploadingPhoto || uploadingLetter
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-[#E31E24] hover:bg-red-700'
+                      }`}
                   >
                     <Save size={18} />
                     {modalType === 'add' ? 'Save User' : 'Save Changes'}
