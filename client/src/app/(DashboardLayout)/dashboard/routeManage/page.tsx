@@ -278,7 +278,7 @@ function getProfilePhoto(session: any) {
       stops: stopNames.map((name) => ({ name, mapUrl: '' })),
       createdAt: r?.createdAt,
     };
-  }, []);
+  };
 
   // const loadRoutes = async () => {
   //   setLoading(true);
