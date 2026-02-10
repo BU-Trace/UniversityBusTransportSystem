@@ -14,21 +14,21 @@ interface Developer {
 }
 
 const DEVELOPERS: Developer[] = [
-  {
-    name: 'Md Mahruf Alam',
-    role: 'Frontend Developer and Database Designer',
-    imageSrc: '/static/mah.png',
-    bio: 'Specializes in full-stack development, UI/UX and system architecture.',
-  },
-  {
+   {
     name: 'Md Imam Hosen',
-    role: 'Backend Developer & Security Specialist',
+    role: 'Team Lead & Full-Stack Developer',
     imageSrc: '/static/im1.png',
     bio: 'Full-stack developer, focused on Typescript, Nest.js and DevOps design systems.',
   },
   {
+    name: 'Md Mahruf Alam',
+    role: 'Backend Developer and Database Designer',
+    imageSrc: '/static/mah.png',
+    bio: 'Specializes in full-stack development, UI/UX and system architecture.',
+  },
+  {
     name: 'Imam Hossen',
-    role: 'API Developer  Deployment & Maintenance Engineer',
+    role: 'API Developer Deployment & Maintenance Engineer',
     imageSrc: '/static/im2.png',
     bio: 'Handles APIs, databases, versions and system security.',
   },
@@ -40,7 +40,7 @@ const DEVELOPERS: Developer[] = [
   },
   {
     name: 'Sourav Debnath',
-    role: 'UI/UX Designer & Frontend Developer',
+    role: 'UI/UX Designer & Backend Developer',
     imageSrc: '/static/sss.png',
     bio: 'UI/UX specialist, creates intuitive and modern interfaces for all platforms.',
   },

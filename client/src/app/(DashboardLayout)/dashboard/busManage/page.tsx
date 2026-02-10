@@ -493,14 +493,19 @@ export default function BusManagementOnlyPage() {
                         <td className="py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
-                              {}
-                              <Image
-                                src={bus.photo}
-                                alt={bus.name}
-                                width={48}
-                                height={48}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
+                              {bus.photo ? (
+                                <Image
+                                  src={bus.photo}
+                                  alt={bus.name}
+                                  width={48}
+                                  height={48}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                  <Bus className="text-gray-400" size={24} />
+                                </div>
+                              )}
                             </div>
                             <div>
                               <div className="font-black text-gray-900">{bus.name}</div>
@@ -712,7 +717,6 @@ export default function BusManagementOnlyPage() {
                     {busForm.photo ? (
                       <div className="flex items-center gap-4">
                         <div className="w-24 h-20 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
-                          {}
                           <Image
                             src={busForm.photo}
                             alt="Bus preview"

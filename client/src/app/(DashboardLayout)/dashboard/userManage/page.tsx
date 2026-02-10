@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
@@ -34,6 +35,7 @@ import {
   MdClose,
   MdEdit,
 } from 'react-icons/md';
+import Image from 'next/image';
 
 type UserRole = 'student' | 'driver' | 'admin';
 type StaffRole = 'admin' | 'superadmin';
@@ -819,8 +821,9 @@ export default function UserManagementPage() {
               <div className="relative mb-3">
                 <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
                   {profilePhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Image
+                      width={80}
+                      height={80}
                       src={profilePhoto}
                       alt={displayName}
                       className="w-full h-full object-cover"
