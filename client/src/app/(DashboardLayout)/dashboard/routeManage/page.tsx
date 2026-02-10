@@ -42,10 +42,12 @@ type IStop = {
 type IRoute = {
   id: string;
   routeName: string;
+
   startPointName: string;
   startPointMapUrl: string;
   endPointName: string;
   endPointMapUrl: string;
+
   stops: IStop[];
   createdAt?: string;
 };
@@ -53,42 +55,33 @@ type IRoute = {
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 const API = {
-  getAllRoutes: `${BASE_URL}/route/get-all-routes`,
-  createRoute: `${BASE_URL}/route/create-route`,
-  updateRoute: (id: string) => `${BASE_URL}/route/update-route/${id}`,
-  deleteRoute: (id: string) => `${BASE_URL}/route/delete-route/${id}`,
+  getAllRoutes: `${BASE_URL}/route`,
+  createRoute: `${BASE_URL}/route`,
+  updateRoute: (id: string) => `${BASE_URL}/route/${id}`,
+  deleteRoute: (id: string) => `${BASE_URL}/route/${id}`,
+
+  createStopage: `${BASE_URL}/stopage/add-stopage`,
 };
 
-type RawStop = {
+type ApiResponse<T> = {
+  success?: boolean;
+  message?: string;
+  data?: T;
+};
+
+type RawStopage = {
+  _id?: string;
+  id?: string;
   name?: string;
-  stopName?: string;
-  mapUrl?: string;
-  locationUrl?: string;
-  googleMapUrl?: string;
 };
 
 type RawRoute = {
   _id?: string;
   id?: string;
-  routeName?: string;
   name?: string;
-  startPointName?: string;
-  startPoint?: { name?: string; mapUrl?: string };
-  startPointUrl?: string;
-  startPointMapUrl?: string;
-  endPointName?: string;
-  endPoint?: { name?: string; mapUrl?: string };
-  endPointUrl?: string;
-  endPointMapUrl?: string;
-  stops?: RawStop[];
-  stopPoints?: RawStop[];
+  route_id?: string;
+  stopages?: RawStopage[]; 
   createdAt?: string;
-};
-
-type ApiResponse<T> = {
-  data?: T;
-  message?: string;
-  success?: boolean;
 };
 
 function getErrorMessage(e: unknown) {
@@ -97,11 +90,7 @@ function getErrorMessage(e: unknown) {
   return 'Something went wrong';
 }
 
-async function apiFetch<T>(
-  url: string,
-  options: RequestInit = {},
-  accessToken?: string
-): Promise<T> {
+async function apiFetch<T>(url: string, options: RequestInit = {}, accessToken?: string): Promise<T> {
   const res = await fetch(url, {
     ...options,
     headers: {
@@ -112,9 +101,12 @@ async function apiFetch<T>(
     cache: 'no-store',
   });
 
-  const json = (await res.json().catch(() => ({}))) as unknown;
-  const message = (json as { message?: string }).message;
-  if (!res.ok) throw new Error(message || 'Request failed');
+  const json = (await res.json().catch(() => ({}))) as any;
+
+  if (!res.ok || json?.success === false) {
+    throw new Error(json?.message || `Request failed (${res.status})`);
+  }
+
   return json as T;
 }
 
@@ -191,33 +183,30 @@ export default function RouteManagementPage() {
   const router = useRouter();
   const { data: session } = useSession();
 
-  const accessToken = session?.accessToken;
-  const myRole = toUserRole(session?.user?.role || null);
+  const displayName = getDisplayName(session);
+  const profilePhoto = getProfilePhoto(session);
+  const initial = getInitial(displayName);
+
+  const accessToken = (session as any)?.accessToken as string | undefined;
+  const myRole = toUserRole((session as any)?.user?.role || null);
 
   const [mounted, setMounted] = useState(false);
 
-  // sidebar
   const [isOpen, setIsOpen] = useState(false);
 
-  // data
   const [routes, setRoutes] = useState<IRoute[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // search
   const [query, setQuery] = useState('');
 
-  // modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<Omit<IRoute, 'id'>>({ ...initialForm });
 
-  // dynamic stops count
   const [stopCount, setStopCount] = useState<number>(0);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const lock = isOpen || isModalOpen;
@@ -229,7 +218,6 @@ export default function RouteManagementPage() {
 
   useEffect(() => {
     if (!mounted) return;
-
     if (!session) return;
 
     if (myRole !== 'admin' && myRole !== 'superadmin') {
@@ -238,7 +226,18 @@ export default function RouteManagementPage() {
     }
   }, [mounted, session, myRole, router]);
 
-  const admin = { name: 'Admin', role: myRole === 'superadmin' ? 'Super Admin' : 'Admin' };
+  function getInitial(name?: string) {
+  const n = (name || '').trim();
+  return n ? n[0].toUpperCase() : 'U';
+}
+
+function getDisplayName(session: any) {
+  return session?.user?.name || session?.user?.fullName || session?.user?.username || 'User';
+}
+
+function getProfilePhoto(session: any) {
+  return session?.user?.photoUrl || session?.user?.profileImage || session?.user?.image || '';
+}
 
   const menuItems = [
     { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
@@ -252,10 +251,7 @@ export default function RouteManagementPage() {
     const q = query.trim().toLowerCase();
     if (!q) return routes;
     return routes.filter((r) => {
-      const stopText = r.stops
-        .map((s) => s.name)
-        .join(' ')
-        .toLowerCase();
+      const stopText = r.stops.map((s) => s.name).join(' ').toLowerCase();
       return (
         r.routeName.toLowerCase().includes(q) ||
         r.startPointName.toLowerCase().includes(q) ||
@@ -265,24 +261,21 @@ export default function RouteManagementPage() {
     });
   }, [routes, query]);
 
-  const toStops = (raw: unknown): RawStop[] => {
-    if (!Array.isArray(raw)) return [];
-    return raw.map((s) => (typeof s === 'object' && s ? (s as RawStop) : {}));
-  };
+  const normalizeRoute = (r: RawRoute): IRoute => {
+    const stopages = Array.isArray(r?.stopages) ? r.stopages : [];
+    const stopNames = stopages.map((s) => s?.name || '').filter(Boolean);
 
-  const normalizeRoute =useCallback((r: RawRoute): IRoute => {
-    const stopsSource = toStops(r?.stops || r?.stopPoints);
+    const start = stopNames[0] || '';
+    const end = stopNames[stopNames.length - 1] || '';
+
     return {
       id: r?._id || r?.id || '',
-      routeName: r?.routeName || r?.name || '',
-      startPointName: r?.startPointName || r?.startPoint?.name || '',
-      startPointMapUrl: r?.startPointMapUrl || r?.startPoint?.mapUrl || r?.startPointUrl || '',
-      endPointName: r?.endPointName || r?.endPoint?.name || '',
-      endPointMapUrl: r?.endPointMapUrl || r?.endPoint?.mapUrl || r?.endPointUrl || '',
-      stops: stopsSource.map((s) => ({
-        name: s?.name || s?.stopName || '',
-        mapUrl: s?.mapUrl || s?.locationUrl || s?.googleMapUrl || '',
-      })),
+      routeName: r?.name || '',
+      startPointName: start,
+      startPointMapUrl: '', 
+      endPointName: end,
+      endPointMapUrl: '', 
+      stops: stopNames.map((name) => ({ name, mapUrl: '' })),
       createdAt: r?.createdAt,
     };
   }, []);
@@ -330,6 +323,7 @@ const loadRoutes = useCallback(async () => {
   const openEdit = (r: IRoute) => {
     setModalType('edit');
     setSelectedId(r.id);
+
     setForm({
       routeName: r.routeName,
       startPointName: r.startPointName,
@@ -339,6 +333,7 @@ const loadRoutes = useCallback(async () => {
       stops: r.stops || [],
       createdAt: r.createdAt,
     });
+
     setStopCount(r.stops?.length || 0);
     setIsModalOpen(true);
   };
@@ -370,6 +365,7 @@ const loadRoutes = useCallback(async () => {
 
   const validate = () => {
     if (!form.routeName.trim()) return 'Route name is required';
+
     if (!form.startPointName.trim()) return 'Start point name is required';
     if (!form.startPointMapUrl.trim()) return 'Start point map url is required';
     if (!form.endPointName.trim()) return 'End point name is required';
@@ -382,8 +378,27 @@ const loadRoutes = useCallback(async () => {
         if (!s?.mapUrl?.trim()) return `Stop #${i + 1} map url is required`;
       }
     }
-
     return null;
+  };
+
+  const createStopagesForStops = async (stops: IStop[]) => {
+    const ids: string[] = [];
+
+    for (const s of stops) {
+      const name = s.name.trim();
+      if (!name) continue;
+
+      const json = await apiFetch<ApiResponse<{ _id: string; name: string }>>(
+        API.createStopage,
+        { method: 'POST', body: JSON.stringify({ name }) },
+        accessToken
+      );
+
+      const createdId = json?.data?._id;
+      if (createdId) ids.push(createdId);
+    }
+
+    return ids;
   };
 
   const saveRoute = async (e: React.FormEvent) => {
@@ -392,20 +407,19 @@ const loadRoutes = useCallback(async () => {
     const msg = validate();
     if (msg) return toast.error(msg);
 
-    const payload = {
-      routeName: form.routeName.trim(),
-      startPointName: form.startPointName.trim(),
-      startPointMapUrl: form.startPointMapUrl.trim(),
-      endPointName: form.endPointName.trim(),
-      endPointMapUrl: form.endPointMapUrl.trim(),
-      stops: (form.stops || []).map((s) => ({
-        name: s.name.trim(),
-        mapUrl: s.mapUrl.trim(),
-      })),
-    };
-
     try {
       toast.message('Saving route...');
+
+      const stopages = await createStopagesForStops(form.stops || []);
+
+      const route_id = `R-${Date.now()}`;
+
+      const payload = {
+        name: form.routeName.trim(),
+        route_id,
+        isActive: true,
+        stopages,
+      };
 
       if (modalType === 'edit' && selectedId) {
         const json = await apiFetch<ApiResponse<RawRoute>>(
@@ -415,7 +429,16 @@ const loadRoutes = useCallback(async () => {
         );
 
         const updated = normalizeRoute(json.data || {});
-        setRoutes((prev) => prev.map((x) => (x.id === selectedId ? updated : x)));
+        const merged: IRoute = {
+          ...updated,
+          startPointName: form.startPointName.trim(),
+          startPointMapUrl: form.startPointMapUrl.trim(),
+          endPointName: form.endPointName.trim(),
+          endPointMapUrl: form.endPointMapUrl.trim(),
+          stops: (form.stops || []).map((s) => ({ name: s.name.trim(), mapUrl: s.mapUrl.trim() })),
+        };
+
+        setRoutes((prev) => prev.map((x) => (x.id === selectedId ? merged : x)));
         toast.success('Route updated');
       } else {
         const json = await apiFetch<ApiResponse<RawRoute>>(
@@ -425,7 +448,16 @@ const loadRoutes = useCallback(async () => {
         );
 
         const created = normalizeRoute(json.data || {});
-        setRoutes((prev) => [created, ...prev]);
+        const merged: IRoute = {
+          ...created,
+          startPointName: form.startPointName.trim(),
+          startPointMapUrl: form.startPointMapUrl.trim(),
+          endPointName: form.endPointName.trim(),
+          endPointMapUrl: form.endPointMapUrl.trim(),
+          stops: (form.stops || []).map((s) => ({ name: s.name.trim(), mapUrl: s.mapUrl.trim() })),
+        };
+
+        setRoutes((prev) => [merged, ...prev]);
         toast.success('Route created');
       }
 
@@ -483,16 +515,33 @@ const loadRoutes = useCallback(async () => {
                 CAMPUS<span className="text-white/70">CONNECT</span>
               </h1>
               <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-sm font-bold italic opacity-70">
-                    {admin.role?.toUpperCase()}
-                  </span>
+                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
+                  {profilePhoto ? (
+                    <img
+                      src={profilePhoto}
+                      alt={displayName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-3xl font-black italic text-white/80">
+                      {initial}
+                    </span>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md">
+
+                <Link
+                  href="/dashboard/editProfile"
+                  title="Edit Profile"
+                  className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md hover:scale-105 transition-transform"
+                >
                   <MdEdit size={12} />
-                </button>
+                </Link>
               </div>
-              <h2 className="font-bold text-base uppercase tracking-widest">{admin.name}</h2>
+
+              <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
+                {displayName}
+              </h2>
+
             </div>
 
             <nav className="flex-1 mt-4 px-4 space-y-1">
@@ -502,9 +551,7 @@ const loadRoutes = useCallback(async () => {
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
-                    pathname === item.href
-                      ? 'bg-white text-[#E31E24] shadow-md'
-                      : 'hover:bg-white/10 text-white/90'
+                    pathname === item.href ? 'bg-white text-[#E31E24] shadow-md' : 'hover:bg-white/10 text-white/90'
                   }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
@@ -530,9 +577,7 @@ const loadRoutes = useCallback(async () => {
           {/* header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
             <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
-                Route Management
-              </h1>
+              <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Route Management</h1>
               <p className="text-gray-500 text-sm font-medium">
                 Create and manage routes. These routes can be assigned to buses.
               </p>
@@ -540,10 +585,7 @@ const loadRoutes = useCallback(async () => {
 
             <div className="flex items-center gap-3 w-full md:w-auto">
               <div className="relative w-full md:w-80">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
@@ -575,8 +617,7 @@ const loadRoutes = useCallback(async () => {
                 <MdMap className="text-[#E31E24]" /> Routes List
               </h3>
               <div className="text-xs font-black text-gray-400">
-                Total:{' '}
-                <span className="text-gray-700">{loading ? '...' : filteredRoutes.length}</span>
+                Total: <span className="text-gray-700">{loading ? '...' : filteredRoutes.length}</span>
               </div>
             </div>
 
@@ -589,9 +630,7 @@ const loadRoutes = useCallback(async () => {
                     <RouteIcon className="text-[#E31E24]" />
                   </div>
                   <h4 className="mt-4 font-black text-gray-900">No routes found</h4>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Add a route to make it available for bus assignment.
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">Add a route to make it available for bus assignment.</p>
                 </div>
               ) : (
                 <table className="w-full text-left border-collapse">
@@ -606,10 +645,7 @@ const loadRoutes = useCallback(async () => {
                   </thead>
                   <tbody className="text-sm">
                     {filteredRoutes.map((r) => (
-                      <tr
-                        key={r.id}
-                        className="border-b border-gray-50 hover:bg-red-50/30 transition-colors"
-                      >
+                      <tr key={r.id} className="border-b border-gray-50 hover:bg-red-50/30 transition-colors">
                         <td className="py-4">
                           <div className="font-black text-gray-900">{r.routeName}</div>
                           <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
@@ -621,7 +657,7 @@ const loadRoutes = useCallback(async () => {
                         <td className="py-4 text-xs text-gray-700">
                           <div className="font-black flex items-center gap-2">
                             <MapPin size={14} className="text-[#E31E24]" />
-                            {r.startPointName}
+                            {r.startPointName || '—'}
                             {r.startPointMapUrl ? (
                               <button
                                 type="button"
@@ -634,7 +670,7 @@ const loadRoutes = useCallback(async () => {
                           </div>
                           <div className="mt-2 font-black flex items-center gap-2">
                             <MapPin size={14} className="text-blue-600" />
-                            {r.endPointName}
+                            {r.endPointName || '—'}
                             {r.endPointMapUrl ? (
                               <button
                                 type="button"
@@ -666,9 +702,7 @@ const loadRoutes = useCallback(async () => {
                                 </div>
                               ))}
                               {r.stops.length > 3 ? (
-                                <div className="text-[11px] font-black text-gray-400">
-                                  +{r.stops.length - 3} more...
-                                </div>
+                                <div className="text-[11px] font-black text-gray-400">+{r.stops.length - 3} more...</div>
                               ) : null}
                             </div>
                           ) : (
@@ -724,9 +758,7 @@ const loadRoutes = useCallback(async () => {
               <form onSubmit={saveRoute} className="p-8 space-y-6">
                 {/* route name */}
                 <div>
-                  <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                    Route Name
-                  </label>
+                  <label className="text-xs font-black uppercase text-gray-500 mb-1 block">Route Name</label>
                   <input
                     value={form.routeName}
                     onChange={(e) => setForm((p) => ({ ...p, routeName: e.target.value }))}
@@ -742,16 +774,12 @@ const loadRoutes = useCallback(async () => {
                       <MapPin size={16} className="text-[#E31E24]" />
                       Start & End Points
                     </div>
-                    <div className="text-[11px] text-gray-500 font-bold">
-                      Must include Google Maps URLs
-                    </div>
+                    <div className="text-[11px] text-gray-500 font-bold">Must include Google Maps URLs</div>
                   </div>
 
                   <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                        Start Point Name
-                      </label>
+                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">Start Point Name</label>
                       <input
                         value={form.startPointName}
                         onChange={(e) => setForm((p) => ({ ...p, startPointName: e.target.value }))}
@@ -761,23 +789,17 @@ const loadRoutes = useCallback(async () => {
                     </div>
 
                     <div>
-                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                        Start Point Map URL
-                      </label>
+                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">Start Point Map URL</label>
                       <input
                         value={form.startPointMapUrl}
-                        onChange={(e) =>
-                          setForm((p) => ({ ...p, startPointMapUrl: e.target.value }))
-                        }
+                        onChange={(e) => setForm((p) => ({ ...p, startPointMapUrl: e.target.value }))}
                         placeholder="https://maps.google.com/..."
                         className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                        End Point Name
-                      </label>
+                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">End Point Name</label>
                       <input
                         value={form.endPointName}
                         onChange={(e) => setForm((p) => ({ ...p, endPointName: e.target.value }))}
@@ -787,9 +809,7 @@ const loadRoutes = useCallback(async () => {
                     </div>
 
                     <div>
-                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                        End Point Map URL
-                      </label>
+                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">End Point Map URL</label>
                       <input
                         value={form.endPointMapUrl}
                         onChange={(e) => setForm((p) => ({ ...p, endPointMapUrl: e.target.value }))}
@@ -853,10 +873,7 @@ const loadRoutes = useCallback(async () => {
                       Array.from({ length: stopCount }).map((_, idx) => {
                         const stop = form.stops?.[idx] || { name: '', mapUrl: '' };
                         return (
-                          <div
-                            key={`stop-${idx}`}
-                            className="rounded-2xl border border-gray-200 p-4"
-                          >
+                          <div key={`stop-${idx}`} className="rounded-2xl border border-gray-200 p-4">
                             <div className="flex items-center justify-between gap-2">
                               <div className="font-black text-gray-900">Stop #{idx + 1}</div>
                               <button
@@ -871,9 +888,7 @@ const loadRoutes = useCallback(async () => {
 
                             <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div>
-                                <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                                  Stop Name
-                                </label>
+                                <label className="text-xs font-black uppercase text-gray-500 mb-1 block">Stop Name</label>
                                 <input
                                   value={stop.name}
                                   onChange={(e) => updateStop(idx, 'name', e.target.value)}
@@ -917,6 +932,11 @@ const loadRoutes = useCallback(async () => {
                     <Save size={18} />
                     {modalType === 'add' ? 'Save Route' : 'Save Changes'}
                   </button>
+                </div>
+
+                <div className="text-[11px] text-gray-400 font-bold">
+                  Note: Your backend currently stores only route name + stop names (as stopages). Map URLs and start/end
+                  URLs are kept only in UI for now.
                 </div>
               </form>
             </motion.div>

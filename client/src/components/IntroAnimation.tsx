@@ -111,7 +111,7 @@ const IntroAnimation: React.FC = () => {
         >
           Welcome to{' '}
           <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 to-red-600 drop-shadow-lg">
-            Campus Connect
+            BU Trace
           </span>
         </motion.h1>
 
