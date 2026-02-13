@@ -15,7 +15,6 @@ import {
   MdMenu,
   MdClose,
   MdEdit,
-  MdHome,
   MdSettings,
   MdDirectionsCar,
   MdPerson,
@@ -85,37 +84,38 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-brick-900 font-sans relative overflow-hidden">
-      {/* Premium Mobile Menu Trigger (Floating Glass) */}
-      <motion.button
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden fixed bottom-8 right-8 z-70 p-6 bg-brick-500 text-white rounded-full shadow-[0_0_50px_rgba(155,17,30,0.5)] border border-white/20 backdrop-blur-md"
-      >
-        <AnimatePresence mode="wait">
-          {isOpen ? (
-            <motion.div
-              key="close"
-              initial={{ rotate: -90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: 90, opacity: 0 }}
-            >
-              <MdClose size={32} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="menu"
-              initial={{ rotate: 90, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              exit={{ rotate: -90, opacity: 0 }}
-            >
-              <MdMenu size={32} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
+      {/* Mobile Menu Triggers (Hamburger Left, Close Right) */}
+      <AnimatePresence>
+        {!isOpen && (
+          <motion.button
+            key="hamburger"
+            initial={{ opacity: 0, scale: 0.8, x: -20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.8, x: -20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsOpen(true)}
+            className="lg:hidden fixed top-8 left-6 z-100 text-brick-600 rounded-2xl shadow-2xl border p-2.5 border-white/20 backdrop-blur-md"
+          >
+            <MdMenu size={24} />
+          </motion.button>
+        )}
+
+        {isOpen && (
+          <motion.button
+            key="close"
+            initial={{ opacity: 0, scale: 0.8, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.8, x: 20 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsOpen(false)}
+            className="lg:hidden fixed top-8 right-6 z-100 text-brick-600 rounded-2xl shadow-2xl border p-2.5 border-white/20 backdrop-blur-md"
+          >
+            <MdClose size={24} />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Sidebar Overlay (Mobile) */}
       <AnimatePresence>
@@ -148,8 +148,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Sidebar Branding / Header */}
             <div className="p-8 flex flex-col items-center border-b border-white/5">
               <Link href="/" className="flex items-center gap-3 mb-8 group">
-                <div className="w-10 h-10 bg-brick-500 rounded-xl flex items-center justify-center shadow-lg group-hover:rotate-6 transition-transform">
-                  <MdHome className="text-white text-2xl" />
+                <div className="w-10 h-10 group-hover:rotate-6 transition-transform overflow-hidden flex items-center justify-center">
+                  <Image
+                    src="/static/logo.png"
+                    alt="BU Trace Logo"
+                    width={40}
+                    height={40}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <h1 className="text-xl font-black tracking-tighter italic">
                   BU<span className="text-brick-400">TRACE</span>
@@ -250,7 +256,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         {/* Top Header */}
-        <header className="h-28 flex items-center justify-between px-8 bg-white/5 backdrop-blur-2xl border-b border-white/10 z-30 shrink-0">
+        <header className="h-28 flex items-center justify-between pl-20 lg:px-8 bg-white/5 backdrop-blur-2xl border-b border-white/10 z-30 shrink-0">
           <div>
             <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">
               {menuItems.find((item) => item.href === pathname)?.label || 'Dashboard'}

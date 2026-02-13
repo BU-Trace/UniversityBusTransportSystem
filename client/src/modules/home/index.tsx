@@ -1,14 +1,15 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bus, Users, MapPin, Clock, ArrowUpRight, Waves, RefreshCcw } from 'lucide-react';
+import { Bus, Users, MapPin, Clock, ArrowUpRight, RefreshCcw } from 'lucide-react';
 import StatCard from './StatCard';
 import LiveBusSection from './LiveBusSection';
 import { SchedulesSection } from '@/components/transport/SchedulesSection';
 import { RoutesSection } from '@/components/transport/RoutesSection';
 import { BusesSection } from '@/components/transport/BusesSection';
 import { BottomNav } from '@/components/transport/BottomNav';
+import LuxuryFlipClock from '@/components/common/LuxuryFlipClock';
+import LocationDisplay from '@/components/common/LocationDisplay';
 
 const HomePageComponent: React.FC = () => {
   const featureHighlights = [
@@ -63,27 +64,17 @@ const HomePageComponent: React.FC = () => {
       </div>
 
       {/* Hero Banner */}
+      {/* Redesigned Hero: Luxury Timepiece & Location */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1 }}
-        className="relative w-full h-[380px] md:h-[450px] lg:h-[500px] mt-16 order-1 lg:order-1 overflow-hidden shadow-xl  "
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.5 }}
+        className="relative w-full mt-16 z-10 flex flex-col items-center"
       >
-        <Image
-          src="/static/loginpagebanner.png"
-          alt="Campus Banner"
-          width={1600}
-          height={700}
-          className="w-full h-full object-cover"
-          priority
-        />
-        <div className="absolute inset-0 bg-red-900/20 flex flex-col items-center justify-center p-4 backdrop-blur-[2px]">
-          <h3 className="text-5xl md:text-6xl font-extrabold text-white text-center uppercase tracking-wider drop-shadow-lg">
-            Campus Connect
-          </h3>
-          <p className="mt-4 text-xl text-white font-medium italic flex items-center gap-2">
-            <Waves className="w-6 h-6" /> Real-time Bus Tracking Simplified
-          </p>
+        <LuxuryFlipClock />
+
+        <div className="w-full px-4 md:px-12 lg:px-20 -mt-8">
+          <LocationDisplay />
         </div>
       </motion.div>
 

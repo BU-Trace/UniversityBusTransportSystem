@@ -10,7 +10,7 @@ import { MdAccessTime, MdCalendarToday, MdPublic, MdDirectionsBus } from 'react-
  */
 const FlipCard = ({ value }: { value: string }) => {
   return (
-    <div className="relative w-16 h-28 lg:w-24 lg:h-36 bg-[#0a0f25] rounded-2xl lg:rounded-4xl border border-white/10 overflow-hidden shadow-2xl">
+    <div className="relative w-10 h-16 lg:w-24 lg:h-36 bg-[#0a0f25] rounded-lg lg:rounded-4xl border border-white/10 overflow-hidden shadow-2xl">
       <AnimatePresence mode="popLayout">
         <motion.div
           key={value}
@@ -20,7 +20,7 @@ const FlipCard = ({ value }: { value: string }) => {
           transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <span className="text-4xl lg:text-7xl font-black text-brick-400 tracking-tighter">
+          <span className="text-xl lg:text-7xl font-black text-brick-400 tracking-tighter">
             {value}
           </span>
         </motion.div>
@@ -38,7 +38,7 @@ const FlipCard = ({ value }: { value: string }) => {
 const RotatingDigit = ({ value, label }: { value: string | number; label?: string }) => {
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-24 h-24 lg:w-40 lg:h-40 flex items-center justify-center">
+      <div className="relative w-16 h-16 lg:w-40 lg:h-40 flex items-center justify-center">
         {/* Gear/Radial pattern background */}
         <div className="absolute inset-0 border-2 border-dashed border-white/5 rounded-full animate-[spin_20s_linear_infinite]" />
 
@@ -49,7 +49,7 @@ const RotatingDigit = ({ value, label }: { value: string | number; label?: strin
             animate={{ rotate: 0, opacity: 1, scale: 1 }}
             exit={{ rotate: 180, opacity: 0, scale: 0.5 }}
             transition={{ type: 'spring', damping: 15, stiffness: 100 }}
-            className="text-5xl lg:text-8xl font-black text-white tracking-tighter z-10"
+            className="text-2xl lg:text-8xl font-black text-white tracking-tighter z-10"
           >
             {value}
           </motion.div>
@@ -222,15 +222,15 @@ const DashboardWatch = ({ activeSessions = [] }: { activeSessions?: UserSession[
           </div>
 
           {/* Center Section: The Full-Width Bold Time Display */}
-          <div className="flex flex-col md:flex-row items-center gap-8   ">
+          <div className="flex flex-row items-center gap-2 lg:gap-8">
             {/* Hours - Rotating Wrap */}
             <RotatingDigit value={hours} label="Hours" />
 
             {/* Separator */}
-            <div className="hidden md:flex flex-col gap-4">
-              <div className="w-3 h-3 rounded-full bg-brick-500 shadow-[0_0_15px_#ef4444]" />
-              <div className="w-3 h-3 rounded-full bg-brick-500/20" />
-              <div className="w-3 h-3 rounded-full bg-brick-500 shadow-[0_0_15px_#ef4444]" />
+            <div className="flex flex-col gap-2 lg:gap-4">
+              <div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-brick-500 shadow-[0_0_15px_#ef4444]" />
+              <div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-brick-500/20" />
+              <div className="w-1.5 h-1.5 lg:w-3 lg:h-3 rounded-full bg-brick-500 shadow-[0_0_15px_#ef4444]" />
             </div>
 
             {/* Minutes - Rotating Wrap */}
@@ -242,9 +242,9 @@ const DashboardWatch = ({ activeSessions = [] }: { activeSessions?: UserSession[
                 <FlipCard value={seconds.length === 1 ? '0' : seconds[0]} />
                 <FlipCard value={seconds.length === 1 ? seconds[0] : seconds[1]} />
               </div>
-              <span className="mt-6 text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
+              <span className="mt-4 lg:mt-6 text-[8px] lg:text-[10px] font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
                 <MdPublic size={14} className="animate-spin-slow" />
-                {ampm} Real-time
+                {ampm}
               </span>
             </div>
           </div>
