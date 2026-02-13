@@ -3,6 +3,43 @@ import mongoose from 'mongoose';
 import Notice from './notice.model';
 import { INotice, NoticeType, NoticePriority, NoticeStatus } from './notice.interface';
 import { broadcastNotice, addSseClient, removeSseClient } from './notice.sse';
+import webpush from 'web-push';
+import config from '../../config';
+import { PushService } from '../Push/push.service';
+
+// Configure web-push with VAPID keys
+if (config.vapid.public_key && config.vapid.private_key) {
+  webpush.setVapidDetails(
+    config.vapid.email || 'mailto:mimam22.cse@bu.ac.bd',
+    config.vapid.public_key,
+    config.vapid.private_key
+  );
+}
+
+const sendPushNotification = async (notice: any) => {
+  const subscriptions = await PushService.getAllSubscriptions();
+  const notificationPayload = JSON.stringify({
+    title: notice.title,
+    body: notice.type === 'text' ? notice.body : 'A new PDF notice is available.',
+    icon: '/static/logo.png',
+    data: {
+      url: '/dashboard/notice',
+      id: notice._id,
+    },
+  });
+
+  const pushPromises = subscriptions.map((sub) =>
+    webpush.sendNotification(sub.subscription as any, notificationPayload).catch((err: any) => {
+      console.error('Error sending push notification:', err);
+      if (err.statusCode === 410 || err.statusCode === 404) {
+        // Subscription has expired or is no longer valid
+        PushService.unsubscribe(sub.subscription.endpoint);
+      }
+    })
+  );
+
+  await Promise.all(pushPromises);
+};
 
 type CreateNoticeBody = {
   title: string;
@@ -127,6 +164,8 @@ export const createNotice: RequestHandler<{}, unknown, CreateNoticeBody> = async
       publishedAt: created.publishedAt,
       isPublished: created.isPublished,
     });
+    // Trigger Push Notification
+    sendPushNotification(created);
   }
 
   return res.status(201).json({ success: true, message: 'Notice created', data: created });
@@ -202,6 +241,8 @@ export const publishOrUpdateNotice: RequestHandler<
       publishedAt: updated.publishedAt,
       isPublished: updated.isPublished,
     });
+    // Trigger Push Notification
+    sendPushNotification(updated);
   }
 
   return res.json({ success: true, message: 'Notice updated', data: updated });

@@ -17,14 +17,20 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Request interceptor: Attach token dynamically from session
-api.interceptors.request.use((config) => {
+import { getSession } from 'next-auth/react';
+import type { InternalAxiosRequestConfig } from 'axios';
+
+interface CustomSession {
+  user?: { accessToken?: string };
+  accessToken?: string;
+}
+
+// Request interceptor: Attach token dynamically from next-auth session
+api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (typeof window !== 'undefined') {
-    // Note: getSession is async, but interceptors must be sync.
-    // So, token must be set outside or use a sync storage (e.g. localStorage).
-    // If you need to use getSession, consider using an interceptor with Promise support or set token before requests.
-    // For now, fallback to localStorage or cookie if available.
-    const token = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : undefined;
+    const session = (await getSession()) as CustomSession | null;
+    const token = session?.user?.accessToken || session?.accessToken || localStorage.getItem('accessToken');
+    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -32,15 +38,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Response interceptor: Global error handling
 api.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    // Only toast on the client side
     if (typeof window !== 'undefined') {
       const message = getErrorMessage(error);
 
-      // Auto-refresh logic (401)
       const err = error as { response?: { status?: number } };
       if (err.response?.status === 401) {
         // Optionally toast 'Session expired, refreshing...' or similar

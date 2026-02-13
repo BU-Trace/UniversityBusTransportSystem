@@ -41,8 +41,10 @@ interface AuthUser extends User {
 }
 
 function toUserRole(role: string | null | undefined): UserRole | null {
-  if (role === 'driver' || role === 'admin' || role === 'superadmin') {
-    return role;
+  if (!role) return null;
+  const normalized = role.toLowerCase();
+  if (normalized === 'driver' || normalized === 'admin' || normalized === 'superadmin') {
+    return normalized as UserRole;
   }
   return null;
 }
@@ -147,7 +149,7 @@ export const authOptions: NextAuthOptions = {
           id: decoded.userId ?? decoded.sub ?? credentials.email,
           email: decoded.email ?? credentials.email,
           name: decoded.name ?? credentials.email,
-          role: toUserRole(decoded.role) ?? decoded.role ?? undefined,
+          role: toUserRole(decoded.role) || decoded.role?.toLowerCase() || undefined,
 
           accessToken: data.data.accessToken,
           refreshToken: data.data.refreshToken,

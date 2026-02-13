@@ -149,7 +149,7 @@ const TransportFab: React.FC = () => {
               </div>
 
               {/* Content Area */}
-              <div className="flex-1 overflow-hidden relative min-h-0">
+              <div className="flex-1 overflow-y-auto relative min-h-0 custom-scrollbar p-6 pt-2">
                 <AnimatePresence mode="wait">
                   {activeTab === 'tracker' && (
                     <motion.div

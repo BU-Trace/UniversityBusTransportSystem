@@ -38,4 +38,9 @@ export default {
     failed_url: process.env.FAILED_URL,
     cancel_url: process.env.CANCEL_URL,
   },
+  vapid: {
+    public_key: process.env.VAPID_PUBLIC_KEY,
+    private_key: process.env.VAPID_PRIVATE_KEY,
+    email: process.env.VAPID_EMAIL,
+  },
 };

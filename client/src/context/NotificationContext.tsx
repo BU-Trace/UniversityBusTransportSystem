@@ -144,6 +144,84 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   }, [fetchInitialNotices]);
 
+  // Web Push and Permissions Logic
+  useEffect(() => {
+    if (
+      typeof window === 'undefined' ||
+      !('serviceWorker' in navigator) ||
+      !('PushManager' in window)
+    ) {
+      return;
+    }
+
+    const initPush = async () => {
+      try {
+        // 1. Request Geolocation permission proactively
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            () => console.log('Location permission granted'),
+            () => console.log('Location permission denied'),
+            { timeout: 10000 }
+          );
+        }
+
+        // 2. Register Service Worker
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        console.log('SW Registered:', registration);
+
+        // 3. Request Notification permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          console.warn('Notification permission not granted');
+          return;
+        }
+
+        // 4. Fetch VAPID Public Key
+        const keyRes = await publicApi.get<{ success: boolean; data: string }>('/push/public-key');
+        if (!keyRes.data.success) return;
+        const vapidPublicKey = keyRes.data.data;
+
+        // 5. Subscribe to Push
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        });
+
+        // 6. Send to Server (using authenticated api if available, otherwise public)
+        // Note: The middleware requires auth, so we should attempt with authenticated 'api'
+        // If not logged in, we can't save the subscription yet (middleware blocks it)
+        try {
+          const { api } = await import('@/lib/axios');
+          await api.post('/push/subscribe', {
+            subscription,
+            deviceInfo: navigator.userAgent,
+          });
+          console.log('Push subscription saved to server');
+        } catch {
+          // If 401, it just means they are guest for now.
+          // We could potentially allow guest subscriptions if we update the route middleware.
+          console.log('Auth required for push subscription sync. Skipping for guest.');
+        }
+      } catch (err) {
+        console.error('Error initializing Web Push:', err);
+      }
+    };
+
+    initPush();
+  }, []);
+
+  // Utility: Convert VAPID key
+  function urlBase64ToUint8Array(base64String: string) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+      outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+  }
+
   // Derived state for the UI
   const processedNotices = useMemo(() => {
     return notices

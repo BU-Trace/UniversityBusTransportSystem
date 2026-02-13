@@ -67,7 +67,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       { label: 'Profile', href: '/dashboard/editProfile', icon: MdPerson },
     ];
 
-    if (role === 'admin' || role === 'superadmin') return adminItems;
+    const normalizedRole = role?.toLowerCase();
+    if (normalizedRole === 'admin' || normalizedRole === 'superadmin') return adminItems;
     if (role === 'driver') return driverItems;
     return studentItems;
   }, [role]);
@@ -214,10 +215,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                     }
                   `}
                 >
-                  <item.icon
-                    size={22}
-                    className={`transition-colors ${pathname === item.href ? 'text-white' : 'text-brick-500/70 group-hover:text-brick-400'}`}
-                  />
+                  <div className="relative">
+                    <item.icon
+                      size={22}
+                      className={`transition-colors ${pathname === item.href ? 'text-white' : 'text-brick-500/70 group-hover:text-brick-400'}`}
+                    />
+                    {pathname === item.href && (
+                      <motion.div
+                        layoutId="sidebar-accent"
+                        className="absolute -left-7 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-white rounded-full shadow-[0_0_15px_rgba(255,255,255,0.4)]"
+                      />
+                    )}
+                  </div>
                   <span className="text-sm tracking-wide">{item.label}</span>
                   {pathname === item.href && (
                     <motion.div
@@ -256,14 +265,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden relative">
         {/* Top Header */}
-        <header className="h-28 flex items-center justify-between pl-20 lg:px-8 bg-white/5 backdrop-blur-2xl border-b border-white/10 z-30 shrink-0">
-          <div>
-            <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter">
-              {menuItems.find((item) => item.href === pathname)?.label || 'Dashboard'}
-            </h2>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mt-1">
-              BU Trace - University Bus Transport System
-            </p>
+        <header className="h-24 md:h-28 flex items-center justify-between px-4 lg:px-8 bg-white/5 backdrop-blur-2xl border-b border-white/10 z-30 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="lg:hidden w-14" /> {/* Space for mobile menu button */}
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="w-1.5 h-10 bg-brick-500 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all duration-300" />
+              <div>
+                <h2 className="text-lg md:text-2xl font-black text-white italic uppercase tracking-tighter">
+                  {menuItems.find((item) => item.href === pathname)?.label || 'Dashboard'}
+                </h2>
+                <p className="hidden sm:block text-[9px] md:text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em] mt-1">
+                  BU Trace - University Bus Transport System
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-6">

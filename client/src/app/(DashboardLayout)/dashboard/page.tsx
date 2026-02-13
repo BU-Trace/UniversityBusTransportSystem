@@ -13,9 +13,10 @@ import {
   MdSettingsEthernet,
   MdWifi,
   MdMemory,
-  MdRefresh,
   MdList,
+  MdRefresh,
 } from 'react-icons/md';
+import { RefreshCcw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
 import {
@@ -112,8 +113,14 @@ const MergedDashboard = () => {
       toast.error('Could not connect to server');
     } finally {
       setLoading(false);
+      setLastSync(new Date().toLocaleTimeString());
     }
   }, [session]);
+
+  const handleManualRefresh = async () => {
+    await fetchStats();
+    toast.success('Dashboard data synchronized.');
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -297,12 +304,10 @@ const MergedDashboard = () => {
         </motion.div>
 
         <button
-          onClick={fetchStats}
-          className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-xs uppercase tracking-widest border border-white/10 transition-all flex items-center gap-2"
+          onClick={handleManualRefresh}
+          className="px-6 py-3 bg-white/5 hover:bg-brick-500/10 text-white rounded-2xl font-bold text-xs uppercase tracking-widest border border-white/10 transition-all flex items-center gap-3 shadow-xl hover:shadow-brick-500/5 hover:border-brick-500/30"
         >
-          <div className={loading ? 'animate-spin' : ''}>
-            <MdBarChart />
-          </div>
+          <RefreshCcw className={`w-4 h-4 text-brick-400 ${loading ? 'animate-spin' : ''}`} />
           Refresh Data
         </button>
       </div>

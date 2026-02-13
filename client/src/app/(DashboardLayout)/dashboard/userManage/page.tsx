@@ -582,7 +582,7 @@ export default function UserManagementPage() {
       <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-2 mb-8 flex flex-wrap gap-2 shadow-2xl">
         {[
           { id: 'driver', label: 'Drivers', icon: Bus },
-          ...(session?.user?.role === 'superadmin'
+          ...(session?.user?.role?.toLowerCase() === 'superadmin'
             ? [{ id: 'admin', label: 'Admins', icon: ShieldCheck }]
             : []),
         ].map((tab) => (
@@ -630,10 +630,12 @@ export default function UserManagementPage() {
               <thead>
                 <tr className="text-xs font-black text-gray-500 uppercase tracking-[0.3em] border-b border-white/5">
                   <th className="pb-8 pl-8">Photo</th>
-                  <th className="pb-8">Name</th>
-                  <th className="pb-8">Email</th>
-                  <th className="pb-8">Role Details</th>
-                  {activeTab === 'driver' && <th className="pb-8">Assigned Bus</th>}
+                  <th className="pb-8 min-w-[150px]">Name</th>
+                  <th className="pb-8 hidden lg:table-cell">Email</th>
+                  <th className="pb-8 hidden sm:table-cell">Role Details</th>
+                  {activeTab === 'driver' && (
+                    <th className="pb-8 hidden xl:table-cell">Assigned Bus</th>
+                  )}
                   <th className="pb-8 text-right pr-8">Actions</th>
                 </tr>
               </thead>
@@ -665,10 +667,10 @@ export default function UserManagementPage() {
                         {u.name}
                       </div>
                     </td>
-                    <td className="py-8 font-medium text-gray-400 group-hover:text-gray-300 transition-colors uppercase text-xs tracking-wider">
+                    <td className="py-8 font-medium text-gray-400 group-hover:text-gray-300 transition-colors uppercase text-xs tracking-wider hidden lg:table-cell">
                       {u.email}
                     </td>
-                    <td className="py-8">
+                    <td className="py-8 hidden sm:table-cell">
                       {u.role === 'driver' && (
                         <div className="text-xs font-bold text-gray-300">
                           License:{' '}
@@ -682,22 +684,10 @@ export default function UserManagementPage() {
                           System Admin
                         </div>
                       )}
-
-                      {u.photoUrl && (
-                        <div className="mt-4 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={() => safeOpen(u.photoUrl)}
-                            className="inline-flex items-center gap-2 text-[10px] font-black px-4 py-2 rounded-[1.2rem] bg-white/5 text-gray-400 hover:bg-brick-500 hover:text-white transition-all border border-white/10 shadow-lg"
-                          >
-                            <Users size={12} /> View Zoom
-                          </button>
-                        </div>
-                      )}
                     </td>
 
                     {activeTab === 'driver' && (
-                      <td className="py-8">
+                      <td className="py-8 hidden xl:table-cell">
                         <span className="text-xs font-black text-brick-400 px-4 py-1.5 rounded-full bg-brick-500/10 border border-brick-500/30 shadow-inner">
                           {u.assignedBusName || 'Not Assigned'}
                         </span>
@@ -707,7 +697,8 @@ export default function UserManagementPage() {
                     <td className="py-8 text-right pr-8">
                       <div className="flex justify-end gap-3 transition-all duration-500">
                         {/* Only superadmin can edit/delete admins. Admins can manage drivers. */}
-                        {(session?.user?.role === 'superadmin' || u.role !== 'admin') && (
+                        {(session?.user?.role?.toLowerCase() === 'superadmin' ||
+                          u.role !== 'admin') && (
                           <>
                             <button
                               onClick={() => openEdit(u)}
@@ -777,7 +768,7 @@ export default function UserManagementPage() {
                     <option value="driver" className="bg-gray-900">
                       Driver
                     </option>
-                    {session?.user?.role === 'superadmin' && (
+                    {session?.user?.role?.toLowerCase() === 'superadmin' && (
                       <option value="admin" className="bg-gray-900">
                         Admin
                       </option>

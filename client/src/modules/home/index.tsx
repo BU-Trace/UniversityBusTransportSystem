@@ -1,7 +1,6 @@
-import Link from 'next/link';
 import React from 'react';
-import { motion } from 'framer-motion';
-import { Bus, Users, MapPin, Clock, ArrowUpRight, RefreshCcw } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bus, Users, MapPin, Clock, ArrowUpRight, Megaphone } from 'lucide-react';
 import StatCard from './StatCard';
 import LiveBusSection from './LiveBusSection';
 import { SchedulesSection } from '@/components/transport/SchedulesSection';
@@ -32,30 +31,56 @@ const HomePageComponent: React.FC = () => {
 
   const quickLinks = [
     {
-      title: 'Explore Routes',
-      href: '#routes',
-      description: 'Pickup points, destinations and coverage.',
-      icon: <MapPin className="w-5 h-5 text-red-600" />,
+      title: 'Live Bus Tracker',
+      description: 'View real-time bus locations.',
+      icon: <Bus className="w-5 h-5 text-red-600" />,
+      modal: {
+        title: 'Live Bus Tracking',
+        content:
+          'Stay updated with our real-time GPS tracking system. You can see almost exactly where our buses are and their estimated arrival times at each stop.',
+        cta: 'Open Tracker',
+        href: '#tracker',
+      },
     },
     {
       title: 'Check Schedules',
-      href: '#schedules',
       description: 'Sunday/Thursday departure plans.',
       icon: <Clock className="w-5 h-5 text-red-600" />,
+      modal: {
+        title: 'Bus Schedules',
+        content:
+          'Our buses operate on a strict schedule from Sunday to Thursday. Morning trips start from 7:00 AM and evening return trips begin from 4:30 PM.',
+        cta: 'View Timetable',
+        href: '#schedules',
+      },
     },
     {
-      title: 'Start Free Trial',
-      href: '/start_trial',
-      description: 'Test UBTS subscription options.',
-      icon: <RefreshCcw className="w-5 h-5 text-red-600" />,
+      title: 'Explore Routes',
+      description: 'Pickup points and destinations.',
+      icon: <MapPin className="w-5 h-5 text-red-600" />,
+      modal: {
+        title: 'Route Coverage',
+        content:
+          'We cover all major areas of Barishal city, including Nathullabad, Sadar Road, and Ruppatoli. Check our interactive map for all stoppages.',
+        cta: 'See All Routes',
+        href: '#routes',
+      },
     },
     {
-      title: 'Contact Operations',
-      href: '/contact',
-      description: 'Get support from the transport team.',
-      icon: <Users className="w-5 h-5 text-red-600" />,
+      title: 'Official Notices',
+      description: 'Latest campus transport updates.',
+      icon: <Megaphone className="w-5 h-5 text-red-600" />,
+      modal: {
+        title: 'Notice Board',
+        content:
+          'Find the latest announcements regarding bus maintenance, route changes, or holiday schedules directly from the transport office.',
+        cta: 'Read Notices',
+        href: '#notices',
+      },
     },
   ];
+
+  const [activeQuickLink, setActiveQuickLink] = React.useState<(typeof quickLinks)[0] | null>(null);
 
   return (
     <div className="relative min-h-screen bg-linear-to-br from-gray-900 via-[#1a0505] to-gray-900 overflow-hidden pb-24">
@@ -170,10 +195,10 @@ const HomePageComponent: React.FC = () => {
           className="grid order-5 lg:order-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
         >
           {quickLinks.map((link) => (
-            <Link
+            <div
               key={link.title}
-              href={link.href}
-              className="group rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-5 flex items-center justify-between gap-4 hover:-translate-y-1 hover:bg-white/15 transition-all duration-300 shadow-white/5"
+              onClick={() => setActiveQuickLink(link)}
+              className="group rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-5 flex items-center justify-between gap-4 hover:-translate-y-1 hover:bg-white/15 transition-all duration-300 shadow-white/5 cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-white/5 rounded-xl shadow-inner group-hover:scale-110 transition-transform">
@@ -187,7 +212,7 @@ const HomePageComponent: React.FC = () => {
                 </div>
               </div>
               <ArrowUpRight className="w-5 h-5 text-brick-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-            </Link>
+            </div>
           ))}
         </motion.div>
 
@@ -217,6 +242,52 @@ const HomePageComponent: React.FC = () => {
 
       {/* Bottom Navigation */}
       <BottomNav />
+
+      {/* Quick Link Detail Modal */}
+      <AnimatePresence>
+        {activeQuickLink && (
+          <div className="fixed inset-0 z-2000 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveQuickLink(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-[2.5rem] shadow-3xl overflow-hidden p-10"
+            >
+              <div className="w-16 h-16 bg-brick-500/10 rounded-3xl flex items-center justify-center text-brick-500 mb-8 border border-brick-500/20">
+                {activeQuickLink.icon}
+              </div>
+              <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-4">
+                {activeQuickLink.modal.title}
+              </h3>
+              <p className="text-gray-400 text-lg leading-relaxed mb-10 font-medium">
+                {activeQuickLink.modal.content}
+              </p>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setActiveQuickLink(null)}
+                  className="px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-widest text-gray-400 hover:text-white transition-colors"
+                >
+                  Close
+                </button>
+                <a
+                  href={activeQuickLink.modal.href}
+                  onClick={() => setActiveQuickLink(null)}
+                  className="flex-1 bg-brick-500 text-white px-8 py-5 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-xl shadow-brick-500/20 text-center flex items-center justify-center gap-2 border border-white/10"
+                >
+                  {activeQuickLink.modal.cta} <ArrowUpRight size={18} />
+                </a>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

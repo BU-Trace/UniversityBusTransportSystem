@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 import { useIntro } from '@/context/IntroContext';
-import { Menu, X, LayoutDashboard, LogOut, Home, Info, Mail } from 'lucide-react';
+import { Menu, X, LayoutDashboard, LogOut, Home, Info, Mail, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NextImage from '../common/NextImage';
 import logoImage from '../../../public/static/logo.png';
@@ -60,8 +60,8 @@ export default function Navbar() {
     const isHomeActive = href === '/' && pathName === '/';
 
     return isActive || isHomeActive
-      ? 'text-brick-500 font-bold border-l-4 border-brick-500 pl-3 py-2 bg-white/5'
-      : 'text-gray-300 hover:text-brick-400 hover:bg-white/5 py-2 pl-3';
+      ? 'relative text-brick-500 font-bold pl-8 py-3 bg-brick-500/5 flex items-center transition-all before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-1.5 before:h-8 before:bg-brick-500 before:rounded-r-full before:shadow-[4px_0_15px_rgba(239,68,68,0.3)]'
+      : 'relative text-gray-300 hover:text-brick-400 hover:bg-white/5 py-3 pl-8 flex items-center transition-all';
   };
 
   return (
@@ -250,8 +250,8 @@ export default function Navbar() {
                           </span>
                         </div>
                       </div>
-                      <X
-                        className={`w-4 h-4 text-gray-500 transition-transform ${mobileUserMenuOpen ? 'rotate-90' : ''}`}
+                      <ChevronDown
+                        className={`w-4 h-4 text-gray-500 transition-transform duration-300 ${mobileUserMenuOpen ? 'rotate-180' : ''}`}
                       />
                     </button>
 

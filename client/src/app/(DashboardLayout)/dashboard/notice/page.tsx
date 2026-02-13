@@ -174,9 +174,10 @@ export default function NoticeManagementPage() {
   const [totalCount, setTotalCount] = useState(0);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState<'add' | 'edit' | null>(null);
+  const [modalType, setModalType] = useState<'add' | 'edit' | 'view' | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [viewingNotice, setViewingNotice] = useState<INotice | null>(null);
 
   const [noticeType, setNoticeType] = useState<NoticeType>('text');
   const [priority, setPriority] = useState<NoticePriority>('medium');
@@ -266,6 +267,12 @@ export default function NoticeManagementPage() {
     setTitle(n.title);
     setBody(n.body || '');
     setFileUrl(n.fileUrl || '');
+    setIsModalOpen(true);
+  };
+
+  const openView = (n: INotice) => {
+    setViewingNotice(n);
+    setModalType('view');
     setIsModalOpen(true);
   };
 
@@ -420,10 +427,10 @@ export default function NoticeManagementPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="text-xs font-black text-gray-500 uppercase tracking-[0.3em] border-b border-white/5">
-                  <th className="pb-8">Information</th>
-                  <th className="pb-8">Status / Priority</th>
-                  <th className="pb-8">Type & Attachment</th>
-                  <th className="pb-8">Created At</th>
+                  <th className="pb-8 min-w-[200px]">Information</th>
+                  <th className="pb-8 hidden md:table-cell">Status / Priority</th>
+                  <th className="pb-8 hidden lg:table-cell">Type & Attachment</th>
+                  <th className="pb-8 hidden xl:table-cell">Created At</th>
                   <th className="pb-8 text-right">Actions</th>
                 </tr>
               </thead>
@@ -475,16 +482,24 @@ export default function NoticeManagementPage() {
                     </td>
 
                     <td className="py-8 text-right">
-                      <div className="flex justify-end gap-3 opacity-100 transition-all duration-500">
+                      <div className="flex justify-end gap-2 md:gap-3">
+                        <button
+                          onClick={() => openView(n)}
+                          className="p-3 md:p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
+                        >
+                          <Edit className="hidden group-hover:block" size={0} />{' '}
+                          {/* Spacer to fix lucide icon ref issue if any */}
+                          <Search size={18} />
+                        </button>
                         <button
                           onClick={() => openEdit(n)}
-                          className="p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
+                          className="p-3 md:p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
                         >
                           <Edit size={18} />
                         </button>
                         <button
                           onClick={() => openDeleteConfirm(n.id)}
-                          className="p-4 bg-white/5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
+                          className="p-3 md:p-4 bg-white/5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
                         >
                           <Trash2 size={18} />
                         </button>
@@ -533,180 +548,257 @@ export default function NoticeManagementPage() {
               className="bg-gray-900/90 backdrop-blur-3xl rounded-[3rem] shadow-3xl w-full max-w-3xl max-h-[90vh] overflow-y-auto border border-white/10 relative custom-scrollbar"
             >
               <HeaderModal
-                title={modalType === 'add' ? 'New Notice' : 'Update Notice'}
-                subtitle="Specify priority and publish now or save as draft."
+                title={
+                  modalType === 'view'
+                    ? 'View Notice'
+                    : modalType === 'add'
+                      ? 'New Notice'
+                      : 'Update Notice'
+                }
+                subtitle={
+                  modalType === 'view'
+                    ? 'Review full announcement details.'
+                    : 'Specify priority and publish now or save as draft.'
+                }
                 onClose={() => setIsModalOpen(false)}
               />
 
-              <div className="p-8 space-y-8">
-                {/* Notice header fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
-                      Notice Title
-                    </label>
-                    <input
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="e.g. Bus Schedule Update"
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white placeholder:text-gray-600 outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-bold"
-                    />
+              {modalType === 'view' && viewingNotice ? (
+                <div className="p-8 space-y-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-3xl font-black text-white italic tracking-tighter">
+                        {viewingNotice.title}
+                      </h3>
+                      <div className="flex gap-2">
+                        <StatusBadge status={viewingNotice.status} />
+                        <PriorityBadge priority={viewingNotice.priority} />
+                      </div>
+                    </div>
+                    <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                      Published on: {formatDate(viewingNotice.createdAt)}
+                    </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
-                      Type
-                    </label>
-                    <select
-                      value={noticeType}
-                      onChange={(e) => setNoticeType(e.target.value as NoticeType)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white outline-none focus:border-brick-500/50 transition-all font-bold appearance-none"
+                  <div className="p-8 bg-white/5 rounded-4xl border border-white/10">
+                    {viewingNotice.type === 'text' ? (
+                      <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-wrap font-medium">
+                        {viewingNotice.body}
+                      </p>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 gap-6">
+                        <FileText className="text-brick-500" size={64} />
+                        <div className="text-center">
+                          <h4 className="text-xl font-bold text-white mb-2 uppercase">
+                            PDF Document Attached
+                          </h4>
+                          <p className="text-gray-500 text-sm mb-8">
+                            This notice contains a PDF file for detailed information.
+                          </p>
+                          <button
+                            onClick={() => safeOpen(viewingNotice.fileUrl)}
+                            className="bg-brick-500 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-xl"
+                          >
+                            Open PDF File
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-4 flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="w-full py-5 rounded-3xl font-black text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all text-xs uppercase tracking-[0.3em]"
                     >
-                      <option value="text" className="bg-gray-900">
-                        Text Content
-                      </option>
-                      <option value="pdf" className="bg-gray-900">
-                        PDF Document
-                      </option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
-                      Priority Level
-                    </label>
-                    <div className="flex gap-2 p-2 bg-white/5 rounded-2xl border border-white/10">
-                      {(['low', 'medium', 'high'] as NoticePriority[]).map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setPriority(p)}
-                          className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            priority === p
-                              ? p === 'high'
-                                ? 'bg-red-500 text-white'
-                                : p === 'medium'
-                                  ? 'bg-orange-500 text-white'
-                                  : 'bg-gray-500 text-white'
-                              : 'text-gray-500 hover:bg-white/5'
-                          }`}
-                        >
-                          {p}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
-                      Quick Hints
-                    </label>
-                    <div className="flex items-center gap-3 p-5 bg-brick-500/10 rounded-2xl border border-brick-500/20 text-brick-400">
-                      <AlertCircle size={18} />
-                      <span className="text-[10px] font-bold uppercase">
-                        High priority sends push notification
-                      </span>
-                    </div>
+                      Close Viewer
+                    </button>
+                    {(session?.user?.role?.toLowerCase() === 'admin' ||
+                      session?.user?.role?.toLowerCase() === 'superadmin') && (
+                      <button
+                        type="button"
+                        onClick={() => openEdit(viewingNotice)}
+                        className="w-full py-5 rounded-3xl font-black text-white bg-brick-500 hover:bg-brick-600 transition-all text-xs uppercase tracking-[0.3em] border border-white/10"
+                      >
+                        Edit Notice
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                {noticeType === 'text' ? (
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
-                      Notice Body
-                    </label>
-                    <textarea
-                      value={body}
-                      onChange={(e) => setBody(e.target.value)}
-                      placeholder="Type your notice detail here..."
-                      rows={6}
-                      className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-white placeholder:text-gray-600 outline-none focus:border-brick-500/50 transition-all font-medium leading-relaxed"
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans flex items-center gap-2">
-                      PDF Attachment
-                    </label>
-
-                    <div
-                      className="relative group p-12 rounded-[2.5rem] border-2 border-dashed border-white/10 bg-white/5 transition-all hover:border-brick-500/50 flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
-                      onClick={() => !uploading && fileRef.current?.click()}
-                    >
-                      {uploading ? (
-                        <>
-                          <Loader className="animate-spin text-brick-500 mb-4" size={48} />
-                          <p className="text-white font-black uppercase tracking-widest text-xs">
-                            Uploading...
-                          </p>
-                        </>
-                      ) : fileUrl ? (
-                        <>
-                          <FileText className="text-green-400 mb-4" size={48} />
-                          <p className="text-white font-black mb-1 text-sm uppercase tracking-tighter line-clamp-1 px-4">
-                            {fileUrl.split('/').pop()}
-                          </p>
-                          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
-                            Click to replace
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <Upload
-                            className="text-gray-600 group-hover:text-brick-500 transition-colors mb-4"
-                            size={48}
-                          />
-                          <p className="text-white font-black uppercase tracking-widest text-xs mb-1">
-                            Upload PDF Document
-                          </p>
-                          <p className="text-gray-500 text-xs font-medium italic">Max size: 10MB</p>
-                        </>
-                      )}
+              ) : (
+                <div className="p-8 space-y-8">
+                  {/* Notice header fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
+                        Notice Title
+                      </label>
                       <input
-                        ref={fileRef}
-                        type="file"
-                        accept=".pdf"
-                        className="hidden"
-                        onChange={onFileChange}
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="e.g. Bus Schedule Update"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white placeholder:text-gray-600 outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-bold"
                       />
                     </div>
-                  </div>
-                )}
 
-                {/* actions */}
-                <div className="pt-4 flex gap-4 sticky bottom-0 bg-gray-900 pb-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-5 rounded-3xl font-black text-gray-500 hover:text-white hover:bg-white/5 transition-all text-xs uppercase tracking-[0.3em]"
-                  >
-                    Cancel
-                  </button>
-                  <div className="flex-2 flex gap-4">
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
+                        Type
+                      </label>
+                      <select
+                        value={noticeType}
+                        onChange={(e) => setNoticeType(e.target.value as NoticeType)}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-white outline-none focus:border-brick-500/50 transition-all font-bold appearance-none"
+                      >
+                        <option value="text" className="bg-gray-900">
+                          Text Content
+                        </option>
+                        <option value="pdf" className="bg-gray-900">
+                          PDF Document
+                        </option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
+                        Priority Level
+                      </label>
+                      <div className="flex gap-2 p-2 bg-white/5 rounded-2xl border border-white/10">
+                        {(['low', 'medium', 'high'] as NoticePriority[]).map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setPriority(p)}
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+                              priority === p
+                                ? p === 'high'
+                                  ? 'bg-red-500 text-white'
+                                  : p === 'medium'
+                                    ? 'bg-orange-500 text-white'
+                                    : 'bg-gray-500 text-white'
+                                : 'text-gray-500 hover:bg-white/5'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
+                        Quick Hints
+                      </label>
+                      <div className="flex items-center gap-3 p-5 bg-brick-500/10 rounded-2xl border border-brick-500/20 text-brick-400">
+                        <AlertCircle size={18} />
+                        <span className="text-[10px] font-bold uppercase">
+                          High priority sends push notification
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {noticeType === 'text' ? (
+                    <div className="space-y-3">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans">
+                        Notice Body
+                      </label>
+                      <textarea
+                        value={body}
+                        onChange={(e) => setBody(e.target.value)}
+                        placeholder="Type your notice detail here..."
+                        rows={6}
+                        className="w-full bg-white/5 border border-white/10 rounded-3xl p-6 text-white placeholder:text-gray-600 outline-none focus:border-brick-500/50 transition-all font-medium leading-relaxed"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 font-sans flex items-center gap-2">
+                        PDF Attachment
+                      </label>
+
+                      <div
+                        className="relative group p-12 rounded-[2.5rem] border-2 border-dashed border-white/10 bg-white/5 transition-all hover:border-brick-500/50 flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden"
+                        onClick={() => !uploading && fileRef.current?.click()}
+                      >
+                        {uploading ? (
+                          <>
+                            <Loader className="animate-spin text-brick-500 mb-4" size={48} />
+                            <p className="text-white font-black uppercase tracking-widest text-xs">
+                              Uploading...
+                            </p>
+                          </>
+                        ) : fileUrl ? (
+                          <>
+                            <FileText className="text-green-400 mb-4" size={48} />
+                            <p className="text-white font-black mb-1 text-sm uppercase tracking-tighter line-clamp-1 px-4">
+                              {fileUrl.split('/').pop()}
+                            </p>
+                            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em]">
+                              Click to replace
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <Upload
+                              className="text-gray-600 group-hover:text-brick-500 transition-colors mb-4"
+                              size={48}
+                            />
+                            <p className="text-white font-black uppercase tracking-widest text-xs mb-1">
+                              Upload PDF Document
+                            </p>
+                            <p className="text-gray-500 text-xs font-medium italic">
+                              Max size: 10MB
+                            </p>
+                          </>
+                        )}
+                        <input
+                          ref={fileRef}
+                          type="file"
+                          accept=".pdf"
+                          className="hidden"
+                          onChange={onFileChange}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* actions */}
+                  <div className="pt-4 flex gap-4 sticky bottom-0 bg-gray-900 pb-2">
                     <button
                       type="button"
-                      disabled={uploading}
-                      onClick={() => saveNotice('draft')}
-                      className="flex-1 py-5 rounded-3xl font-black text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center gap-3 text-xs uppercase tracking-[0.3em]"
+                      onClick={() => setIsModalOpen(false)}
+                      className="flex-1 py-5 rounded-3xl font-black text-gray-500 hover:text-white hover:bg-white/5 transition-all text-xs uppercase tracking-[0.3em]"
                     >
-                      <Save size={18} /> Draft
+                      Cancel
                     </button>
-                    <button
-                      type="button"
-                      disabled={uploading}
-                      onClick={() => saveNotice('published')}
-                      className="flex-1 py-5 rounded-3xl font-black text-white bg-brick-500 hover:bg-brick-600 shadow-2xl shadow-brick-500/30 transition-all flex justify-center items-center gap-3 text-xs uppercase tracking-[0.3em] border border-white/10"
-                    >
-                      {uploading ? (
-                        <Loader className="animate-spin" size={18} />
-                      ) : (
-                        <Megaphone size={18} />
-                      )}
-                      {modalType === 'add' ? 'Publish' : 'Save'}
-                    </button>
+                    <div className="flex-2 flex gap-4">
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        onClick={() => saveNotice('draft')}
+                        className="flex-1 py-5 rounded-3xl font-black text-white bg-white/5 border border-white/10 hover:bg-white/10 transition-all flex justify-center items-center gap-3 text-xs uppercase tracking-[0.3em]"
+                      >
+                        <Save size={18} /> Draft
+                      </button>
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        onClick={() => saveNotice('published')}
+                        className="flex-1 py-5 rounded-3xl font-black text-white bg-brick-500 hover:bg-brick-600 shadow-2xl shadow-brick-500/30 transition-all flex justify-center items-center gap-3 text-xs uppercase tracking-[0.3em] border border-white/10"
+                      >
+                        {uploading ? (
+                          <Loader className="animate-spin" size={18} />
+                        ) : (
+                          <Megaphone size={18} />
+                        )}
+                        {modalType === 'add' ? 'Publish' : 'Save'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </motion.div>
           </Overlay>
         )}

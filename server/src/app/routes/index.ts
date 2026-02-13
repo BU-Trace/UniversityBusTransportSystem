@@ -9,6 +9,7 @@ import IssueRoutes from '../modules/Issue/issue.routes';
 import LocationRoutes from '../modules/location/location.routes';
 import AiRoutes from '../modules/AI/ai.routes';
 import noticeRoutes from '../modules/Notice/notice.routes';
+import PushRoutes from '../modules/Push/push.routes';
 import { DashboardRoutes } from '../modules/Dashboard/dashboard.routes';
 import { CalendarEventRoutes } from '../modules/CalendarEvent/calendarEvent.routes';
 
@@ -54,6 +55,10 @@ const moduleRoutes = [
   {
     path: '/notice',
     route: noticeRoutes,
+  },
+  {
+    path: '/push',
+    route: PushRoutes,
   },
   {
     path: '/dashboard',
