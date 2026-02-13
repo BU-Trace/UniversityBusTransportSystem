@@ -36,7 +36,8 @@ export default function Navbar() {
   const getDashboardLink = () => {
     const role = session?.user?.role;
     if (role === 'driver') return '/driver-dashboard';
-    return '/dashboard';
+    if (role === 'admin' || role === 'superadmin') return '/dashboard';
+    return '/user-dashboard';
   };
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
@@ -140,9 +141,7 @@ export default function Navbar() {
                     <p className="text-xs text-gray-400 truncate">{session.user.email}</p>
                   </div>
                   <div className="py-1">
-                    {(session.user.role === 'driver' ||
-                      session.user.role === 'admin' ||
-                      session.user.role === 'superadmin') && (
+                    {session.user.role && (
                       <Link
                         href={getDashboardLink()}
                         className="flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-white/10 hover:text-brick-400 transition-colors"
@@ -265,9 +264,7 @@ export default function Navbar() {
                           className="overflow-hidden bg-white/5 rounded-xl mt-2"
                         >
                           <div className="py-2">
-                            {(session.user.role === 'driver' ||
-                              session.user.role === 'admin' ||
-                              session.user.role === 'superadmin') && (
+                            {session.user.role && (
                               <Link
                                 href={getDashboardLink()}
                                 onClick={toggleMenu}

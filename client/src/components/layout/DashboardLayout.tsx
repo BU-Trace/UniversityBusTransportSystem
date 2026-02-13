@@ -225,14 +225,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
             {/* Sidebar Footer */}
             <div className="p-6 border-t border-white/5 space-y-3">
-              <Link
-                href="/dashboard/editProfile"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-4 w-full px-6 py-3 text-gray-400 hover:text-white transition-colors text-sm font-bold"
-              >
-                <MdSettings size={20} className="text-gray-500" />
-                Settings
-              </Link>
+              {role !== 'driver' && (
+                <Link
+                  href="/dashboard/editProfile"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-4 w-full px-6 py-3 text-gray-400 hover:text-white transition-colors text-sm font-bold"
+                >
+                  <MdSettings size={20} className="text-gray-500" />
+                  Settings
+                </Link>
+              )}
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
                 className="flex items-center gap-4 w-full px-6 py-4 bg-white/5 hover:bg-brick-600/20 text-brick-400 hover:text-brick-300 rounded-2xl font-black transition-all border border-white/5 hover:border-brick-500/30 shadow-lg"

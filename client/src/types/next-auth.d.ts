@@ -8,6 +8,7 @@ declare module 'next-auth' {
     error?: string;
     user: {
       id: string;
+      _id?: string;
       userId: string;
       role?: UserRole;
       photoUrl?: string;

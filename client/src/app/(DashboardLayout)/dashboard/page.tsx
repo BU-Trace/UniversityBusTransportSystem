@@ -33,6 +33,15 @@ import {
   Bar,
 } from 'recharts';
 import { toast } from 'sonner';
+import DashboardWatch from '@/components/DashboardWatch';
+import DashboardCalendar from '@/components/DashboardCalendar';
+
+interface ActiveSession {
+  id: string;
+  name: string;
+  role: string;
+  profileImage?: string;
+}
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
 
@@ -80,6 +89,7 @@ const MergedDashboard = () => {
   const [activities, setActivities] = useState<
     { id: string; text: string; time: string; type: string }[]
   >([]);
+  const [activeSessions, setActiveSessions] = useState<ActiveSession[]>([]);
 
   const fetchStats = React.useCallback(async () => {
     if (!session?.accessToken) return;
@@ -118,6 +128,20 @@ const MergedDashboard = () => {
     socket.on('connect', () => {
       setSocketStatus('connected');
       console.log('📡 Dashboard Socket Connected');
+
+      // Register this user session
+      if (session?.user) {
+        socket.emit('registerUser', {
+          id: session.user.id || session.user._id,
+          name: session.user.name,
+          role: session.user.role,
+          profileImage: session.user.profileImage || session.user.image,
+        });
+      }
+    });
+
+    socket.on('activeSessionsUpdate', (sessions: ActiveSession[]) => {
+      setActiveSessions(sessions);
     });
 
     socket.on('disconnect', () => {
@@ -153,7 +177,7 @@ const MergedDashboard = () => {
     return () => {
       socket.disconnect();
     };
-  }, [fetchStats]);
+  }, [fetchStats, session?.user]);
 
   const stats = useMemo(() => {
     if (!data) return [];
@@ -282,6 +306,11 @@ const MergedDashboard = () => {
           Refresh Data
         </button>
       </div>
+
+      {/* Dynamic Watch Component (New) */}
+      <DashboardWatch activeSessions={activeSessions} />
+
+      <DashboardCalendar />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">

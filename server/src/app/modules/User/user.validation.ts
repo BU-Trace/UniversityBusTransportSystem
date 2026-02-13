@@ -62,8 +62,8 @@ export const registerUserSchema = z.discriminatedUnion('role', [
     clientInfo: driverClientInfoSchema,
     clientITInfo: clientITInfoSchema,
 
-    profileImage: z.string().url('Driver photo is required'),
-    approvalLetter: z.string().url('Approval letter is required'),
+    profileImage: z.string().url('Driver photo is required').optional(),
+    approvalLetter: z.string().url('Approval letter is required').optional(),
 
     assignedBus: z.string().optional(),
     assignedBusName: z.string().optional(),
@@ -74,8 +74,8 @@ export const registerUserSchema = z.discriminatedUnion('role', [
     clientInfo: baseClientInfoSchema.optional(),
     clientITInfo: clientITInfoSchema,
 
-    profileImage: z.string().url('Admin photo is required'),
-    approvalLetter: z.string().url('Approval letter is required'),
+    profileImage: z.string().url('Admin photo is required').optional(),
+    approvalLetter: z.string().url('Approval letter is required').optional(),
   }),
 ]);
 
@@ -122,7 +122,7 @@ export const adminCreateUserSchema = z.discriminatedUnion('role', [
       licenseNumber: z.string().min(1),
       bio: z.string().optional(),
     }),
-    profileImage: z.string().url(),
+    profileImage: z.string().url().optional(),
     assignedBus: z.string().min(1),
     assignedBusName: z.string().optional(),
     password: z.string().min(6).optional(),
@@ -134,7 +134,7 @@ export const adminCreateUserSchema = z.discriminatedUnion('role', [
     name: z.string().min(1),
     email: z.string().email(),
     clientInfo: z.object({ bio: z.string().optional() }).optional(),
-    profileImage: z.string().url(),
+    profileImage: z.string().url().optional(),
     password: z.string().min(6).optional(),
     needPasswordChange: z.boolean().optional(),
   }),
@@ -148,7 +148,7 @@ export const adminCreateDriverSchema = z.object({
     licenseNumber: z.string().min(1),
     bio: z.string().optional(),
   }),
-  profileImage: z.string().url(),
+  profileImage: z.string().url().optional(),
   assignedBus: z.string().min(1),
   assignedBusName: z.string().optional(),
   password: z.string().min(6).optional(),

@@ -288,12 +288,14 @@ const adminCreateUser = async (payload: any) => {
     clientInfo: payload.clientInfo ?? {},
   };
 
+  /*
   if ((role === 'admin' || role === 'superadmin' || role === 'driver') && !userDoc.profileImage) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Photo is required for admin/driver');
   }
   if ((role === 'admin' || role === 'superadmin' || role === 'driver') && !userDoc.approvalLetter) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Approval letter is required for admin/driver');
   }
+  */
   if (role === 'driver' && !userDoc.assignedBus) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver');
   }
@@ -351,12 +353,14 @@ const adminCreateDriver = async (payload: any) => {
     clientInfo: payload.clientInfo ?? {},
   };
 
+  /*
   if (!userDoc.profileImage) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Driver photo is required');
   }
   if (!userDoc.approvalLetter) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Approval letter is required');
   }
+  */
   if (!userDoc.assignedBus) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver');
   }

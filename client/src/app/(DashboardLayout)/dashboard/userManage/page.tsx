@@ -453,7 +453,7 @@ export default function UserManagementPage() {
     }
 
     if (modalType === 'add' && requireDocs) {
-      if (!form.photoUrl) return toast.error('Photo is mandatory for admin/driver.');
+      // Photo is now optional for admin/driver
       // approvalLetter is now optional
     }
 
@@ -582,7 +582,9 @@ export default function UserManagementPage() {
       <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-2 mb-8 flex flex-wrap gap-2 shadow-2xl">
         {[
           { id: 'driver', label: 'Drivers', icon: Bus },
-          { id: 'admin', label: 'Admins', icon: ShieldCheck },
+          ...(session?.user?.role === 'superadmin'
+            ? [{ id: 'admin', label: 'Admins', icon: ShieldCheck }]
+            : []),
         ].map((tab) => (
           <button
             key={tab.id}
@@ -704,18 +706,23 @@ export default function UserManagementPage() {
 
                     <td className="py-8 text-right pr-8">
                       <div className="flex justify-end gap-3 transition-all duration-500">
-                        <button
-                          onClick={() => openEdit(u)}
-                          className="p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
-                        >
-                          <Pencil size={20} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(u.id)}
-                          className="p-4 bg-white/5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
-                        >
-                          <Trash2 size={20} />
-                        </button>
+                        {/* Only superadmin can edit/delete admins. Admins can manage drivers. */}
+                        {(session?.user?.role === 'superadmin' || u.role !== 'admin') && (
+                          <>
+                            <button
+                              onClick={() => openEdit(u)}
+                              className="p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
+                            >
+                              <Pencil size={20} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(u.id)}
+                              className="p-4 bg-white/5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
+                            >
+                              <Trash2 size={20} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -770,9 +777,11 @@ export default function UserManagementPage() {
                     <option value="driver" className="bg-gray-900">
                       Driver
                     </option>
-                    <option value="admin" className="bg-gray-900">
-                      Admin
-                    </option>
+                    {session?.user?.role === 'superadmin' && (
+                      <option value="admin" className="bg-gray-900">
+                        Admin
+                      </option>
+                    )}
                   </select>
                 </div>
 
@@ -901,11 +910,11 @@ export default function UserManagementPage() {
                       <div>
                         <div className="text-xs font-black uppercase text-gray-400 flex items-center gap-2 tracking-widest">
                           <BadgeCheck size={16} className="text-brick-500" />
-                          Required Photo
+                          Photo (Optional)
                         </div>
                         <div className="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed">
                           {modalType === 'add'
-                            ? 'Profile photo is mandatory for verification.'
+                            ? 'Profile photo is optional for verification.'
                             : 'Existing photo will be kept unless you upload a new one.'}
                         </div>
                       </div>
@@ -915,7 +924,7 @@ export default function UserManagementPage() {
                       <div className="rounded-2xl border border-white/10 p-5 bg-white/5">
                         <div className="flex items-center justify-between gap-4">
                           <div className="text-[10px] font-black uppercase text-gray-500 tracking-widest">
-                            Photo {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
+                            Photo (Optional)
                           </div>
                           <button
                             type="button"
