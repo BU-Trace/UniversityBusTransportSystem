@@ -11,7 +11,9 @@ export interface IIssue {
   reporter?: Types.ObjectId | null;
   relatedBus?: Types.ObjectId | null;
   relatedRoute?: Types.ObjectId | null;
-  submittedByRole?: 'superadmin' | 'admin' | 'student' | 'driver';
+  submittedByRole?: 'superadmin' | 'admin' | 'driver';
+  contactInfo?: string;
+  solution?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }

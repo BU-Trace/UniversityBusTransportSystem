@@ -26,15 +26,15 @@ export const calculateDistance = (
  * Get Distance, ETA and Status info
  */
 export const getBusTimingInfo = (
-  studentPos: [number, number] | null,
+  userPos: [number, number] | null,
   busLat: number,
   busLng: number,
   speed: number
 ) => {
-  // Return placeholder if student location is unavailable
-  if (!studentPos) return { distance: '...', eta: 'Calculating', isPassed: false };
+  // Return placeholder if user location is unavailable
+  if (!userPos) return { distance: '...', eta: 'Calculating', isPassed: false };
 
-  const distance = calculateDistance(studentPos[0], studentPos[1], busLat, busLng);
+  const distance = calculateDistance(userPos[0], userPos[1], busLat, busLng);
 
   // Set minimum speed to 20 km/h for university bus context
   const busSpeed = speed > 5 ? speed : 20;

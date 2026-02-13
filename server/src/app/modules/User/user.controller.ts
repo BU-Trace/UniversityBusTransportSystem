@@ -3,6 +3,7 @@ import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 import { UserServices } from './user.service';
+import AppError from '../../errors/appError';
 
 // PATCH /user/driver/:id/status
 const updateDriverStatus = catchAsync(async (req: Request, res: Response) => {
@@ -48,15 +49,7 @@ const updateAdminProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const updateStudentProfile = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserServices.updateProfile(req.params.id, req.body, 'student');
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Student profile updated successfully',
-    data: result,
-  });
-});
+// DECOMMISSIONED: updateStudentProfile
 
 const updateDriverProfile = catchAsync(async (req: Request, res: Response) => {
   const result = await UserServices.updateProfile(req.params.id, req.body, 'driver');
@@ -137,12 +130,18 @@ const getAllDrivers = catchAsync(async (_req: Request, res: Response) => {
   });
 });
 
-const getAllStudents = catchAsync(async (_req: Request, res: Response) => {
-  const result = await UserServices.getAllStudents();
+// DECOMMISSIONED: getAllStudents
+
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  const userId = req.user?.userId;
+  if (!userId) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized');
+  }
+  const result = await UserServices.getMe(userId);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Students fetched successfully',
+    message: 'User profile fetched successfully',
     data: result,
   });
 });
@@ -152,9 +151,9 @@ export const UserController = {
   verifyEmail,
 
   updateAdminProfile,
-  updateStudentProfile,
+  // updateStudentProfile,
   updateDriverProfile,
-
+  getMe,
   updateDriverStatus,
 
   getAllUsers,
@@ -163,5 +162,5 @@ export const UserController = {
   adminUpdateUser,
   adminDeleteUser,
   getAllDrivers,
-  getAllStudents,
+  // getAllStudents,
 };

@@ -88,7 +88,7 @@ const StartTrialPage: React.FC = () => {
 
       {/* Header */}
       <Header
-        title="Start Your UBTS Subscription"
+        title="Start Your BU Trace Subscription"
         subtitle="Choose the perfect plan for your needs — from a free trial to lifetime premium access."
         imageSrc="/static/loginpagebanner.png"
         primaryText="Start Free Trial"
@@ -128,7 +128,7 @@ const StartTrialPage: React.FC = () => {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setSelected(plan.title)}
-                className="mt-6 w-full bg-gradient-to-r from-[#9b111e] to-[#b91c1c] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
+                className="mt-6 w-full bg-linear-to-r from-brick-600 to-[#b91c1c] text-white py-3 rounded-lg font-semibold hover:shadow-lg transition-all"
               >
                 {plan.title === 'Free Trial (7 Days)' ? 'Start Free Trial' : 'Choose Plan'}
               </motion.button>

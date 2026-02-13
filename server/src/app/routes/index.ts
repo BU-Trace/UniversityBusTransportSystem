@@ -8,6 +8,8 @@ import NotificationRoutes from '../modules/Notification/notification.routes';
 import IssueRoutes from '../modules/Issue/issue.routes';
 import LocationRoutes from '../modules/location/location.routes';
 import AiRoutes from '../modules/AI/ai.routes';
+import noticeRoutes from '../modules/Notice/notice.routes';
+import { DashboardRoutes } from '../modules/Dashboard/dashboard.routes';
 
 const router = Router();
 
@@ -47,6 +49,14 @@ const moduleRoutes = [
   {
     path: '/ai',
     route: AiRoutes,
+  },
+  {
+    path: '/notice',
+    route: noticeRoutes,
+  },
+  {
+    path: '/dashboard',
+    route: DashboardRoutes,
   },
 ];
 

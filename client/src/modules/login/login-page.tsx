@@ -213,7 +213,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
-type UserRole = 'student' | 'driver' | 'admin' | 'superadmin';
+type UserRole = 'driver' | 'admin' | 'superadmin';
 
 function isRoleAllowedForPath(role: UserRole | undefined, path: string) {
   if (!role) return false;
@@ -221,10 +221,6 @@ function isRoleAllowedForPath(role: UserRole | undefined, path: string) {
   // Admin dashboard
   if (path.startsWith('/dashboard')) return role === 'admin' || role === 'superadmin';
 
-  // Student dashboard
-  if (path.startsWith('/student-dashboard')) return role === 'student';
-
-  // Driver dashboard (if you have it)
   if (path.startsWith('/driver-dashboard')) return role === 'driver';
 
   // Public / other routes: allow
@@ -233,7 +229,6 @@ function isRoleAllowedForPath(role: UserRole | undefined, path: string) {
 
 function defaultRouteForRole(role: UserRole | undefined) {
   if (role === 'admin' || role === 'superadmin') return '/dashboard';
-  if (role === 'student') return '/student-dashboard';
   if (role === 'driver') return '/driver-dashboard';
   return '/';
 }
@@ -339,16 +334,14 @@ const LoginPageComponent = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 overflow-hidden relative">
       {/* blobs */}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border-none lg:border lg:border-white/50 rounded-none lg:rounded-[2.5rem] shadow-none lg:shadow-2xl overflow-hidden w-full lg:max-w-[95%] xl:max-w-7xl h-screen lg:h-[800px] z-10"
+        className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border-none rounded-none   shadow-none lg:shadow-2xl overflow-hidden w-full   h-screen z-10"
       >
         {/* Left banner */}
         <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
@@ -373,6 +366,9 @@ const LoginPageComponent = () => {
         {/* Right glass box */}
         <div className="w-full lg:w-[35%] p-8 lg:p-12 flex flex-col justify-center h-full bg-white relative">
           <div className="mb-8 text-center">
+            <Link href="/" className="inline-block mb-4">
+              <Image src="/static/logo.png" alt="Logo" width={80} height={80} className="mx-auto" />
+            </Link>
             <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter mb-2">
               Login
             </h2>
@@ -443,13 +439,6 @@ const LoginPageComponent = () => {
               >
                 Forgot Password?
               </Link>
-
-              <div className="text-sm text-gray-600">
-                Don&apos;t have an account?{' '}
-                <Link href="/register" className="text-[#E31E24] font-bold hover:underline ml-1">
-                  Register Now
-                </Link>
-              </div>
             </div>
           </form>
         </div>

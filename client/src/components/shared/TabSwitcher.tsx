@@ -6,7 +6,7 @@ interface TabSwitcherProps {
 }
 
 const TabSwitcher: React.FC<TabSwitcherProps> = ({ activeTab, setActiveTab }) => {
-  const tabs = ['Student', 'Driver', 'Teacher'];
+  const tabs = ['Driver', 'Admin'];
 
   return (
     <div className="flex justify-between mb-6 bg-gray-100 rounded-md">

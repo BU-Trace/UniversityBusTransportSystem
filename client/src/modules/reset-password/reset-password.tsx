@@ -4,7 +4,7 @@ import React, { useState, Suspense } from 'react';
 import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Home, Loader2, KeyRound, CheckCircle2 } from 'lucide-react';
+import { Home, Loader2, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { resetPassword } from '@/services/auth-client';
 import { toast } from 'sonner';
@@ -79,9 +79,9 @@ const ResetPasswordForm = () => {
         >
           {}
           <div className="mb-8 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-4 text-[#E31E24]">
-              <KeyRound size={32} />
-            </div>
+            <Link href="/" className="inline-block mb-4">
+              <Image src="/static/logo.png" alt="Logo" width={80} height={80} className="mx-auto" />
+            </Link>
             <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-2">
               Reset Password
             </h2>
@@ -179,7 +179,7 @@ const ResetPasswordForm = () => {
 
 const ResetPasswordPage = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 overflow-hidden relative ">
       {}
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
@@ -189,12 +189,11 @@ const ResetPasswordPage = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col lg:flex-row-reverse bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2.5rem] shadow-2xl overflow-hidden w-full max-w-[95%] xl:max-w-7xl h-[85vh] lg:h-[800px] z-10"
+        className="flex flex-col lg:flex-row-reverse bg-white/80 backdrop-blur-xl shadow-2xl overflow-hidden w-full h-screen z-10"
       >
-        {}
+        {/* Left Side: Image */}
         <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
-          {}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
+          <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
 
           <Image
             width={1000}

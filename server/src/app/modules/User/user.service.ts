@@ -25,20 +25,15 @@ const updateDriverStatus = async (driverId: string, status: any) => {
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
-  student: ['bio', 'department', 'rollNumber'],
-  driver: ['bio', 'licenseNumber'],
-  admin: ['bio'],
-  superadmin: ['bio'],
-  // staff: ['bio', 'department', 'designation'],
+  driver: ['licenseNumber'],
+  admin: [],
+  superadmin: [],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
     user.clientInfo = {} as ClientInfo;
 
-    if (role === 'student') {
-      user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
-    }
     if (role === 'driver') {
       user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
@@ -122,13 +117,6 @@ const registerUser = async (userData: Partial<IUser>) =>
       throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
     }
 
-    if (role === 'student') {
-      const department = (userData.clientInfo as any)?.department?.toString().trim();
-      const rollNumber = (userData.clientInfo as any)?.rollNumber?.toString().trim();
-      if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
-      if (!rollNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'Roll number is required');
-    }
-
     if (role === 'driver') {
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
@@ -178,7 +166,7 @@ const registerUser = async (userData: Partial<IUser>) =>
   ">
     <div style="text-align: center; margin-bottom: 20px;">
       <h2 style="color: #ef4444; margin: 0;">Campus Connect</h2>
-      <p style="color: #6b7280; font-size: 14px;">Empowering Students. Connecting Campuses.</p>
+      <p style="color: #6b7280; font-size: 14px;">Reliable Transport Tracking.</p>
     </div>
 
     <div style="background-color: #ffffff; padding: 25px; border-radius: 8px; text-align: center;">
@@ -283,12 +271,13 @@ const adminCreateUser = async (payload: any) => {
 
   const userDoc: Partial<IUser> = {
     email,
-    password: tempPassword,
+    password: payload.password || tempPassword,
     name: payload.name,
     role,
     isActive: true,
     isApproved: true, // ✅ admin created means approved
-    needPasswordChange: true,
+    needPasswordChange:
+      payload.needPasswordChange !== undefined ? payload.needPasswordChange : true,
 
     profileImage: payload.profileImage ?? null,
     approvalLetter: payload.approvalLetter ?? null,
@@ -319,7 +308,7 @@ const adminCreateUser = async (payload: any) => {
         <h3>Campus Connect - Account Created</h3>
         <p>Hello ${created.name || ''},</p>
         <p>An admin has created your account.</p>
-        <p><b>Temporary Password:</b> ${tempPassword}</p>
+        <p><b>Temporary Password:</b> ${payload.password || tempPassword}</p>
         <p>Please login and change your password immediately.</p>
       </div>
       `,
@@ -345,12 +334,13 @@ const adminCreateDriver = async (payload: any) => {
 
   const userDoc: Partial<IUser> = {
     email,
-    password: tempPassword,
+    password: payload.password || tempPassword,
     name: payload.name,
     role: 'driver',
     isActive: true,
     isApproved: true,
-    needPasswordChange: true,
+    needPasswordChange:
+      payload.needPasswordChange !== undefined ? payload.needPasswordChange : true,
 
     profileImage: payload.profileImage,
     approvalLetter: payload.approvalLetter,
@@ -381,7 +371,7 @@ const adminCreateDriver = async (payload: any) => {
         <h3>Campus Connect - Driver Account Created</h3>
         <p>Hello ${created.name || ''},</p>
         <p>An admin has created your driver account.</p>
-        <p><b>Temporary Password:</b> ${tempPassword}</p>
+        <p><b>Temporary Password:</b> ${payload.password || tempPassword}</p>
         <p>Please login and change your password immediately.</p>
       </div>
       `,
@@ -440,22 +430,24 @@ const getAllDrivers = async () => {
   return await UserModel.find({ role: 'driver' }).select('-password').sort({ createdAt: -1 });
 };
 
-// Get all students
-const getAllStudents = async () => {
-  return await UserModel.find({ role: 'student' }).select('-password').sort({ createdAt: -1 });
+const getMe = async (userId: string) => {
+  const user = await UserModel.findById(userId).select('-password');
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  return user;
 };
 
 export const UserServices = {
   registerUser,
   verifyEmail,
   updateProfile,
-
+  getMe,
   getAllUsers,
   adminCreateUser,
   adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
   getAllDrivers,
-  getAllStudents,
   updateDriverStatus,
 };

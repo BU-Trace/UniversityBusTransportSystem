@@ -4,7 +4,7 @@ import config from '../../config';
 import AppError from '../../errors/appError';
 import catchAsync from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
-import { AuthService, type ReqUser } from './auth.service';
+import { AuthService } from './auth.service';
 
 const loginUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
@@ -25,9 +25,8 @@ const loginUser = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// ✅ NEW: refresh access token using refreshToken cookie
 const refreshToken = catchAsync(async (req: Request, res: Response) => {
-  const refreshTokenFromCookie = req.cookies?.refreshToken;
+  const refreshTokenFromCookie = req.cookies?.refreshToken || req.headers.authorization;
   if (!refreshTokenFromCookie) {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Refresh token not found');
   }
@@ -43,7 +42,19 @@ const refreshToken = catchAsync(async (req: Request, res: Response) => {
 });
 
 const changePassword = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.changePassword(req.body);
+  const { oldPassword, newPassword } = req.body;
+  const email = req.user?.email;
+
+  if (!email) {
+    throw new AppError(StatusCodes.UNAUTHORIZED, 'User email not found in session');
+  }
+
+  const result = await AuthService.changePassword({
+    email,
+    oldPassword,
+    newPassword,
+  });
+
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -72,50 +83,10 @@ const resetPassword = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getPendingRegistrations = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.getPendingRegistrations(req.user as ReqUser);
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Pending registrations fetched successfully!',
-    data: result,
-  });
-});
-
-const approveRegistration = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.approveRegistration(
-    req.params.id,
-    req.body,
-    req.user as ReqUser
-  );
-
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Registration approved successfully!',
-    data: result,
-  });
-});
-
-const rejectRegistration = catchAsync(async (req: Request, res: Response) => {
-  const result = await AuthService.rejectRegistration(req.params.id, req.user as ReqUser);
-
-  sendResponse(res, {
-    statusCode: StatusCodes.OK,
-    success: true,
-    message: 'Registration rejected successfully!',
-    data: result,
-  });
-});
-
 export const AuthController = {
   loginUser,
   refreshToken,
   changePassword,
   forgetPassword,
   resetPassword,
-
-  getPendingRegistrations,
-  approveRegistration,
-  rejectRegistration,
 };

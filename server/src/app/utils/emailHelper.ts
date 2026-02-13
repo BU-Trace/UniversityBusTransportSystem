@@ -16,21 +16,16 @@ const sendEmail = async (
 ) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // Use `true` for port 465, `false` for all other ports
+      service: 'gmail',
       auth: {
         user: config.sender_email,
         pass: config.sender_app_password,
-      },
-      tls: {
-        rejectUnauthorized: false,
       },
     });
 
     // Email configuration
     const mailOptions: nodemailer.SendMailOptions = {
-      from: '"CampusConnect" <mimam22.cse@bu.ac.bd>',
+      from: `"BUTrace" <${config.sender_email}>`,
       to: email,
       subject,
       html,

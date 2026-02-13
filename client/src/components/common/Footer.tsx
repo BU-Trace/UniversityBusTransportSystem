@@ -124,7 +124,6 @@ const Footer = () => {
         <div className="border-t border-gray-800 mt-12 pt-6">
           <p className="text-sm text-gray-500 text-center font-medium">
             &copy; {new Date().getFullYear()}{' '}
-            <span className="text-red-500 font-semibold">UBTS</span> | All Rights Reserved
           </p>
         </div>
       </div>

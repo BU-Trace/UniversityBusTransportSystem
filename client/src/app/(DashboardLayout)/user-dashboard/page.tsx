@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Bus as BusIcon, MapPin, ChevronRight, X } from 'lucide-react';
 import { io } from 'socket.io-client';
 import type { Location } from './map';
 
@@ -21,20 +22,11 @@ const UserMap = dynamic(() => import('./map'), {
 
 export default function Page() {
   /* ================= STATE ================= */
-  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [tracking, setTracking] = useState(false);
 
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [busLocation, setBusLocation] = useState<Location | null>(null);
   const [selectedBus, setSelectedBus] = useState<string>('');
-
-  /* ================= USER DATA ================= */
-  const user = {
-    name: 'Utsojet Paticor',
-    id: 'CSE-22-017',
-    department: 'Computer Science & Engineering',
-    image: '/static/user-avatar.jpg', // optional
-  };
 
   /* ================= BUS LIST (DB MOCK) ================= */
   const availableBuses = [
@@ -63,7 +55,6 @@ export default function Page() {
         });
 
         setTracking(true); // ✅ SHOW MAP
-        setSidebarOpen(false); // ✅ HIDE SIDEBAR
       },
       (err) => {
         console.error(err);
@@ -89,114 +80,140 @@ export default function Page() {
   }, [tracking, selectedBus]);
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-gray-50">
-      {/* ================= SIDEBAR ================= */}
-      {!tracking && (
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-80
-          bg-linear-to-b from-[#EF4444] to-[#8B0000]
-          text-white p-6 transition-transform duration-500
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        >
-          {/* Close */}
-          <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-2xl">
-            ✕
-          </button>
-
-          {/* Logo */}
-          <div className="flex items-center mb-10">
-            <div className="bg-white rounded-full w-12 h-12 flex items-center justify-center">
-              <Image src="/static/BUTracelogo-modified.png" alt="Logo" width={40} height={40} />
-            </div>
-            <span className="ml-3 font-bold text-xl uppercase">BUTrace</span>
-          </div>
-
-          {/* USER PROFILE */}
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden bg-white/20 shadow-xl flex items-center justify-center">
-              {user.image ? (
-                <Image src={user.image} alt="User" width={96} height={96} />
-              ) : (
-                <span className="text-4xl">👤</span>
-              )}
-            </div>
-
-            <h2 className="mt-4 text-lg font-black uppercase text-center">{user.name}</h2>
-
-            <p className="text-xs text-red-200 text-center mt-1">{user.department}</p>
-
-            <p className="text-[10px] uppercase tracking-widest text-red-300 mt-1">ID: {user.id}</p>
-          </div>
-
-          {/* BUS SELECT */}
-          <div className="space-y-4">
-            <label className="text-xs uppercase tracking-widest text-red-200 font-black">
-              Select Current Bus
-            </label>
-
-            <select
-              value={selectedBus}
-              onChange={(e) => setSelectedBus(e.target.value)}
-              className="w-full p-3 rounded-xl bg-white text-slate-800 font-bold outline-none"
-            >
-              <option value="">-- Choose a Bus --</option>
-              {availableBuses.map((bus) => (
-                <option key={bus.busNo} value={bus.busNo}>
-                  {bus.busNo} • {bus.route}
-                </option>
-              ))}
-            </select>
-          </div>
-        </aside>
-      )}
-
-      {/* ================= MAIN ================= */}
-      <main className="relative flex-1">
-        {/* Sidebar toggle */}
-        {!tracking && !sidebarOpen && (
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-6 left-6 z-40 bg-white text-red-600 p-4 rounded-xl shadow-xl"
-          >
-            ☰
-          </button>
-        )}
-
-        {/* ================= CENTER LOCATION ANIMATION ================= */}
+    <div className="relative h-[calc(100vh-2rem)] w-full overflow-hidden rounded-[3rem] border border-white/10 shadow-3xl bg-gray-900/50 backdrop-blur-sm">
+      {/* ================= CENTER LOCATION ANIMATION ================= */}
+      <AnimatePresence>
         {!tracking && (
-          <div className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none">
-            <div className="relative w-32 h-32 flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-red-500/30 animate-ping"></div>
-              <div className="relative w-20 h-20 rounded-full bg-white shadow-2xl flex items-center justify-center">
-                <svg viewBox="0 0 24 24" className="w-10 h-10 text-red-600 fill-current">
-                  <path d="M12 2C8.13 2 5.13 5.13 5.13 9c0 5.25 6.87 13 6.87 13s6.87-7.75 6.87-13c0-3.87-3.13-7-6.87-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z" />
-                </svg>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.2 }}
+            className="fixed inset-0 flex items-center justify-center z-30 pointer-events-none"
+          >
+            <div className="relative w-48 h-48 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-brick-500/20 animate-ping"></div>
+              <div className="absolute inset-4 rounded-full bg-brick-500/10 animate-pulse"></div>
+              <div className="relative w-24 h-24 rounded-full bg-gray-900 border border-white/10 shadow-3xl flex items-center justify-center">
+                <MapPin className="w-12 h-12 text-brick-500" />
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= MAP ================= */}
+      <div className="absolute inset-0 z-0">
+        {tracking ? (
+          <UserMap userLocation={userLocation} busLocation={busLocation} />
+        ) : (
+          <div className="h-full w-full flex flex-col items-center justify-center bg-gray-900/40 backdrop-blur-md">
+            <h3 className="text-3xl font-black text-white uppercase tracking-tighter mb-2">
+              Ready to Track
+            </h3>
+            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">
+              Select your bus below
+            </p>
           </div>
         )}
+      </div>
 
-        {/* ================= MAP ================= */}
+      {/* ================= UI OVERLAYS ================= */}
+      <div className="absolute top-8 left-8 right-8 flex justify-between items-start pointer-events-none z-20">
+        <AnimatePresence>
+          {!tracking && (
+            <motion.div
+              initial={{ x: -50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -50, opacity: 0 }}
+              className="bg-gray-900/80 backdrop-blur-2xl p-8 rounded-3xl shadow-3xl w-full max-w-sm border border-white/10 pointer-events-auto"
+            >
+              <h3 className="text-2xl font-black mb-6 text-white uppercase tracking-tighter flex items-center gap-3">
+                <BusIcon className="text-brick-500" size={28} /> Select Bus
+              </h3>
+
+              <div className="space-y-4">
+                <div className="relative">
+                  <select
+                    value={selectedBus}
+                    onChange={(e) => setSelectedBus(e.target.value)}
+                    className="w-full p-5 pl-6 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-xs outline-none focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10 transition-all appearance-none cursor-pointer"
+                  >
+                    <option value="" className="bg-gray-900">
+                      -- Choose a Bus --
+                    </option>
+                    {availableBuses.map((bus) => (
+                      <option key={bus.busNo} value={bus.busNo} className="bg-gray-900">
+                        {bus.busNo} • {bus.route}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                    <ChevronRight size={18} className="rotate-90" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {tracking && (
-          <div className="absolute inset-0 z-0">
-            <UserMap userLocation={userLocation} busLocation={busLocation} />
-          </div>
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="bg-gray-900/80 backdrop-blur-xl p-5 px-8 rounded-3xl border border-white/10 shadow-2xl flex items-center gap-6 pointer-events-auto"
+          >
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                Tracking
+              </span>
+              <span className="text-xl font-black text-white uppercase">{selectedBus}</span>
+            </div>
+            <div className="h-8 w-px bg-white/10" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                Live Signal
+              </span>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[10px] font-black text-green-400 uppercase tracking-widest">
+                  Connected
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setTracking(false)}
+              className="ml-4 p-3 bg-white/5 hover:bg-brick-500/20 text-gray-400 hover:text-white rounded-xl transition-all border border-white/10"
+            >
+              <X size={18} />
+            </button>
+          </motion.div>
         )}
+      </div>
 
-        {/* ================= TRACK BUS BUTTON ================= */}
+      {/* ================= TRACK BUS BUTTON ================= */}
+      <AnimatePresence>
         {!tracking && (
-          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-md">
+          <motion.div
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-sm"
+          >
             <button
               onClick={handleTrackBus}
-              className="w-full bg-red-600 text-white py-5 rounded-4xl
-              font-black uppercase tracking-widest shadow-2xl
-              active:scale-95 transition-transform"
+              disabled={!selectedBus}
+              className={`w-full py-6 rounded-4xl font-black uppercase tracking-[0.3em] shadow-3xl transition-all border border-white/10
+              ${
+                selectedBus
+                  ? 'bg-brick-500 text-white hover:bg-brick-600 hover:scale-105 active:scale-95 shadow-brick-500/40'
+                  : 'bg-gray-800 text-gray-500 cursor-not-allowed opacity-50'
+              }`}
             >
               Track Bus
             </button>
-          </div>
+          </motion.div>
         )}
-      </main>
+      </AnimatePresence>
     </div>
   );
 }

@@ -16,14 +16,14 @@ import {
   FaTwitter,
   FaInstagram,
 } from 'react-icons/fa';
-import Header from '@/components/Header';
-import NextImage from '@/components/common/NextImage';
+import PageBanner from '@/components/common/PageBanner';
+import Image from 'next/image';
 
 function FAQ() {
   const items = [
     {
       q: 'How do I track the bus in real time?',
-      a: "Open the UBTS app or the 'View Bus Routes' page and tap a running bus — the map will show its live location.",
+      a: "Open the BU Trace app or the 'View Bus Routes' page and tap a running bus — the map will show its live location.",
     },
     {
       q: 'What should I do if the app crashes?',
@@ -41,24 +41,28 @@ function FAQ() {
       {items.map((it, idx) => (
         <motion.article
           key={idx}
-          whileHover={{ scale: 1.03, rotate: 0.5 }}
+          whileHover={{ scale: 1.02 }}
           transition={{ type: 'spring', stiffness: 200 }}
-          className="rounded-lg border border-gray-100 overflow-hidden shadow-sm hover:shadow-md bg-white"
+          className="rounded-xl border border-white/10 overflow-hidden shadow-sm hover:shadow-md bg-white/5 backdrop-blur-lg"
         >
           <button
             onClick={() => setOpen(open === idx ? null : idx)}
-            className="w-full flex items-center justify-between p-4"
+            className="w-full flex items-center justify-between p-4 text-left"
           >
-            <span className="text-gray-800 font-medium">{it.q}</span>
+            <span className="text-gray-200 font-medium">{it.q}</span>
             <span
               className={`inline-block transition-transform duration-200 ${
                 open === idx ? 'rotate-180' : 'rotate-0'
-              } text-gray-500`}
+              } text-brick-400`}
             >
               <FaChevronDown />
             </span>
           </button>
-          {open === idx && <div className="p-4 bg-red-50 text-gray-700">{it.a}</div>}
+          {open === idx && (
+            <div className="p-4 pt-0 text-gray-400 text-sm leading-relaxed border-t border-white/5">
+              {it.a}
+            </div>
+          )}
         </motion.article>
       ))}
     </div>
@@ -77,146 +81,128 @@ const ContactPage: React.FC = () => {
       toast.error('Please fill in all fields before submitting.');
       return;
     }
-    setSubmitted(true);
-    toast.success('Message sent successfully!');
+    // Simulate API call
+    setTimeout(() => {
+      setSubmitted(true);
+      toast.success('Message sent successfully!');
+    }, 1000);
   };
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
-      {}
-      <div className="absolute top-0 left-0 w-full overflow-hidden leading-none z-0">
-        <svg
-          className="relative block w-full h-40 opacity-30 text-red-500"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-          viewBox="0 0 1200 120"
-        >
-          <path
-            d="M321.39 56.44C186.45 35.59 79.15 66.6 0 93.68V0h1200v27.35c-110.46 41.42-241.55 73.24-378.61 54.09C643.06 62.7 456.33 77.29 321.39 56.44z"
-            fill="url(#gradient)"
-          />
-          <defs>
-            <linearGradient id="gradient" x1="0" y1="0" x2="1200" y2="0">
-              <stop offset="0%" stopColor="#9b111e" />
-              <stop offset="100%" stopColor="#b91c1c" />
-            </linearGradient>
-          </defs>
-        </svg>
-      </div>
-
-      {}
-      <Header
-        title="Contact UBTS Support"
-        subtitle="Have questions about bus schedules, routes or service updates? Reach out to our team — we’re here to help!"
+    <div className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-brick-900 font-sans">
+      <PageBanner
+        title="Contact Support"
+        subtitle="Have questions? Reach out to our team — we’re here to help!"
         imageSrc="/static/loginpagebanner.png"
-        primaryText="Send a Message"
-        primaryHref="#contact-form"
-        secondaryText="View Routes"
-        secondaryHref="/routes"
       />
 
-      {}
-      <main className="max-w-7xl mx-auto px-6 py-16 relative z-10">
-        <section className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
-          {}
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-16 -mt-20 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Contact Form */}
           <motion.div
-            id="contact-form"
-            whileHover={{ rotate: 1, scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 180 }}
-            className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="lg:col-span-7 bg-white/5 backdrop-blur-lg rounded-3xl shadow-xl p-8 border border-white/10"
           >
             {!submitted ? (
               <>
-                <h2 className="text-3xl font-bold text-[#8B0000] mb-2">Send a Message</h2>
-                <p className="text-gray-600 mb-6">
+                <h2 className="text-3xl font-black text-white mb-2">Send a Message</h2>
+                <p className="text-gray-400 mb-8 max-w-lg">
                   Have a question about routes, schedules or the mobile app? Drop us a message and
-                  our UBTS team will respond within 24 hours.
+                  our BU Trace team will respond within 24 hours.
                 </p>
 
-                <form onSubmit={onSubmit} className="space-y-5">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form onSubmit={onSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <label className="block">
-                      <span className="text-sm text-gray-700 inline-flex items-center gap-2">
-                        <span className="text-red-600">
-                          <FaUser />
-                        </span>{' '}
-                        Full name
+                      <span className="text-xs font-bold uppercase text-gray-400 mb-1 block">
+                        Full Name
                       </span>
-                      <input
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        placeholder="Your full name"
-                        className="mt-2 block w-full rounded-md border border-gray-200 px-4 py-2 text-gray-800 focus:ring-2 focus:ring-[#9b111e] focus:border-[#9b111e]"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brick-500">
+                          <FaUser />
+                        </span>
+                        <input
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                          placeholder="John Doe"
+                          className="w-full pl-10 h-12 rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-brick-500 focus:border-transparent outline-none transition-all"
+                        />
+                      </div>
                     </label>
 
                     <label className="block">
-                      <span className="text-sm text-gray-700 inline-flex items-center gap-2">
-                        <span className="text-red-600">
-                          <FaEnvelope />
-                        </span>{' '}
-                        Email
+                      <span className="text-xs font-bold uppercase text-gray-400 mb-1 block">
+                        Email Address
                       </span>
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                        placeholder="you@university.edu"
-                        className="mt-2 block w-full rounded-md border border-gray-200 px-4 py-2 text-gray-800 focus:ring-2 focus:ring-[#9b111e] focus:border-[#9b111e]"
-                      />
+                      <div className="relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-brick-500">
+                          <FaEnvelope />
+                        </span>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                          placeholder="you@university.edu"
+                          className="w-full pl-10 h-12 rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-brick-500 focus:border-transparent outline-none transition-all"
+                        />
+                      </div>
                     </label>
                   </div>
 
                   <label className="block">
-                    <span className="text-sm text-gray-700 inline-flex items-center gap-2">
-                      <span className="text-red-600">
-                        <FaBus />
-                      </span>{' '}
+                    <span className="text-xs font-bold uppercase text-gray-400 mb-1 block">
                       Message
                     </span>
-                    <textarea
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      required
-                      placeholder="How can we help?"
-                      rows={6}
-                      className="mt-2 block w-full rounded-md border border-gray-200 px-4 py-3 text-gray-800 focus:ring-2 focus:ring-[#9b111e] focus:border-[#9b111e] resize-none"
-                    />
+                    <div className="relative">
+                      <span className="absolute left-4 top-4 text-brick-500">
+                        <FaBus />
+                      </span>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        required
+                        placeholder="How can we help you today?"
+                        rows={6}
+                        className="w-full pl-10 py-3 rounded-xl border border-white/10 bg-white/5 focus:bg-white/10 px-4 text-white placeholder-gray-500 focus:ring-2 focus:ring-brick-500 focus:border-transparent outline-none transition-all resize-none"
+                      />
+                    </div>
                   </label>
 
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="text-sm text-gray-500">
-                      <span className="inline text-red-600 mr-1">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                    <div className="text-xs font-medium text-gray-400 flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-full">
+                      <span className="text-green-400">
                         <FaClock />
                       </span>{' '}
-                      Typical response within 24 hours
+                      Average response: 24h
                     </div>
-                    <motion.button
-                      whileHover={{ rotate: [-1, 1, -1, 0], scale: 1.05 }}
-                      transition={{ duration: 0.4 }}
+                    <button
                       type="submit"
-                      className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#9b111e] to-[#b91c1c] text-white px-6 py-3 rounded-lg font-semibold shadow-md hover:shadow-lg"
+                      className="w-full sm:w-auto bg-brick-600 text-white px-8 h-12 rounded-xl font-bold shadow-lg hover:bg-brick-700 hover:shadow-brick-200 transition-all flex items-center justify-center gap-2 group"
                     >
-                      <FaEnvelope /> Send Message
-                    </motion.button>
+                      <span>SendMessage</span>
+                      <FaEnvelope className="group-hover:translate-x-1 transition-transform" />
+                    </button>
                   </div>
                 </form>
               </>
             ) : (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="text-center py-12"
+                className="text-center py-16 px-4"
               >
-                <h3 className="text-2xl font-semibold text-[#8B0000] flex items-center justify-center gap-2">
-                  <FaBus /> Thank you, {name.split(' ')[0] || 'User'}!
-                </h3>
-                <p className="text-gray-600 mt-3">
-                  We have received your message. Our team will reply to{' '}
-                  <span className="font-medium">{email}</span> shortly.
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600">
+                  <FaBus size={32} />
+                </div>
+                <h3 className="text-2xl font-black text-white mb-2">Message Sent!</h3>
+                <p className="text-gray-400 max-w-sm mx-auto mb-8">
+                  Thanks for reaching out,{' '}
+                  <span className="font-bold text-white">{name.split(' ')[0]}</span>. We&apos;ll get
+                  back to <span className="font-bold text-white">{email}</span> shortly.
                 </p>
                 <button
                   onClick={() => {
@@ -225,153 +211,140 @@ const ContactPage: React.FC = () => {
                     setEmail('');
                     setMessage('');
                   }}
-                  className="mt-6 bg-gradient-to-r from-[#9b111e] to-[#b91c1c] text-white px-6 py-2 rounded-md hover:scale-105 transition-all font-medium"
+                  className="bg-white/10 text-white border border-white/10 px-6 py-3 rounded-xl font-bold hover:bg-white/20 transition-colors"
                 >
-                  <span className="inline-flex items-center mr-2">
-                    <FaEnvelope />
-                  </span>{' '}
-                  Send Another
+                  Send Another Message
                 </button>
               </motion.div>
             )}
           </motion.div>
 
-          {}
-          <motion.aside
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.8 }}
-            className="space-y-6"
+          {/* Sidebar */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-5 space-y-6"
           >
-            <motion.div
-              whileHover={{ scale: 1.03, rotate: 0.8 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-              className="bg-gradient-to-br from-[#fff1f1] to-white rounded-2xl p-6 shadow-lg border"
-            >
-              <h4 className="text-lg font-semibold text-[#8B0000] flex items-center gap-2">
-                <FaMapMarkerAlt /> UBTS Office
+            {/* Contact Info Card */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/10 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+
+              <h4 className="text-xl font-bold text-white mb-6 flex items-center gap-3 relative z-10">
+                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white">
+                  <FaMapMarkerAlt />
+                </div>
+                Contact Information
               </h4>
-              <p className="text-gray-700 mt-2">University of Barishal Campus</p>
-              <div className="mt-4 grid gap-3">
-                <a
-                  href="mailto:support@ubts.edu.bd"
-                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
-                >
-                  <FaEnvelope /> support@ubts.edu.bd
-                </a>
-                <a
-                  href="tel:+8801733570761"
-                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
-                >
-                  <FaPhoneAlt /> +880 1733 570 761
-                </a>
-                <a
-                  href="tel:+8801977987420"
-                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
-                >
-                  <FaPhoneAlt /> +880 1977 987 420
-                </a>
-                <a
-                  href="tel:+8801829494993"
-                  className="text-[#9b111e] hover:underline flex gap-2 items-center"
-                >
-                  <FaPhoneAlt /> +880 1829 494 993
-                </a>
-              </div>
-              <div className="mt-4 text-sm text-gray-700">
-                <p>Mon - Fri: 9:00 AM - 6:00 PM</p>
-                <p>Sat: 10:00 AM - 3:00 PM</p>
-              </div>
-            </motion.div>
 
-            <motion.div
-              whileHover={{ scale: 1.03, rotate: -0.8 }}
-              transition={{ type: 'spring', stiffness: 200 }}
-              className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100"
-            >
-              <h4 className="text-lg font-semibold text-[#8B0000] flex items-center gap-2">
-                <FaQuestionCircle /> Quick Links
+              <div className="space-y-6">
+                <div className="relative z-10">
+                  <h5 className="text-xs font-bold uppercase text-white/70 mb-1">
+                    Office Location
+                  </h5>
+                  <p className="text-white font-medium">University of Barishal Campus</p>
+                  <p className="text-white/80 text-sm">Barishal, Bangladesh</p>
+                </div>
+
+                <div className="relative z-10">
+                  <h5 className="text-xs font-bold uppercase text-white/70 mb-1">Phone & Email</h5>
+                  <div className="space-y-3 mt-2">
+                    <a
+                      href="tel:01799532172"
+                      className="flex items-center gap-3 text-white hover:text-white/90 transition-colors group p-2 hover:bg-white/10 rounded-lg -ml-2"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center text-white group-hover:text-white transition-colors">
+                        <FaPhoneAlt size={14} />
+                      </div>
+                      <span className="font-bold">01799532172</span>
+                    </a>
+                    <a
+                      href="mailto:mdimamhosen.cse@gmail.com"
+                      className="flex items-center gap-3 text-white hover:text-white/90 transition-colors group p-2 hover:bg-white/10 rounded-lg -ml-2"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-white/20 group-hover:bg-white/30 flex items-center justify-center text-white group-hover:text-white transition-colors">
+                        <FaEnvelope size={14} />
+                      </div>
+                      <span className="font-medium truncate">mdimamhosen.cse@gmail.com</span>
+                    </a>
+                  </div>
+                </div>
+
+                <div className="relative z-10">
+                  <h5 className="text-xs font-bold uppercase text-white/70 mb-1">Office Hours</h5>
+                  <div className="text-sm font-medium text-white bg-white/10 p-3 rounded-xl border border-white/10">
+                    <p className="flex justify-between mb-1">
+                      <span>Sun - Thu</span> <span>9:00 AM - 5:00 PM</span>
+                    </p>
+                    <p className="flex justify-between text-white/60">
+                      <span>Fri - Sat</span> <span>Closed</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Links & Social */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-3xl p-8 shadow-xl border border-white/10 text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+
+              <h4 className="text-xl font-bold mb-4 relative z-10 flex items-center gap-2">
+                <FaQuestionCircle className="opacity-80" /> Quick Links
               </h4>
-              <div className="mt-4 grid grid-cols-1 gap-2">
-                <a href="#routes" className="text-gray-700 hover:text-red-600">
-                  View Bus Routes
-                </a>
-                <a href="#dashboard" className="text-gray-700 hover:text-red-600">
-                  Driver Dashboard
-                </a>
-                <a href="#help" className="text-gray-700 hover:text-red-600">
-                  Help Center
-                </a>
-              </div>
-              <div className="mt-4 flex items-center gap-3">
-                <button className="p-2 rounded-md bg-[#9b111e] text-white hover:rotate-6 transition-transform">
-                  <FaFacebookF />
-                </button>
-                <button className="p-2 rounded-md bg-[#b91c1c] text-white hover:-rotate-6 transition-transform">
-                  <FaTwitter />
-                </button>
-                <button className="p-2 rounded-md bg-gradient-to-r from-[#9b111e] to-[#b91c1c] text-white hover:scale-110 transition-transform">
-                  <FaInstagram />
-                </button>
-              </div>
-            </motion.div>
-          </motion.aside>
-        </section>
-
-        {}
-        <motion.div
-          whileHover={{ rotate: 0.5, scale: 1.02 }}
-          transition={{ type: 'spring', stiffness: 150 }}
-          className="bg-white mt-10 rounded-2xl p-6 shadow-md border w-full border-gray-100"
-        >
-          <h4 className="text-lg font-semibold text-[#8B0000]">Map</h4>
-          <div className="mt-4 rounded-md overflow-hidden border border-gray-100">
-            <NextImage
-              image="/static/map-placeholder.png"
-              alt="map placeholder"
-              width={800}
-              height={320}
-            />
-          </div>
-        </motion.div>
-
-        {}
-        <section className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <motion.div whileHover={{ scale: 1.01 }} className="lg:col-span-2 space-y-6">
-            <h3 className="text-2xl font-semibold text-[#8B0000]">Support Topics</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[
-                ['Bus Schedules', 'View and download daily routes.'],
-                ['Route Updates', 'Latest changes to stops and timings.'],
-                ['App Issues', 'Troubleshooting for mobile app.'],
-                ['Lost Items', 'Report and claim process.'],
-              ].map(([title, desc], i) => (
-                <motion.div
-                  key={i}
-                  whileHover={{ rotate: 0.8, scale: 1.03 }}
-                  transition={{ type: 'spring', stiffness: 200 }}
-                  className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100"
+              <div className="grid grid-cols-1 gap-3 relative z-10 text-brick-100 font-medium">
+                <a
+                  href="#routes"
+                  className="hover:text-white hover:translate-x-1 transition-all flex items-center gap-2"
                 >
-                  <a href="#" className="text-gray-800 font-medium hover:text-red-600">
-                    {title}
-                  </a>
-                  <p className="text-sm text-gray-600 mt-1">{desc}</p>
-                </motion.div>
-              ))}
+                  <div className="w-1 h-1 bg-brick-300 rounded-full"></div> View Bus Routes
+                </a>
+                <a
+                  href="#dashboard"
+                  className="hover:text-white hover:translate-x-1 transition-all flex items-center gap-2"
+                >
+                  <div className="w-1 h-1 bg-brick-300 rounded-full"></div> Driver Dashboard
+                </a>
+              </div>
+
+              <div className="mt-8 pt-6 border-t border-white/20 relative z-10">
+                <div className="flex gap-3">
+                  <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white hover:text-brick-600 flex items-center justify-center transition-all">
+                    <FaFacebookF />
+                  </button>
+                  <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white hover:text-brick-600 flex items-center justify-center transition-all">
+                    <FaTwitter />
+                  </button>
+                  <button className="w-10 h-10 rounded-full bg-white/10 hover:bg-white hover:text-brick-600 flex items-center justify-center transition-all">
+                    <FaInstagram />
+                  </button>
+                </div>
+              </div>
             </div>
           </motion.div>
+        </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            className="lg:col-span-1"
-          >
-            <h3 className="text-2xl font-semibold text-[#8B0000] mb-4">
-              Frequently Asked Questions
-            </h3>
-            <FAQ />
-          </motion.div>
+        {/* FAQ Section */}
+        <section className="mt-16">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-1">
+              <h3 className="text-2xl font-black text-white mb-3">Frequently Asked Questions</h3>
+              <p className="text-gray-400 mb-6 leading-relaxed">
+                Can&apos;t find the answer you&apos;re looking for? Check out our documentation or
+                contact our support team.
+              </p>
+              <div className="aspect-16/10 relative rounded-2xl shadow-md border border-white/10 overflow-hidden hidden lg:block   opacity-80   transition-all duration-500">
+                <Image
+                  src="/image/suppport.png"
+                  alt="Support illustration"
+                  fill
+                  className="object-cover"
+                />
+              </div>
+            </div>
+            <div className="lg:col-span-2">
+              <FAQ />
+            </div>
+          </div>
         </section>
       </main>
     </div>

@@ -1,13 +1,12 @@
 import { Document, Model, Types } from 'mongoose';
 
 // --- Roles ----------------------------------------------------
-export const USER_ROLES = ['superadmin', 'admin', 'student', 'driver'] as const;
+export const USER_ROLES = ['superadmin', 'admin', 'driver'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export type IUserRole = {
   SUPERADMIN: 'superadmin';
   ADMIN: 'admin';
-  STUDENT: 'student';
   DRIVER: 'driver';
 };
 
@@ -25,14 +24,7 @@ export type ClientITInfo = {
 type BaseClientInfo = {
   bio?: string;
   department?: string;
-  rollNumber?: string;
   licenseNumber?: string;
-  // designation?: string;
-};
-
-type StudentClientInfo = BaseClientInfo & {
-  department?: string;
-  rollNumber?: string;
 };
 
 type DriverClientInfo = BaseClientInfo & {
@@ -72,14 +64,6 @@ interface UserCommon {
 }
 
 export type UserDoc =
-  | (UserCommon & {
-      role: 'student';
-      clientInfo: StudentClientInfo; // required for students
-    })
-  // | (UserCommon & {
-  //     role: 'staff'; // ✅ Update: Added Staff Role Block
-  //     clientInfo: StaffClientInfo; // required for staff
-  //   })
   | (UserCommon & {
       role: 'driver';
       clientInfo: DriverClientInfo; // required for drivers

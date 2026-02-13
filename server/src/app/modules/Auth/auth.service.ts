@@ -8,7 +8,7 @@ import UserModel from '../User/user.model';
 import { Bus as BusModel } from '../Bus/bus.model';
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 
-type UserRole = 'student' | 'driver' | 'admin' | 'superadmin';
+type UserRole = 'driver' | 'admin' | 'superadmin';
 
 type LoginPayload = {
   email: string;
@@ -53,107 +53,22 @@ const verifyToken = <T>(token: string, secret: string) => {
   return jwt.verify(token, secret) as T;
 };
 
+// ADMIN APPROVAL SYSTEM DECOMMISSIONED
+/*
 const getPendingRegistrations = async (requester: ReqUser) => {
-  if (!requester) throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
-
-  // ✅ both admin + superadmin can view pending
-  if (requester.role !== 'admin' && requester.role !== 'superadmin') {
-    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
-  }
-
-  // pending = verified email but not approved
-  const pending = await UserModel.find({
-    isActive: true,
-    isApproved: false,
-  }).sort({ createdAt: -1 });
-
-  // You can filter here if you want admins not to even SEE admin-role pendings:
-  // if (requester.role === "admin") pending = pending.filter(u => u.role !== "admin" && u.role !== "superadmin");
-
-  return pending;
+...
 };
+*/
 
+/*
 const approveRegistration = async (
-  id: string,
-  body: { assignedBusId?: string },
-  requester: ReqUser
-) => {
-  if (!requester) throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
-
-  if (requester.role !== 'admin' && requester.role !== 'superadmin') {
-    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
-  }
-
-  return runWithTransaction(async (session) => {
-    const user = await UserModel.findById(id).session(session);
-    if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-
-    // must be verified first
-    if (!user.isActive) {
-      throw new AppError(StatusCodes.BAD_REQUEST, 'User email is not verified yet');
-    }
-
-    // already approved
-    if (user.isApproved) {
-      return user;
-    }
-
-    // ✅ RULE: admin cannot approve admin/superadmin
-    if (requester.role === 'admin' && (user.role === 'admin' || user.role === 'superadmin')) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'Only superadmin can approve admin accounts');
-    }
-
-    // driver requires bus
-    if (user.role === 'driver') {
-      if (!body?.assignedBusId) {
-        throw new AppError(
-          StatusCodes.BAD_REQUEST,
-          'assignedBusId is required for driver approval'
-        );
-      }
-      const bus = await BusModel.findById(body.assignedBusId).session(session);
-      if (!bus) throw new AppError(StatusCodes.NOT_FOUND, 'Bus not found');
-
-      user.assignedBus = bus._id;
-      user.assignedBusName = `${bus.name} (${bus.plateNumber})`;
-    }
-
-    user.isApproved = true;
-    await user.save({ session });
-
-    return user;
-  });
+...
 };
 
 const rejectRegistration = async (id: string, requester: ReqUser) => {
-  if (!requester) throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
-
-  if (requester.role !== 'admin' && requester.role !== 'superadmin') {
-    throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
-  }
-
-  return runWithTransaction(async (session) => {
-    const user = await UserModel.findById(id).session(session);
-    if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-
-    // ✅ RULE: admin cannot reject admin/superadmin (keep consistent)
-    if (requester.role === 'admin' && (user.role === 'admin' || user.role === 'superadmin')) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'Only superadmin can reject admin accounts');
-    }
-
-    // ✅ your requested behavior:
-    // reject = keep isApproved false and make isActive false so they must register again
-    user.isApproved = false;
-    user.isActive = false;
-
-    // optional cleanup
-    user.otpToken = null;
-    user.otpExpires = null;
-
-    await user.save({ session });
-    return { message: 'Rejected successfully' };
-  });
+...
 };
+*/
 
 const loginUser = async (payload: LoginPayload) => {
   return runWithTransaction(async (session) => {
@@ -169,11 +84,6 @@ const loginUser = async (payload: LoginPayload) => {
     // must verify email
     if (!user.isActive) {
       throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
-    }
-
-    // if approved required for login (your system behavior)
-    if (!user.isApproved) {
-      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
     }
 
     // ✅ fix: use bcrypt directly (no missing model method typing)
@@ -234,7 +144,6 @@ const refreshAccessToken = async (tokenFromCookie: string | undefined) => {
   const user = await UserModel.findOne({ email: decoded.email }).select('+password');
   if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
   if (!user.isActive) throw new AppError(StatusCodes.UNAUTHORIZED, 'User is not active');
-  if (!user.isApproved) throw new AppError(StatusCodes.UNAUTHORIZED, 'User is not approved');
 
   const jwtPayload: JwtPayloadShape = {
     userId: user._id.toString(),
@@ -266,13 +175,11 @@ const changePassword = async (payload: {
     if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
 
     if (!user.isActive) throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
-    if (!user.isApproved)
-      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
 
     const ok = await bcrypt.compare(payload.oldPassword, user.password);
     if (!ok) throw new AppError(StatusCodes.FORBIDDEN, 'Old password does not match');
 
-    user.password = await bcrypt.hash(payload.newPassword, Number(config.bcrypt_salt_rounds));
+    user.password = payload.newPassword;
     await user.save({ session });
 
     return { message: 'Password changed successfully' };
@@ -287,8 +194,6 @@ const forgetPassword = async (payload: { email: string }) => {
     const user = await UserModel.findOne({ email }).session(session);
     if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     if (!user.isActive) throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
-    if (!user.isApproved)
-      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
 
     const token = signToken(
       {
@@ -348,10 +253,8 @@ const resetPassword = async (payload: { token: string; newPassword: string }) =>
       .session(session);
     if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
     if (!user.isActive) throw new AppError(StatusCodes.FORBIDDEN, 'Email is not verified!');
-    if (!user.isApproved)
-      throw new AppError(StatusCodes.FORBIDDEN, 'Account is pending admin approval!');
 
-    user.password = await bcrypt.hash(payload.newPassword, Number(config.bcrypt_salt_rounds));
+    user.password = payload.newPassword;
     await user.save({ session });
 
     return { message: 'Password reset successfully' };
@@ -365,7 +268,9 @@ export const AuthService = {
   forgetPassword,
   resetPassword,
 
+  /*
   getPendingRegistrations,
   approveRegistration,
   rejectRegistration,
+  */
 };

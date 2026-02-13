@@ -45,7 +45,7 @@ const auth = (...requiredRoles: UserRole[]) => {
       }
 
       // ✅ role authorization check using DB role (source of truth)
-      // Some routes pass enum-like roles ("ADMIN", "STUDENT"...). Your DB uses lowercase.
+      // Some routes pass enum-like roles ("ADMIN", "DRIVER"...). Your DB uses lowercase.
       // Normalize both sides so authorization works consistently.
       const normalizedRequiredRoles = requiredRoles.map((r) => String(r).toLowerCase());
 

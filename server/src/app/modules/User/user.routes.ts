@@ -9,6 +9,7 @@ import { parseBody } from '../../middleware/bodyParser';
 import { UserValidation } from './user.validation';
 import { UserController } from './user.controller';
 import { UserRole } from './user.utils';
+import { updateMyProfile } from './user.profile.controller';
 
 const router = Router();
 router.patch(
@@ -29,13 +30,6 @@ router.get(
   '/get-all-drivers',
   auth(UserRole.ADMIN, UserRole.SUPERADMIN),
   UserController.getAllDrivers
-);
-
-// Get all students
-router.get(
-  '/get-all-students',
-  auth(UserRole.ADMIN, UserRole.SUPERADMIN),
-  UserController.getAllStudents
 );
 
 // Admin adds a driver (dedicated)
@@ -79,16 +73,6 @@ router.patch(
   UserController.updateAdminProfile
 );
 
-// Update student profile
-router.patch(
-  '/student/:id',
-  auth(UserRole.STUDENT),
-  multerUpload.single('profileImage'),
-  parseBody,
-  validateRequest(UserValidation.studentProfileValidationSchema),
-  UserController.updateStudentProfile
-);
-
 // Update driver profile
 router.patch(
   '/driver/:id',
@@ -98,5 +82,7 @@ router.patch(
   validateRequest(UserValidation.driverProfileValidationSchema),
   UserController.updateDriverProfile
 );
+router.get('/me', auth(), UserController.getMe);
+router.put('/me', auth(), updateMyProfile);
 
 export const UserRoutes = router;
