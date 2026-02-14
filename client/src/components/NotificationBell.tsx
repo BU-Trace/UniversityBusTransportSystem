@@ -1,15 +1,14 @@
-'use client';
-
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, FileText, ExternalLink, Megaphone, Trash2, CheckCircle2 } from 'lucide-react';
-import { useNotifications } from '@/context/NotificationContext';
+import { Bell, X, FileText, Megaphone, Trash2, CheckCircle2, Eye, Info } from 'lucide-react';
+import { useNotifications, NoticeEvent } from '@/context/NotificationContext';
 import ConfirmationModal from './shared/ConfirmationModal';
 
 export default function NotificationBell() {
   const { notices, unreadCount, markAsRead, clearAll } = useNotifications();
   const [isOpen, setIsOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [selectedNotice, setSelectedNotice] = useState<NoticeEvent | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close on click outside
@@ -25,11 +24,8 @@ export default function NotificationBell() {
 
   const toggleOpen = () => setIsOpen(!isOpen);
 
-  const handleNoticeClick = (id: string, fileUrl?: string) => {
-    markAsRead(id);
-    if (fileUrl) {
-      window.open(fileUrl, '_blank', 'noopener,noreferrer');
-    }
+  const handleNoticeClick = (n: NoticeEvent) => {
+    setSelectedNotice(n);
   };
 
   const getPriorityStyles = (priority?: string) => {
@@ -87,7 +83,7 @@ export default function NotificationBell() {
             initial={{ opacity: 0, y: 15, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.95 }}
-            className="absolute top-full right-[-50px] sm:right-0 mt-4 w-[calc(100vw-2rem)] sm:w-md bg-gray-900/95 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.7)] border border-white/10 z-100 overflow-hidden flex flex-col max-h-[80vh]"
+            className="fixed md:absolute top-24 md:top-full left-4 right-4 md:left-auto md:right-0 md:mt-4 md:w-md bg-gray-900/95 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.7)] border border-white/10 z-100 overflow-hidden flex flex-col max-h-[70vh] md:max-h-[80vh]"
           >
             {/* Header */}
             <div className="p-6 border-b border-white/5 bg-white/5 flex items-center justify-between">
@@ -137,8 +133,7 @@ export default function NotificationBell() {
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         key={n.id}
-                        onClick={() => handleNoticeClick(n.id, n.fileUrl)}
-                        className={`p-5 rounded-3xl border transition-all cursor-pointer relative overflow-hidden group/item ${styles.bg}`}
+                        className={`p-5 rounded-3xl border transition-all relative overflow-hidden group/item ${n.isUnread ? styles.bg : 'bg-white/5 border-white/10 opacity-70 hover:opacity-100'}`}
                       >
                         {/* Status Bit */}
                         {n.isUnread && (
@@ -149,7 +144,7 @@ export default function NotificationBell() {
 
                         <div className="flex gap-4 relative z-10">
                           <div
-                            className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-transform group-hover/item:scale-110 ${styles.iconBg}`}
+                            className={`shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-transform group-hover/item:scale-110 ${n.isUnread ? styles.iconBg : 'bg-white/10 text-gray-500 border-white/10'}`}
                           >
                             {n.type === 'pdf' ? <FileText size={20} /> : <Megaphone size={20} />}
                           </div>
@@ -162,20 +157,40 @@ export default function NotificationBell() {
                                 {n.title}
                               </h4>
                               <span
-                                className={`shrink-0 text-[7px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm ${styles.badge}`}
+                                className={`shrink-0 text-[7px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shadow-sm ${n.isUnread ? styles.badge : 'bg-white/10 text-gray-500'}`}
                               >
-                                {styles.label}
+                                {n.isUnread ? styles.label : 'READ'}
                               </span>
                             </div>
                             <p
-                              className={`text-xs line-clamp-2 leading-relaxed font-medium ${n.isUnread ? 'text-gray-300' : 'text-gray-500 italic'}`}
+                              className={`text-xs line-clamp-1 leading-relaxed font-medium ${n.isUnread ? 'text-gray-300' : 'text-gray-500 italic'}`}
                             >
                               {n.type === 'text'
                                 ? n.body
-                                : 'A PDF attachment is available for review. Click to open.'}
+                                : 'A PDF attachment is available for review.'}
                             </p>
-                            <div className="flex items-center justify-between mt-4">
-                              <div className="flex items-center gap-2">
+
+                            <div className="flex flex-wrap items-center gap-2 mt-4">
+                              <button
+                                onClick={() => handleNoticeClick(n)}
+                                className="px-3 py-1.5 bg-brick-500/20 hover:bg-brick-500 text-brick-400 hover:text-white rounded-lg border border-brick-500/30 hover:border-transparent transition-all text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 active:scale-95"
+                              >
+                                <Eye size={12} /> View
+                              </button>
+
+                              {n.isUnread && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    markAsRead(n.id);
+                                  }}
+                                  className="px-3 py-1.5 bg-emerald-500/20 hover:bg-emerald-500 text-emerald-400 hover:text-white rounded-lg border border-emerald-500/30 hover:border-transparent transition-all text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 active:scale-95"
+                                >
+                                  <CheckCircle2 size={12} /> Mark Read
+                                </button>
+                              )}
+
+                              <div className="flex-1 flex justify-end">
                                 <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest tabular-nums bg-white/5 px-2 py-1 rounded-lg border border-white/5">
                                   {n.createdAt
                                     ? new Date(n.createdAt).toLocaleTimeString([], {
@@ -184,23 +199,10 @@ export default function NotificationBell() {
                                       })
                                     : 'Just now'}
                                 </span>
-                                {!n.isUnread && (
-                                  <span className="text-[8px] font-black text-green-500 uppercase tracking-widest flex items-center gap-1">
-                                    <CheckCircle2 size={10} /> Read
-                                  </span>
-                                )}
                               </div>
-                              {n.type === 'pdf' && (
-                                <span className="flex items-center gap-1.5 text-[9px] font-black text-brick-400 uppercase tracking-widest group-hover/item:text-brick-300 transition-colors">
-                                  <ExternalLink size={12} /> View PDF
-                                </span>
-                              )}
                             </div>
                           </div>
                         </div>
-
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-white/5 opacity-0 group-hover/item:opacity-100 transition-opacity pointer-events-none" />
                       </motion.div>
                     );
                   })}
@@ -224,6 +226,93 @@ export default function NotificationBell() {
               </div>
             )}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {selectedNotice && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedNotice(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-gray-900 border border-white/10 rounded-[3rem] shadow-[0_50px_100px_rgba(0,0,0,0.8)] overflow-hidden"
+            >
+              <div className="p-10">
+                <div className="flex justify-between items-start mb-8">
+                  <div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <span
+                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getPriorityStyles(selectedNotice.priority).badge}`}
+                      >
+                        {getPriorityStyles(selectedNotice.priority).label}
+                      </span>
+                      <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                        {selectedNotice.createdAt
+                          ? new Date(selectedNotice.createdAt).toLocaleString()
+                          : 'Recent Update'}
+                      </span>
+                    </div>
+                    <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-tight">
+                      {selectedNotice.title}
+                    </h2>
+                  </div>
+                  <button
+                    onClick={() => setSelectedNotice(null)}
+                    className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-gray-500 hover:text-white transition-all border border-white/10"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="bg-white/5 rounded-[2rem] border border-white/5 p-8 mb-10 min-h-[200px] flex flex-col justify-center">
+                  {selectedNotice.body ? (
+                    <p className="text-gray-300 text-lg leading-relaxed font-medium">
+                      {selectedNotice.body}
+                    </p>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Info size={48} className="text-brick-500 mx-auto mb-4 opacity-50" />
+                      <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">
+                        This notice has no text body.
+                        {selectedNotice.type === 'pdf' ? ' Please review the attached PDF.' : ''}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-4">
+                  {selectedNotice.fileUrl && (
+                    <a
+                      href={selectedNotice.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 py-5 bg-white/5 hover:bg-white/10 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border border-white/10 text-white"
+                    >
+                      <FileText size={20} /> View PDF Document
+                    </a>
+                  )}
+                  <button
+                    onClick={() => {
+                      markAsRead(selectedNotice.id);
+                      setSelectedNotice(null);
+                    }}
+                    className="flex-1 py-5 bg-brick-600 hover:bg-brick-700 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all shadow-xl shadow-brick-900/40 active:scale-[0.98]"
+                  >
+                    Acknowledge
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
