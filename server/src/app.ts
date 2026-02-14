@@ -13,7 +13,13 @@ const app: Application = express();
 // ---------------- Middleware ----------------
 app.use(
   cors({
-    origin: config.client_url || 'http://localhost:3000' || 'http://localhost:3001',
+    origin: [
+      config.client_url || 'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:8081', // Expo dev server
+      'http://192.168.0.106:19000',
+      '*'
+    ],
     credentials: true,
   })
 );
