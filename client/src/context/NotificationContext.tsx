@@ -224,17 +224,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Derived state for the UI
   const processedNotices = useMemo(() => {
-    return notices
-      .map((n) => {
-        const createdAtTime = n.createdAt ? new Date(n.createdAt).getTime() : 0;
-        const isRead = readIds.includes(n.id) || createdAtTime <= lastClearedAt;
-        return { ...n, isUnread: !isRead };
-      })
-      .filter((n) => n.isUnread); // Only show unread notifications
+    return notices.map((n) => {
+      const createdAtTime = n.createdAt ? new Date(n.createdAt).getTime() : 0;
+      const isRead = readIds.includes(n.id) || createdAtTime <= lastClearedAt;
+      return { ...n, isUnread: !isRead };
+    });
   }, [notices, readIds, lastClearedAt]);
 
   const unreadCount = useMemo(() => {
-    return processedNotices.length; // Count is now just the length of filtered notices
+    return processedNotices.filter((n) => n.isUnread).length;
   }, [processedNotices]);
 
   const markAsRead = useCallback((id: string) => {
