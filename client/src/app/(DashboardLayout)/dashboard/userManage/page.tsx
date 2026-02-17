@@ -1,42 +1,27 @@
 'use client';
-
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
-import { toast } from 'sonner';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Users,
-  Plus,
-  Trash2,
-  Edit,
-  X,
-  Save,
-  Upload,
-  Search,
-  ShieldCheck,
-  FileText,
-  Bus,
-  Clock,
   BadgeCheck,
-  Home,
+  Search,
+  Upload,
+  X,
+  Pencil,
+  Eye,
+  EyeOff,
+  Trash2,
+  Save,
+  Bus,
+  Plus,
+  ShieldCheck,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 
-import {
-  MdDashboard,
-  MdDirectionsBus,
-  MdPeople,
-  MdMap,
-  MdNotifications,
-  MdLogout,
-  MdMenu,
-  MdClose,
-  MdEdit,
-} from 'react-icons/md';
-
-type UserRole = 'student' | 'driver' | 'admin';
-type StaffRole = 'admin' | 'superadmin';
+type UserRole = 'driver' | 'admin';
+// type StaffRole = 'admin' | 'superadmin';
 
 interface IUser {
   id: string;
@@ -44,7 +29,6 @@ interface IUser {
   email: string;
   role: UserRole;
 
-  studentId?: string;
   licenseNumber?: string;
 
   photoUrl?: string;
@@ -53,6 +37,9 @@ interface IUser {
   assignedBusId?: string;
   assignedBusName?: string;
 
+  password?: string;
+  needPasswordChange?: boolean;
+
   createdAt?: string;
 }
 
@@ -60,21 +47,6 @@ interface IBusLite {
   id: string;
   name: string;
   plateNumber: string;
-}
-
-interface IPendingRequest {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-
-  studentId?: string;
-  licenseNumber?: string;
-
-  photoUrl?: string;
-  approvalLetterUrl?: string;
-
-  createdAt?: string;
 }
 
 type ApiFetchOptions = RequestInit & { headers?: Record<string, string> };
@@ -101,10 +73,8 @@ type RawUser = {
   name?: string;
   email?: string;
   role?: UserRole;
-  studentId?: string;
   licenseNumber?: string;
   clientInfo?: {
-    rollNumber?: string;
     licenseNumber?: string;
   };
   profileImage?: string;
@@ -118,6 +88,7 @@ type RawUser = {
   createdAt?: string;
 };
 
+<<<<<<< HEAD
 interface CustomSession {
   user?: {
     name?: string;
@@ -134,6 +105,8 @@ interface CustomSession {
 
 type RawPending = RawUser;
 
+=======
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 function joinUrl(pathOrUrl: string) {
   const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
   if (isFullUrl) return pathOrUrl;
@@ -257,32 +230,16 @@ const API = {
   userAdd: `/user/add-user`,
   userUpdate: (id: string) => `/user/update-user/${id}`,
   userDelete: (id: string) => `/user/delete-user/${id}`,
-
-  pendingAll: `/auth/get-pending-registrations`,
-  approvePending: (id: string) => `/auth/approve-registration/${id}`,
-  rejectPending: (id: string) => `/auth/reject-registration/${id}`,
 };
 
 function prettyRole(role: UserRole) {
-  if (role === 'student') return 'Student';
   if (role === 'driver') return 'Driver';
   return 'Admin';
-}
-
-function formatDate(d?: string) {
-  if (!d) return '—';
-  const dt = new Date(d);
-  if (Number.isNaN(dt.getTime())) return d;
-  return dt.toLocaleString();
 }
 
 function safeOpen(url?: string) {
   if (!url) return;
   window.open(url, '_blank', 'noopener,noreferrer');
-}
-
-function toStaffRole(role?: string | null): StaffRole | undefined {
-  return role === 'admin' || role === 'superadmin' ? role : undefined;
 }
 
 function Overlay({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
@@ -291,7 +248,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+      className="fixed inset-0 z-100 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -311,32 +268,35 @@ function HeaderModal({
   onClose: () => void;
 }) {
   return (
-    <div className="p-6 border-b border-gray-100 flex justify-between items-start gap-4 sticky top-0 bg-white z-10">
+    <div className="p-8 border-b border-white/5 flex justify-between items-start gap-4 sticky top-0 bg-gray-900/50 backdrop-blur-3xl z-10">
       <div>
-        <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">{title}</h2>
-        {subtitle ? <p className="text-xs text-gray-500 mt-1 font-medium">{subtitle}</p> : null}
+        <h2 className="text-2xl font-black text-white uppercase tracking-tighter">{title}</h2>
+        {subtitle ? (
+          <p className="text-sm text-gray-400 mt-2 font-medium leading-relaxed">{subtitle}</p>
+        ) : null}
       </div>
       <button
         onClick={onClose}
-        className="p-2 bg-gray-100 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors"
+        className="p-3 bg-white/5 text-gray-400 rounded-2xl hover:bg-brick-500 hover:text-white transition-all shadow-lg border border-white/10"
       >
-        <X size={20} />
+        <X size={24} />
       </button>
     </div>
   );
 }
-
 export default function UserManagementPage() {
+<<<<<<< HEAD
   const pathname = usePathname();
   const { data } = useSession();
   const session = data as CustomSession | null;
   const displayName = getDisplayName(session);
   const profilePhoto = getProfilePhoto(session);
   const initial = getInitial(displayName);
+=======
+  const { data: session } = useSession();
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 
-
-  // role + accessToken from next-auth session (adjust if your session shape differs)
-  const staffRole = toStaffRole(session?.user?.role ?? null);
+  // const staffRole = toStaffRole(session?.user?.role ?? null);
 
   const accessTokenFromSession = session?.accessToken;
 
@@ -349,20 +309,12 @@ export default function UserManagementPage() {
 
   const [mounted, setMounted] = useState(false);
 
-  // sidebar
-  const [isOpen, setIsOpen] = useState(false);
-
   // tabs
-  const [activeTab, setActiveTab] = useState<UserRole>('student');
+  const [activeTab, setActiveTab] = useState<UserRole>('driver');
 
   // data
   const [users, setUsers] = useState<IUser[]>([]);
   const [buses, setBuses] = useState<IBusLite[]>([]);
-
-  // pending
-  const [pendingOpen, setPendingOpen] = useState(false);
-  const [pending, setPending] = useState<IPendingRequest[]>([]);
-  const [pendingLoading, setPendingLoading] = useState(false);
 
   // search
   const [query, setQuery] = useState('');
@@ -376,7 +328,6 @@ export default function UserManagementPage() {
       return (
         u.name.toLowerCase().includes(q) ||
         u.email.toLowerCase().includes(q) ||
-        (u.studentId || '').toLowerCase().includes(q) ||
         (u.licenseNumber || '').toLowerCase().includes(q) ||
         (u.assignedBusName || '').toLowerCase().includes(q)
       );
@@ -389,29 +340,24 @@ export default function UserManagementPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
   const [form, setForm] = useState<Partial<IUser>>({
-    role: 'student',
+    role: 'driver',
     name: '',
     email: '',
   });
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingLetter, setUploadingLetter] = useState(false);
   const photoRef = useRef<HTMLInputElement | null>(null);
-  const letterRef = useRef<HTMLInputElement | null>(null);
 
-  const [approvalOpen, setApprovalOpen] = useState(false);
-  const [approvalItem, setApprovalItem] = useState<IPendingRequest | null>(null);
-
-  const [assignBusOpen, setAssignBusOpen] = useState(false);
-  const [assignBusId, setAssignBusId] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    const lock = isOpen || isModalOpen || pendingOpen || approvalOpen || assignBusOpen;
+    const lock = isModalOpen;
     document.body.style.overflow = lock ? 'hidden' : 'auto';
     return () => {
       document.body.style.overflow = 'auto';
     };
+<<<<<<< HEAD
   }, [isOpen, isModalOpen, pendingOpen, approvalOpen, assignBusOpen]);
 
   function getInitial(name?: string) {
@@ -451,6 +397,9 @@ export default function UserManagementPage() {
     { label: 'Route Management', href: '/dashboard/routeManage', icon: MdMap },
     { label: 'Notice Publish', href: '/dashboard/notice', icon: MdNotifications },
   ];
+=======
+  }, [isModalOpen]);
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 
   const loadBuses = async () => {
     try {
@@ -482,11 +431,9 @@ export default function UserManagementPage() {
         id: u._id || u.id || '',
         name: u.name || '',
         email: u.email || '',
-        role: u.role || 'student',
-        studentId: u.studentId || u.clientInfo?.rollNumber,
+        role: u.role || 'driver',
         licenseNumber: u.licenseNumber || u.clientInfo?.licenseNumber,
         photoUrl: u.profileImage || u.photoUrl || u.photo,
-        approvalLetterUrl: u.approvalLetter || u.approvalLetterUrl,
         assignedBusId: u.assignedBus || u.assignedBusId,
         assignedBusName: u.assignedBusName,
         createdAt: u.createdAt,
@@ -502,7 +449,6 @@ export default function UserManagementPage() {
     if (!mounted) return;
     loadBuses();
     loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted]);
 
   const openAdd = () => {
@@ -512,12 +458,12 @@ export default function UserManagementPage() {
       role: activeTab,
       name: '',
       email: '',
-      studentId: '',
       licenseNumber: '',
       photoUrl: '',
-      approvalLetterUrl: '',
       assignedBusId: '',
       assignedBusName: '',
+      password: '',
+      needPasswordChange: true,
     });
     setIsModalOpen(true);
   };
@@ -548,14 +494,12 @@ export default function UserManagementPage() {
   const requireDocs = form.role === 'admin' || form.role === 'driver';
 
   const pickPhoto = () => photoRef.current?.click();
-  const pickLetter = () => letterRef.current?.click();
 
   const onPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
       setUploadingPhoto(true);
-      toast.message('Uploading photo...');
       const url = await uploadToCloudinary(file);
       setForm((p) => ({ ...p, photoUrl: url }));
       toast.success('Photo uploaded.');
@@ -567,23 +511,6 @@ export default function UserManagementPage() {
     }
   };
 
-  const onLetterChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    try {
-      setUploadingLetter(true);
-      toast.message('Uploading approval letter...');
-      const url = await uploadToCloudinary(file);
-      setForm((p) => ({ ...p, approvalLetterUrl: url }));
-      toast.success('Approval letter uploaded.');
-    } catch (err) {
-      toast.error(getErrorMessage(err));
-    } finally {
-      setUploadingLetter(false);
-      e.target.value = '';
-    }
-  };
-
   const saveUser = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -591,25 +518,20 @@ export default function UserManagementPage() {
     if (!form.name?.trim()) return toast.error('Name is required.');
     if (!form.email?.trim()) return toast.error('Email is required.');
 
-    if (form.role === 'student' && !form.studentId?.trim()) {
-      return toast.error('Student ID is required for students.');
-    }
-
     if (form.role === 'driver' && !form.licenseNumber?.trim()) {
       return toast.error('License number is required for drivers.');
     }
 
     if (modalType === 'add' && requireDocs) {
-      if (!form.photoUrl) return toast.error('Photo is mandatory for admin/driver.');
-      if (!form.approvalLetterUrl)
-        return toast.error('Approval letter is mandatory for admin/driver.');
+      // Photo is now optional for admin/driver
+      // approvalLetter is now optional
     }
 
     if (form.role === 'driver' && !form.assignedBusId) {
       return toast.error('Please assign a bus to this driver.');
     }
 
-    if (uploadingPhoto || uploadingLetter) return toast.error('Wait for uploads to finish.');
+    if (uploadingPhoto) return toast.error('Wait for uploads to finish.');
 
     // IMPORTANT: match your backend expected structure (you were using studentId/licenseNumber)
     const payload = {
@@ -617,14 +539,16 @@ export default function UserManagementPage() {
       email: form.email.trim(),
       role: form.role,
 
-      // if your backend expects clientInfo instead, we can adjust later
-      studentId: form.role === 'student' ? form.studentId?.trim() : undefined,
-      licenseNumber: form.role === 'driver' ? form.licenseNumber?.trim() : undefined,
+      password: form.password?.trim() || undefined,
+      needPasswordChange: form.needPasswordChange,
 
-      photoUrl: requireDocs ? form.photoUrl || undefined : undefined,
-      approvalLetterUrl: requireDocs ? form.approvalLetterUrl || undefined : undefined,
+      clientInfo: {
+        licenseNumber: form.role === 'driver' ? form.licenseNumber?.trim() : undefined,
+      },
 
-      assignedBusId: form.role === 'driver' ? form.assignedBusId : undefined,
+      profileImage: requireDocs ? form.photoUrl || undefined : undefined,
+
+      assignedBus: form.role === 'driver' ? form.assignedBusId : undefined,
       assignedBusName:
         form.role === 'driver' ? buses.find((b) => b.id === form.assignedBusId)?.name : undefined,
     };
@@ -643,8 +567,7 @@ export default function UserManagementPage() {
           id: json.data?._id || json.data?.id || (selectedId as string),
           name: json.data?.name || '',
           email: json.data?.email || '',
-          role: json.data?.role || form.role || 'student',
-          studentId: json.data?.studentId || json.data?.clientInfo?.rollNumber,
+          role: json.data?.role || form.role || 'driver',
           licenseNumber: json.data?.licenseNumber || json.data?.clientInfo?.licenseNumber,
           photoUrl: json.data?.profileImage || json.data?.photoUrl || json.data?.photo,
           approvalLetterUrl: json.data?.approvalLetter || json.data?.approvalLetterUrl,
@@ -666,8 +589,7 @@ export default function UserManagementPage() {
           id: json.data?._id || json.data?.id || '',
           name: json.data?.name || '',
           email: json.data?.email || '',
-          role: json.data?.role || form.role || 'student',
-          studentId: json.data?.studentId || json.data?.clientInfo?.rollNumber,
+          role: json.data?.role || form.role || 'driver',
           licenseNumber: json.data?.licenseNumber || json.data?.clientInfo?.licenseNumber,
           photoUrl: json.data?.profileImage || json.data?.photoUrl || json.data?.photo,
           approvalLetterUrl: json.data?.approvalLetter || json.data?.approvalLetterUrl,
@@ -686,189 +608,87 @@ export default function UserManagementPage() {
     }
   };
 
-  const loadPending = async () => {
-    setPendingLoading(true);
-    try {
-      const json = await apiFetchAuth<ApiResponse<RawPending[]>>(
-        API.pendingAll,
-        { method: 'GET' },
-        accessTokenRef
-      );
-
-      setPending(
-        (json.data || []).map((r) => ({
-          id: r._id || r.id || '',
-          name: r.name || '',
-          email: r.email || '',
-          role: r.role || 'student',
-          studentId: r.clientInfo?.rollNumber || r.studentId,
-          licenseNumber: r.clientInfo?.licenseNumber || r.licenseNumber,
-          photoUrl: r.profileImage || r.photoUrl,
-          approvalLetterUrl: r.approvalLetter || r.approvalLetterUrl,
-          createdAt: r.createdAt,
-        }))
-      );
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    } finally {
-      setPendingLoading(false);
-    }
-  };
-
-  const openPending = async () => {
-    setPendingOpen(true);
-    await loadPending();
-  };
-
-  const startApprove = (item: IPendingRequest) => {
-    // UI rule: admin can't approve admin
-    if (staffRole === 'admin' && item.role === 'admin') {
-      toast.error('Admin cannot approve another Admin. Only SuperAdmin can approve Admin.');
-      return;
-    }
-    setApprovalItem(item);
-    setApprovalOpen(true);
-  };
-
-  const confirmApprove = async () => {
-    if (!approvalItem) return;
-
-    if (approvalItem.role === 'driver') {
-      setAssignBusId('');
-      setAssignBusOpen(true);
-      return;
-    }
-
-    await finalizeApprove({});
-  };
-
-  const finalizeApprove = async (extra: { assignedBusId?: string }) => {
-    if (!approvalItem) return;
-
-    // UI rule again (safety)
-    if (staffRole === 'admin' && approvalItem.role === 'admin') {
-      toast.error('Only SuperAdmin can approve Admin.');
-      return;
-    }
-
-    try {
-      toast.message('Approving...');
-
-      const json = await apiFetchAuth<ApiResponse<RawUser>>(
-        API.approvePending(approvalItem.id),
-        {
-          method: 'POST',
-          body: JSON.stringify({
-            assignedBusId: approvalItem.role === 'driver' ? extra.assignedBusId : undefined,
-          }),
-        },
-        accessTokenRef
-      );
-
-      const created = (json as ApiResponse<RawUser>)?.data;
-
-      const newUser: IUser = {
-        id: created?._id || created?.id || approvalItem.id,
-        name: created?.name || approvalItem.name,
-        email: created?.email || approvalItem.email,
-        role: created?.role || approvalItem.role,
-        licenseNumber: created?.clientInfo?.licenseNumber || approvalItem.licenseNumber,
-        studentId: created?.clientInfo?.rollNumber || approvalItem.studentId,
-        photoUrl: created?.profileImage || created?.photoUrl,
-        approvalLetterUrl: created?.approvalLetter || created?.approvalLetterUrl,
-        assignedBusId: created?.assignedBus || created?.assignedBusId,
-        assignedBusName: created?.assignedBusName,
-        createdAt: created?.createdAt,
-      };
-
-      setUsers((prev) => [...prev, newUser]);
-
-      setPending((prev) => prev.filter((p) => p.id !== approvalItem.id));
-
-      toast.success('Approved and added to users.');
-
-      setAssignBusOpen(false);
-      setApprovalOpen(false);
-      setApprovalItem(null);
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    }
-  };
-
-  const rejectPending = async (id: string) => {
-    if (!window.confirm('Reject this registration request?')) return;
-
-    try {
-      await apiFetchAuth<ApiResponse<null>>(
-        API.rejectPending(id),
-        { method: 'DELETE' },
-        accessTokenRef
-      );
-
-      setPending((prev) => prev.filter((p) => p.id !== id));
-      toast.success('Request rejected.');
-    } catch (e) {
-      toast.error(getErrorMessage(e));
-    }
-  };
-
   if (!mounted) return null;
 
   return (
-    <div className="flex min-h-screen bg-[#F8F9FA] relative font-sans text-gray-800">
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-[#E31E24] text-white rounded-xl shadow-lg"
-        >
-          <MdMenu size={24} />
-        </button>
-      )}
+    <div className="space-y-12">
+      {/* Page Top Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+          <h1 className="text-4xl font-black text-white tracking-tight uppercase">
+            User Management
+          </h1>
+          <p className="text-gray-400 text-sm font-medium tracking-wide">
+            Manage Drivers and Admins
+          </p>
+        </motion.div>
 
-      <AnimatePresence>
-        {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
-          <motion.aside
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed lg:sticky top-0 left-0 z-50 bg-[#E31E24] text-white flex flex-col shadow-2xl w-full lg:w-72 h-screen overflow-hidden"
-          >
+        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+          <div className="relative flex-1 md:w-80">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-brick-400/60"
+              size={20}
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by name / email / license..."
+              className="w-full pl-12 pr-4 py-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md text-white shadow-xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all placeholder:text-gray-500"
+            />
+          </div>
+
+          <div className="flex items-center gap-3 w-full md:w-auto">
             <button
-              onClick={() => setIsOpen(false)}
-              className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
+              onClick={openAdd}
+              className="flex-1 md:flex-none bg-brick-500 text-white px-8 py-4 rounded-3xl font-black text-sm hover:bg-brick-600 transition-all shadow-xl shadow-brick-500/20 flex items-center justify-center gap-2 whitespace-nowrap border border-white/10"
             >
-              <MdClose size={24} />
+              <Plus size={20} /> Add User
             </button>
+          </div>
+        </div>
+      </div>
 
-            <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
-              <h1 className="text-xl font-black mb-6 tracking-tight italic">
-                CAMPUS<span className="text-white/70">CONNECT</span>
-              </h1>
-              <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
-                  {profilePhoto ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={profilePhoto}
-                      alt={displayName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl font-black italic text-white/80">
-                      {initial}
-                    </span>
-                  )}
-                </div>
+      {/* Custom Tab Switcher */}
+      <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 p-2 mb-8 flex flex-wrap gap-2 shadow-2xl">
+        {[
+          { id: 'driver', label: 'Drivers', icon: Bus },
+          ...(session?.user?.role?.toLowerCase() === 'superadmin'
+            ? [{ id: 'admin', label: 'Admins', icon: ShieldCheck }]
+            : []),
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as UserRole)}
+            className={`flex-1 flex items-center justify-center gap-3 py-4 rounded-4xl font-black text-sm transition-all ${
+              activeTab === tab.id
+                ? 'bg-brick-500 text-white shadow-2xl shadow-brick-500/30 border border-white/10'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <tab.icon size={20} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-                <Link
-                  href="/dashboard/editProfile"
-                  title="Edit Profile"
-                  className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md hover:scale-105 transition-transform"
-                >
-                  <MdEdit size={12} />
-                </Link>
+      {/* Main List Container */}
+      <div className="bg-white/5 backdrop-blur-2xl rounded-[3.5rem] border border-white/10 shadow-3xl overflow-hidden min-h-[520px] flex flex-col relative">
+        <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
+          <h3 className="font-black text-xl text-white uppercase tracking-wider flex items-center gap-3">
+            <Users className="text-brick-400" size={28} /> {prettyRole(activeTab)} List
+          </h3>
+          <div className="text-xs font-black text-gray-500 tracking-widest bg-white/5 px-6 py-2 rounded-full border border-white/10">
+            TOTAL: <span className="text-brick-400 ml-1">{filteredUsers.length}</span>
+          </div>
+        </div>
+
+        <div className="p-8 overflow-x-auto custom-scrollbar">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-24">
+              <div className="mx-auto w-20 h-20 rounded-3xl bg-brick-500/10 flex items-center justify-center mb-6 text-brick-500">
+                <Users size={32} />
               </div>
+<<<<<<< HEAD
 
               <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
                 {displayName}
@@ -1050,44 +870,122 @@ export default function UserManagementPage() {
                               {u.assignedBusName || 'Not Assigned'}
                             </span>
                           </td>
+=======
+              <h4 className="text-2xl font-black text-white mb-2 uppercase tracking-wide">
+                No users found
+              </h4>
+              <p className="text-gray-500 font-medium">
+                Add a new user or check your search query.
+              </p>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="text-xs font-black text-gray-500 uppercase tracking-[0.3em] border-b border-white/5">
+                  <th className="pb-8 pl-8">Photo</th>
+                  <th className="pb-8 min-w-[150px]">Name</th>
+                  <th className="pb-8 hidden lg:table-cell">Email</th>
+                  <th className="pb-8 hidden sm:table-cell">Role Details</th>
+                  {activeTab === 'driver' && (
+                    <th className="pb-8 hidden xl:table-cell">Assigned Bus</th>
+                  )}
+                  <th className="pb-8 text-right pr-8">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {filteredUsers.map((u) => (
+                  <tr
+                    key={u.id}
+                    className="border-b border-white/5 hover:bg-white/5 transition-all group"
+                  >
+                    <td className="py-8 pl-8">
+                      <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 bg-white/5 shadow-xl">
+                        {u.photoUrl ? (
+                          <Image
+                            src={u.photoUrl}
+                            alt={u.name}
+                            width={48}
+                            height={48}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-600">
+                            <Users size={20} />
+                          </div>
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                         )}
+                      </div>
+                    </td>
+                    <td className="py-8">
+                      <div className="font-black text-white group-hover:text-brick-400 transition-colors text-base tracking-tight">
+                        {u.name}
+                      </div>
+                    </td>
+                    <td className="py-8 font-medium text-gray-400 group-hover:text-gray-300 transition-colors uppercase text-xs tracking-wider hidden lg:table-cell">
+                      {u.email}
+                    </td>
+                    <td className="py-8 hidden sm:table-cell">
+                      {u.role === 'driver' && (
+                        <div className="text-xs font-bold text-gray-300">
+                          License:{' '}
+                          <span className="text-white bg-brick-500/10 px-3 py-1 rounded-lg border border-brick-500/30 ml-2">
+                            {u.licenseNumber || '—'}
+                          </span>
+                        </div>
+                      )}
+                      {u.role === 'admin' && (
+                        <div className="text-[10px] font-black text-brick-400 uppercase tracking-[0.2em] bg-brick-500/10 px-4 py-1.5 rounded-full border border-brick-500/20 inline-block shadow-inner">
+                          System Admin
+                        </div>
+                      )}
+                    </td>
 
-                        <td className="py-4 text-right">
-                          <div className="flex justify-end gap-2">
+                    {activeTab === 'driver' && (
+                      <td className="py-8 hidden xl:table-cell">
+                        <span className="text-xs font-black text-brick-400 px-4 py-1.5 rounded-full bg-brick-500/10 border border-brick-500/30 shadow-inner">
+                          {u.assignedBusName || 'Not Assigned'}
+                        </span>
+                      </td>
+                    )}
+
+                    <td className="py-8 text-right pr-8">
+                      <div className="flex justify-end gap-3 transition-all duration-500">
+                        {/* Only superadmin can edit/delete admins. Admins can manage drivers. */}
+                        {(session?.user?.role?.toLowerCase() === 'superadmin' ||
+                          u.role !== 'admin') && (
+                          <>
                             <button
                               onClick={() => openEdit(u)}
-                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                              className="p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
                             >
-                              <Edit size={18} />
+                              <Pencil size={20} />
                             </button>
                             <button
                               onClick={() => handleDelete(u.id)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                              className="p-4 bg-white/5 text-gray-400 hover:text-red-400 hover:bg-red-500/20 rounded-2xl transition-all border border-white/10 shadow-2xl active:scale-90"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={20} />
                             </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
-      </main>
+      </div>
 
-      {/* Add/Edit Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <Overlay onClose={() => setIsModalOpen(false)}>
             <motion.div
-              initial={{ scale: 0.96, y: 24 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-              className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
+              initial={{ scale: 0.95, y: 20, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.95, y: 20, opacity: 0 }}
+              className="bg-gray-900/90 backdrop-blur-3xl rounded-[3rem] shadow-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-white/10 relative custom-scrollbar"
             >
               <HeaderModal
                 title={`${modalType === 'add' ? 'Add' : 'Update'} ${prettyRole(form.role as UserRole) || 'User'
@@ -1098,90 +996,130 @@ export default function UserManagementPage() {
 
               <form onSubmit={saveUser} className="p-8 space-y-6">
                 <div>
-                  <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
+                  <label className="text-xs font-black uppercase text-gray-500 mb-3 block tracking-widest px-1">
                     Role
                   </label>
                   <select
                     value={form.role}
+                    disabled={modalType === 'edit'}
                     onChange={(e) => {
                       const role = e.target.value as UserRole;
                       setForm((p) => ({
                         ...p,
                         role,
-                        studentId: role === 'student' ? p.studentId : '',
                         licenseNumber: role === 'driver' ? p.licenseNumber : '',
                         assignedBusId: role === 'driver' ? p.assignedBusId : '',
                         assignedBusName: role === 'driver' ? p.assignedBusName : '',
                       }));
                     }}
-                    className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white font-black"
+                    className={`w-full p-4 rounded-2xl border outline-none transition-all font-black ${
+                      modalType === 'edit'
+                        ? 'bg-white/5 border-white/5 text-gray-500 cursor-not-allowed'
+                        : 'bg-white/5 border-white/10 text-white focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10'
+                    }`}
                   >
-                    <option value="student">Student</option>
-                    <option value="driver">Driver</option>
-                    <option value="admin">Admin</option>
+                    <option value="driver" className="bg-gray-900">
+                      Driver
+                    </option>
+                    {session?.user?.role?.toLowerCase() === 'superadmin' && (
+                      <option value="admin" className="bg-gray-900">
+                        Admin
+                      </option>
+                    )}
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
+                    <label className="text-xs font-black uppercase text-gray-500 mb-3 block tracking-widest px-1">
                       Full Name
                     </label>
                     <input
-                      type="text"
                       required
                       value={form.name || ''}
                       onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                      className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white"
+                      className="w-full p-4 rounded-2xl border border-white/10 outline-none focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10 bg-white/5 text-white font-black transition-all"
                     />
                   </div>
-
                   <div>
-                    <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                      Email
+                    <label className="text-xs font-black uppercase text-gray-500 mb-3 block tracking-widest px-1">
+                      Email Address
                     </label>
                     <input
-                      type="email"
                       required
+                      type="email"
+                      disabled={modalType === 'edit'}
                       value={form.email || ''}
                       onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                      className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 bg-gray-50 focus:bg-white"
+                      className={`w-full p-4 rounded-2xl border outline-none transition-all font-black ${
+                        modalType === 'edit'
+                          ? 'bg-white/5 border-white/5 text-gray-500 cursor-not-allowed'
+                          : 'bg-white/5 border-white/10 text-white focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10'
+                      }`}
                     />
                   </div>
                 </div>
 
-                {form.role === 'student' && (
-                  <div>
-                    <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                      Student ID
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={form.studentId || ''}
-                      onChange={(e) => setForm((p) => ({ ...p, studentId: e.target.value }))}
-                      className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
-                    />
+                {modalType === 'add' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-xs font-black uppercase text-gray-500 mb-3 block tracking-widest px-1">
+                        Initial Password
+                      </label>
+                      <div className="relative group">
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Leave blank for auto-generate"
+                          value={form.password || ''}
+                          onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                          className="w-full p-4 pr-12 rounded-2xl border border-white/10 outline-none focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10 bg-white/5 text-white font-black transition-all placeholder:text-gray-600 placeholder:text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-brick-400 transition-colors p-1"
+                        >
+                          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-end pb-1 px-1">
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={form.needPasswordChange}
+                            onChange={(e) =>
+                              setForm((p) => ({ ...p, needPasswordChange: e.target.checked }))
+                            }
+                            className="peer sr-only"
+                          />
+                          <div className="w-12 h-6 bg-white/5 border border-white/10 rounded-full transition-all peer-checked:bg-brick-500/20 peer-checked:border-brick-500/50"></div>
+                          <div className="absolute left-1 top-1 w-4 h-4 bg-gray-500 rounded-full transition-all peer-checked:left-7 peer-checked:bg-brick-500"></div>
+                        </div>
+                        <span className="text-xs font-black uppercase text-gray-500 group-hover:text-gray-300 transition-colors tracking-widest">
+                          Force Password Change
+                        </span>
+                      </label>
+                    </div>
                   </div>
                 )}
 
                 {form.role === 'driver' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
+                      <label className="text-xs font-black uppercase text-gray-500 mb-3 block tracking-widest px-1">
                         License Number
                       </label>
                       <input
-                        type="text"
                         required
                         value={form.licenseNumber || ''}
                         onChange={(e) => setForm((p) => ({ ...p, licenseNumber: e.target.value }))}
-                        className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-gray-50 focus:bg-white"
+                        className="w-full p-4 rounded-2xl border border-white/10 outline-none focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10 bg-white/5 text-white font-black transition-all"
                       />
                     </div>
-
                     <div>
-                      <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
+                      <label className="text-xs font-black uppercase text-gray-500 mb-3 block tracking-widest px-1">
                         Assign Bus
                       </label>
                       <select
@@ -1195,11 +1133,13 @@ export default function UserManagementPage() {
                             assignedBusName: bus ? `${bus.name} (${bus.plateNumber})` : undefined,
                           }));
                         }}
-                        className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white font-black"
+                        className="w-full p-4 rounded-2xl border border-white/10 outline-none focus:border-brick-500 focus:ring-4 focus:ring-brick-500/10 bg-white/5 text-white font-black transition-all"
                       >
-                        <option value="">-- Select a Bus --</option>
+                        <option value="" className="bg-gray-900">
+                          -- Select a Bus --
+                        </option>
                         {buses.map((b) => (
-                          <option key={b.id} value={b.id}>
+                          <option key={b.id} value={b.id} className="bg-gray-900">
                             {b.name} ({b.plateNumber})
                           </option>
                         ))}
@@ -1209,37 +1149,45 @@ export default function UserManagementPage() {
                 )}
 
                 {(form.role === 'admin' || form.role === 'driver') && (
-                  <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                    <div className="p-4 bg-gray-50 flex items-start justify-between gap-3">
+                  <div className="rounded-3xl border border-white/5 overflow-hidden bg-white/5">
+                    <div className="p-6 border-b border-white/5 flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-xs font-black uppercase text-gray-700 flex items-center gap-2">
-                          <BadgeCheck size={16} className="text-[#E31E24]" />
-                          Required Documents
+                        <div className="text-xs font-black uppercase text-gray-400 flex items-center gap-2 tracking-widest">
+                          <BadgeCheck size={16} className="text-brick-500" />
+                          Photo (Optional)
                         </div>
-                        <div className="text-[11px] text-gray-500 mt-1">
+                        <div className="text-[11px] text-gray-500 mt-2 font-medium leading-relaxed">
                           {modalType === 'add'
-                            ? 'Photo and approval letter are mandatory.'
-                            : 'You can keep existing documents or upload new ones.'}
+                            ? 'Profile photo is optional for verification.'
+                            : 'Existing photo will be kept unless you upload a new one.'}
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="rounded-2xl border border-gray-200 p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs font-black uppercase text-gray-600">
-                            Photo {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
+                    <div className="p-6">
+                      <div className="rounded-2xl border border-white/10 p-5 bg-white/5">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="text-[10px] font-black uppercase text-gray-500 tracking-widest">
+                            Photo (Optional)
                           </div>
                           <button
                             type="button"
                             onClick={pickPhoto}
                             disabled={uploadingPhoto}
+<<<<<<< HEAD
                             className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingPhoto
                               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                               : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
                               }`}
+=======
+                            className={`px-4 py-2 rounded-xl font-black text-[10px] flex items-center gap-2 transition-all uppercase tracking-widest ${
+                              uploadingPhoto
+                                ? 'bg-white/5 text-gray-600 cursor-not-allowed'
+                                : 'bg-brick-500 text-white hover:bg-brick-600 shadow-lg shadow-brick-500/20'
+                            }`}
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                           >
-                            <Upload size={16} /> {uploadingPhoto ? 'Uploading...' : 'Upload'}
+                            <Upload size={14} /> {uploadingPhoto ? '...' : 'Upload'}
                           </button>
                           <input
                             ref={photoRef}
@@ -1250,6 +1198,7 @@ export default function UserManagementPage() {
                           />
                         </div>
 
+<<<<<<< HEAD
                         <div className="mt-3">
                           {form.photoUrl ? (
                             <button
@@ -1305,39 +1254,77 @@ export default function UserManagementPage() {
                               <div className="text-sm font-black text-gray-900">Letter Ready</div>
                               <div className="text-xs text-gray-500 break-all">
                                 {form.approvalLetterUrl}
+=======
+                        <div className="mt-4 flex flex-col items-center gap-4">
+                          <div className="relative w-32 h-32 rounded-3xl overflow-hidden border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center">
+                            {uploadingPhoto && (
+                              <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-20">
+                                <div className="w-6 h-6 border-2 border-brick-500 border-t-transparent rounded-full animate-spin" />
+                                <div className="text-[8px] font-black text-brick-400 uppercase tracking-widest animate-pulse">
+                                  Uploading
+                                </div>
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                               </div>
-                            </button>
-                          ) : (
-                            <div className="text-sm text-gray-500">
-                              {modalType === 'add'
-                                ? 'Upload an approval letter to continue.'
-                                : 'No letter selected.'}
-                            </div>
-                          )}
+                            )}
+
+                            {form.photoUrl ? (
+                              <div className="w-full h-full relative group">
+                                <Image
+                                  width={100}
+                                  height={100}
+                                  src={form.photoUrl}
+                                  alt="Preview"
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all z-10">
+                                  <button
+                                    type="button"
+                                    onClick={() => safeOpen(form.photoUrl)}
+                                    className="p-2 bg-white/10 backdrop-blur-md rounded-xl text-white hover:bg-brick-500 transition-all shadow-xl"
+                                  >
+                                    <Search size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="text-gray-600 italic text-[10px]">
+                                {uploadingPhoto ? '' : 'No Preview'}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
 
-                <div className="pt-2 flex gap-3">
+                <div className="pt-4 flex gap-4">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 py-4 rounded-2xl font-black text-gray-500 hover:bg-gray-100 transition-colors"
+                    className="flex-1 py-5 rounded-3xl font-black text-gray-500 hover:text-white hover:bg-white/5 transition-all text-sm uppercase tracking-widest"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
+<<<<<<< HEAD
                     disabled={uploadingPhoto || uploadingLetter}
                     className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploadingPhoto || uploadingLetter
                       ? 'bg-gray-300 cursor-not-allowed'
                       : 'bg-[#E31E24] hover:bg-red-700'
                       }`}
+=======
+                    disabled={uploadingPhoto}
+                    className={`flex-1 py-5 rounded-3xl font-black text-white transition-all shadow-2xl flex justify-center items-center gap-3 text-sm uppercase tracking-widest border border-white/10 ${
+                      uploadingPhoto
+                        ? 'bg-white/5 text-gray-600 cursor-not-allowed border-white/5'
+                        : 'bg-brick-500 hover:bg-brick-600 shadow-brick-500/20'
+                    }`}
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                   >
                     <Save size={18} />
-                    {modalType === 'add' ? 'Save User' : 'Save Changes'}
+                    {modalType === 'add' ? 'Create User' : 'Update User'}
                   </button>
                 </div>
               </form>
@@ -1345,333 +1332,6 @@ export default function UserManagementPage() {
           </Overlay>
         )}
       </AnimatePresence>
-
-      {/* Pending Modal */}
-      <AnimatePresence>
-        {pendingOpen && (
-          <Overlay onClose={() => setPendingOpen(false)}>
-            <motion.div
-              initial={{ scale: 0.96, y: 24 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-              className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-gray-100"
-            >
-              <HeaderModal
-                title="Pending Registration Requests"
-                subtitle="New users requesting for registration."
-                onClose={() => setPendingOpen(false)}
-              />
-
-              <div className="p-6">
-                {pendingLoading ? (
-                  <div className="py-16 text-center text-gray-500 font-bold">
-                    Loading requests...
-                  </div>
-                ) : pending.length === 0 ? (
-                  <div className="py-16 text-center">
-                    <div className="mx-auto w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
-                      <Clock className="text-[#E31E24]" />
-                    </div>
-                    <h4 className="mt-4 font-black text-gray-900">No pending requests</h4>
-                    <p className="text-sm text-gray-500 mt-1">
-                      New registration requests will appear here.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {pending.map((p) => (
-                      <div
-                        key={p.id}
-                        className="border border-gray-200 rounded-2xl p-4 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="font-black text-gray-900 flex items-center gap-2">
-                              {p.name}
-                              <span className="text-[10px] px-2 py-1 rounded-full bg-gray-100 border border-gray-200 font-black text-gray-600 uppercase">
-                                {prettyRole(p.role)}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-600 truncate">{p.email}</div>
-                            <div className="text-xs text-gray-400 mt-1">
-                              Submitted: {formatDate(p.createdAt)}
-                            </div>
-
-                            <div className="mt-2 text-xs text-gray-600">
-                              {p.role === 'student' && (
-                                <span className="font-semibold">
-                                  Student ID:{' '}
-                                  <span className="font-black">{p.studentId || '—'}</span>
-                                </span>
-                              )}
-                              {p.role === 'driver' && (
-                                <span className="font-semibold">
-                                  License:{' '}
-                                  <span className="font-black">{p.licenseNumber || '—'}</span>
-                                </span>
-                              )}
-                            </div>
-
-                            {(p.photoUrl || p.approvalLetterUrl) && (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {p.photoUrl ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => safeOpen(p.photoUrl)}
-                                    className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
-                                  >
-                                    <Users size={12} /> Photo
-                                  </button>
-                                ) : null}
-                                {p.approvalLetterUrl ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => safeOpen(p.approvalLetterUrl)}
-                                    className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
-                                  >
-                                    <FileText size={12} /> Letter
-                                  </button>
-                                ) : null}
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() => startApprove(p)}
-                              className="px-4 py-2 rounded-xl font-black text-sm bg-[#E31E24] text-white hover:bg-red-700 transition-all shadow-lg shadow-red-200 flex items-center gap-2"
-                            >
-                              <BadgeCheck size={18} /> Review & Approve
-                            </button>
-
-                            <button
-                              onClick={() => rejectPending(p.id)}
-                              className="px-4 py-2 rounded-xl font-black text-sm bg-white border border-gray-200 hover:bg-gray-50 transition-all flex items-center gap-2"
-                            >
-                              <Trash2 size={18} className="text-red-600" /> Reject
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                <div className="mt-6 flex justify-end">
-                  <button
-                    type="button"
-                    onClick={loadPending}
-                    className="px-4 py-2 rounded-xl font-black text-sm bg-white border border-gray-200 hover:bg-gray-50 transition-all"
-                  >
-                    Refresh
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </Overlay>
-        )}
-      </AnimatePresence>
-
-      {/* Approval Modal */}
-      <AnimatePresence>
-        {approvalOpen && approvalItem && (
-          <Overlay
-            onClose={() => {
-              setApprovalOpen(false);
-              setApprovalItem(null);
-            }}
-          >
-            <motion.div
-              initial={{ scale: 0.96, y: 24 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-              className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
-            >
-              <HeaderModal
-                title="Confirm Approval"
-                subtitle="Review all data carefully before approving."
-                onClose={() => {
-                  setApprovalOpen(false);
-                  setApprovalItem(null);
-                }}
-              />
-
-              <div className="p-6 space-y-4">
-                <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50">
-                  <div className="font-black text-gray-900 text-lg">{approvalItem.name}</div>
-                  <div className="text-sm text-gray-600">{approvalItem.email}</div>
-
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <span className="text-[11px] px-2 py-1 rounded-full bg-white border border-gray-200 font-black text-gray-600 uppercase">
-                      {prettyRole(approvalItem.role)}
-                    </span>
-                    <span className="text-[11px] px-2 py-1 rounded-full bg-white border border-gray-200 font-black text-gray-600">
-                      Submitted: {formatDate(approvalItem.createdAt)}
-                    </span>
-                  </div>
-
-                  <div className="mt-3 text-sm text-gray-700">
-                    {approvalItem.role === 'student' && (
-                      <div>
-                        Student ID:{' '}
-                        <span className="font-black">{approvalItem.studentId || '—'}</span>
-                      </div>
-                    )}
-                    {approvalItem.role === 'driver' && (
-                      <div>
-                        License Number:{' '}
-                        <span className="font-black">{approvalItem.licenseNumber || '—'}</span>
-                      </div>
-                    )}
-                    {approvalItem.role === 'admin' && (
-                      <div className="font-black text-red-600">
-                        Admin requires documents verification.
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {approvalItem.photoUrl ? (
-                      <button
-                        type="button"
-                        onClick={() => safeOpen(approvalItem.photoUrl)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 font-black text-sm"
-                      >
-                        <Users size={18} /> View Photo
-                      </button>
-                    ) : null}
-
-                    {approvalItem.approvalLetterUrl ? (
-                      <button
-                        type="button"
-                        onClick={() => safeOpen(approvalItem.approvalLetterUrl)}
-                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 font-black text-sm"
-                      >
-                        <FileText size={18} /> View Letter
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-gray-200 p-4">
-                  <div className="font-black text-gray-900 flex items-center gap-2">
-                    <ShieldCheck size={18} className="text-[#E31E24]" />
-                    Sure about approval?
-                  </div>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Approving will add this user to the user database and remove the pending
-                    request.
-                  </p>
-                </div>
-
-                <div className="pt-2 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setApprovalOpen(false);
-                      setApprovalItem(null);
-                    }}
-                    className="flex-1 py-4 rounded-2xl font-black text-gray-500 hover:bg-gray-100 transition-colors"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={confirmApprove}
-                    className="flex-1 py-4 rounded-2xl font-black text-white bg-[#E31E24] hover:bg-red-700 transition-colors shadow-lg shadow-red-200 flex justify-center items-center gap-2"
-                  >
-                    <BadgeCheck size={18} /> Approve
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </Overlay>
-        )}
-      </AnimatePresence>
-
-      {/* Assign bus modal */}
-      <AnimatePresence>
-        {assignBusOpen && approvalItem?.role === 'driver' && (
-          <Overlay onClose={() => setAssignBusOpen(false)}>
-            <motion.div
-              initial={{ scale: 0.96, y: 24 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.96, y: 24 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 22 }}
-              className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto border border-gray-100"
-            >
-              <HeaderModal
-                title="Assign Bus to Driver"
-                subtitle="Driver approval requires a bus assignment."
-                onClose={() => setAssignBusOpen(false)}
-              />
-
-              <div className="p-6 space-y-4">
-                <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50">
-                  <div className="font-black text-gray-900">{approvalItem.name}</div>
-                  <div className="text-sm text-gray-600">{approvalItem.email}</div>
-                  <div className="text-sm text-gray-700 mt-2">
-                    License: <span className="font-black">{approvalItem.licenseNumber || '—'}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-xs font-black uppercase text-gray-500 mb-1 block">
-                    Select Bus
-                  </label>
-                  <select
-                    value={assignBusId}
-                    onChange={(e) => setAssignBusId(e.target.value)}
-                    className="w-full p-3 rounded-2xl border border-gray-200 outline-none focus:border-red-500 bg-white font-black"
-                  >
-                    <option value="">-- Select a Bus --</option>
-                    {buses.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.name} ({b.plateNumber})
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-xs text-gray-500 mt-2">
-                    This assignment is saved in the user database.
-                  </p>
-                </div>
-
-                <div className="pt-2 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setAssignBusOpen(false)}
-                    className="flex-1 py-4 rounded-2xl font-black text-gray-500 hover:bg-gray-100 transition-colors"
-                  >
-                    Back
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!assignBusId) return toast.error('Please select a bus for this driver.');
-                      finalizeApprove({ assignedBusId: assignBusId });
-                    }}
-                    className="flex-1 py-4 rounded-2xl font-black text-white bg-[#E31E24] hover:bg-red-700 transition-colors shadow-lg shadow-red-200 flex justify-center items-center gap-2"
-                  >
-                    <Bus size={18} /> Approve & Assign
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </Overlay>
-        )}
-      </AnimatePresence>
-      {/*home btn*/}
-      <Link
-        href="/"
-        title="Go to Home"
-        className="fixed top-6 right-6 p-4 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 z-50"
-      >
-        <Home size={24} />
-      </Link>
     </div>
   );
 }

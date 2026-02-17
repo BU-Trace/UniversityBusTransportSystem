@@ -63,9 +63,14 @@ const extractText = (response: GenerateContentResponse): string => {
   return '';
 };
 
-
 // Helper to get or create a chat session (by userId or sessionId)
-export const getOrCreateChatSession = async ({ userId, sessionId }: { userId?: string; sessionId?: string; }) => {
+export const getOrCreateChatSession = async ({
+  userId,
+  sessionId,
+}: {
+  userId?: string;
+  sessionId?: string;
+}) => {
   let session: IChatSession | null = null;
   if (userId) {
     session = await ChatSession.findOne({ userId });
@@ -82,7 +87,17 @@ export const getOrCreateChatSession = async ({ userId, sessionId }: { userId?: s
 };
 
 // Save a chat message to the session
-export const saveChatMessage = async ({ userId, sessionId, role, content }: { userId?: string; sessionId?: string; role: 'user' | 'assistant'; content: string; }) => {
+export const saveChatMessage = async ({
+  userId,
+  sessionId,
+  role,
+  content,
+}: {
+  userId?: string;
+  sessionId?: string;
+  role: 'user' | 'assistant';
+  content: string;
+}) => {
   const session = await getOrCreateChatSession({ userId, sessionId });
   if (!session) return;
   session.history.push({ role, content, timestamp: new Date() });
@@ -91,7 +106,11 @@ export const saveChatMessage = async ({ userId, sessionId, role, content }: { us
 };
 
 // Main chat logic with persistence
-export const startChat = async (payload: ChatRequest, userId?: string, sessionId?: string): Promise<ChatResponse> => {
+export const startChat = async (
+  payload: ChatRequest,
+  userId?: string,
+  sessionId?: string
+): Promise<ChatResponse> => {
   const data = chatRequestSchema.parse(payload);
   const model = data.model || 'gemini-2.5-flash';
 

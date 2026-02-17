@@ -8,7 +8,7 @@ declare global {
         userId: string;
         name: string;
         email: string;
-        role: 'student' | 'driver' | 'admin' | 'superadmin';
+        role: 'driver' | 'admin' | 'superadmin';
         isActive: boolean;
         iat?: number;
         exp?: number;

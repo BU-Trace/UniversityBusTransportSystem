@@ -33,10 +33,12 @@ export default function StatusModal({
 
       {/* MODAL */}
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden">
+        <div className="w-full max-w-md rounded-3xl bg-gray-900/90 backdrop-blur-2xl shadow-2xl border border-white/10 overflow-hidden">
           {/* HEADER */}
-          <div className="bg-gradient-to-r from-red-600 to-red-700 p-6 text-white flex justify-between items-center">
-            <h2 className="text-lg font-semibold">Driver Status</h2>
+          <div className="bg-linear-to-r from-gray-900 to-gray-800 p-6 text-white flex justify-between items-center border-b border-white/10">
+            <h2 className="text-lg font-black uppercase tracking-tight">
+              Driver <span className="text-brick-500">Status</span>
+            </h2>
             <button onClick={onClose} className="text-white/80 hover:text-white text-xl">
               ✕
             </button>
@@ -46,16 +48,18 @@ export default function StatusModal({
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* STATUS SELECT */}
             <div>
-              <p className="text-sm font-semibold text-gray-600 mb-2">Current Status</p>
+              <p className="text-[10px] font-black text-gray-500 mb-3 uppercase tracking-widest">
+                Current Status
+              </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setStatus('active')}
-                  className={`py-3 rounded-xl font-semibold transition ${
+                  className={`py-3 rounded-xl font-bold uppercase tracking-tight text-xs transition-all duration-300 ${
                     status === 'active'
-                      ? 'bg-green-500 text-white shadow'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-green-500 text-white shadow-lg shadow-green-900/40 border border-green-400/20'
+                      : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10'
                   }`}
                 >
                   Active
@@ -64,10 +68,10 @@ export default function StatusModal({
                 <button
                   type="button"
                   onClick={() => setStatus('inactive')}
-                  className={`py-3 rounded-xl font-semibold transition ${
+                  className={`py-3 rounded-xl font-bold uppercase tracking-tight text-xs transition-all duration-300 ${
                     status === 'inactive'
-                      ? 'bg-red-500 text-white shadow'
-                      : 'bg-gray-100 text-gray-600'
+                      ? 'bg-brick-600 text-white shadow-lg shadow-brick-900/40 border border-brick-500/20'
+                      : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10'
                   }`}
                 >
                   Inactive
@@ -77,37 +81,49 @@ export default function StatusModal({
 
             {/* DRIVER NAME */}
             <div>
-              <label className="text-sm font-semibold text-gray-600">Driver Name</label>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                Driver Name
+              </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter driver name"
                 required
-                className="mt-1 w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="mt-1 w-full px-4 py-3 bg-white/5 rounded-xl border border-white/10 text-white placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-brick-500/50 transition-all font-medium"
               />
             </div>
 
             {/* ROUTE */}
             <div>
-              <label className="text-sm font-semibold text-gray-600">Route</label>
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                Route
+              </label>
               <select
                 value={route}
                 onChange={(e) => setRoute(e.target.value)}
                 required
-                className="mt-1 w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="mt-1 w-full px-4 py-3 bg-white/5 rounded-xl border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-brick-500/50 transition-all font-medium appearance-none"
               >
-                <option value="">Select route</option>
-                <option value="Barishal Club">Barishal Club</option>
-                <option value="Nothullabad">Nothullabad</option>
-                <option value="Natun Bazar">Natun Bazar</option>
+                <option value="" className="bg-gray-900">
+                  Select route
+                </option>
+                <option value="Barishal Club" className="bg-gray-900">
+                  Barishal Club
+                </option>
+                <option value="Nothullabad" className="bg-gray-900">
+                  Nothullabad
+                </option>
+                <option value="Natun Bazar" className="bg-gray-900">
+                  Natun Bazar
+                </option>
               </select>
             </div>
 
             {/* SUBMIT */}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-red-600 text-white font-semibold text-lg shadow hover:bg-red-700 transition"
+              className="w-full py-4 rounded-xl bg-brick-600 text-white font-black text-sm uppercase tracking-widest shadow-lg shadow-brick-900/40 hover:bg-brick-700 hover:shadow-brick-900/60 transition-all active:scale-[0.98]"
             >
               Save Status
             </button>

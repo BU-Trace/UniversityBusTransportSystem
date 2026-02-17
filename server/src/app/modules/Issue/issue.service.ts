@@ -11,7 +11,9 @@ const issueSchema = z.object({
   reporter: z.any().nullable().optional(),
   relatedBus: z.any().nullable().optional(),
   relatedRoute: z.any().nullable().optional(),
-  submittedByRole: z.enum(['superadmin', 'admin', 'student', 'driver']).optional(),
+  submittedByRole: z.enum(['superadmin', 'admin', 'driver']).optional(),
+  contactInfo: z.string().optional(),
+  solution: z.string().optional(),
 });
 
 const updateSchema = issueSchema.partial();

@@ -17,13 +17,12 @@ interface AuthPayload extends JwtPayload {
 
 const auth = (...requiredRoles: UserRole[]) => {
   return catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
+    // Robust Token Extraction (Header or Cookie fallback)
+    const token = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.cookies?.accessToken;
 
-    if (!authHeader) {
-      throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
+    if (!token) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized! Access token missing.');
     }
-
-    const token = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
 
     try {
       const decoded = jwt.verify(token, config.jwt_access_secret as string) as AuthPayload;
@@ -33,7 +32,6 @@ const auth = (...requiredRoles: UserRole[]) => {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token!');
       }
 
-      // ✅ IMPORTANT FIX: don't query by role here
       const user = await User.findOne({ email });
 
       if (!user) {
@@ -44,18 +42,21 @@ const auth = (...requiredRoles: UserRole[]) => {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'Your account is not active!');
       }
 
-      // ✅ role authorization check using DB role (source of truth)
-      // Some routes pass enum-like roles ("ADMIN", "STUDENT"...). Your DB uses lowercase.
-      // Normalize both sides so authorization works consistently.
+      // Role authorization check using DB role
+      const userRole = String(user.role).toLowerCase();
       const normalizedRequiredRoles = requiredRoles.map((r) => String(r).toLowerCase());
 
-      const userRole = String(user.role).toLowerCase();
+      if (normalizedRequiredRoles.length > 0) {
+        // SUPERADMIN Hierarchy: superadmin is allowed on ANY route requiring roles
+        const isSuperAdmin = userRole === 'superadmin';
+        const hasRequiredRole = normalizedRequiredRoles.includes(userRole);
 
-      if (normalizedRequiredRoles.length > 0 && !normalizedRequiredRoles.includes(userRole)) {
-        throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
+        if (!isSuperAdmin && !hasRequiredRole) {
+          throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
+        }
       }
 
-      // ✅ attach user info from DB (prevents token/db mismatch issues)
+      // Attach user info from DB
       req.user = {
         userId: user._id.toString(),
         name: user.name,

@@ -1,4 +1,4 @@
-export type UserRole = "student" | "driver" | "admin" | "superadmin";
+export type UserRole = 'driver' | 'admin' | 'superadmin';
 
 export type UpdateMyProfileBody = {
   name: string;

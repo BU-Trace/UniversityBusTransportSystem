@@ -6,7 +6,6 @@ import { IUser, UserRole } from './user.interface';
 import { EmailHelper } from '../../utils/emailHelper';
 import { runWithTransaction } from '../../utils/transaction';
 
-
 // Update driver status (active/inactive or custom status)
 const updateDriverStatus = async (driverId: string, status: any) => {
   const driver = await UserModel.findById(driverId);
@@ -23,27 +22,24 @@ const updateDriverStatus = async (driverId: string, status: any) => {
   return driver;
 };
 
+<<<<<<< HEAD
 
 
 
+=======
+>>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {
-  student: ['bio', 'department', 'rollNumber'],
-  driver: ['bio', 'licenseNumber'],
-  admin: ['bio'],  
-  superadmin: ['bio'],  
-  // staff: ['bio', 'department', 'designation'],
+  driver: ['licenseNumber'],
+  admin: [],
+  superadmin: [],
 };
 
 const getClientInfoForUpdate = (user: IUser, role: UserRole): ClientInfo => {
   if (!user.clientInfo) {
-   
     user.clientInfo = {} as ClientInfo;
 
-    if (role === 'student') {
-      user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
-    }
     if (role === 'driver') {
       user.clientInfo = { ...(user.clientInfo as any) } as ClientInfo;
     }
@@ -127,24 +123,17 @@ const registerUser = async (userData: Partial<IUser>) =>
       throw new AppError(StatusCodes.NOT_ACCEPTABLE, 'Email is already registered');
     }
 
-    if (role === 'student') {
-      const department = (userData.clientInfo as any)?.department?.toString().trim();
-      const rollNumber = (userData.clientInfo as any)?.rollNumber?.toString().trim();
-      if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
-      if (!rollNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'Roll number is required');
-    }
-
     if (role === 'driver') {
       const licenseNumber = (userData.clientInfo as any)?.licenseNumber?.toString().trim();
       if (!licenseNumber) throw new AppError(StatusCodes.BAD_REQUEST, 'License number is required');
     }
-  // if (role === 'staff') {
-  //     const department = (userData.clientInfo as any)?.department?.toString().trim();
-  //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
+    // if (role === 'staff') {
+    //     const department = (userData.clientInfo as any)?.department?.toString().trim();
+    //     const designation = (userData.clientInfo as any)?.designation?.toString().trim();
 
-  //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
-  //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
-  //   }
+    //     if (!department) throw new AppError(StatusCodes.BAD_REQUEST, 'Department is required');
+    //     if (!designation) throw new AppError(StatusCodes.BAD_REQUEST, 'Designation is required');
+    //   }
 
     const OTP = Math.floor(100000 + Math.random() * 900000);
     const otpToken = String(OTP);
@@ -159,7 +148,7 @@ const registerUser = async (userData: Partial<IUser>) =>
       clientITInfo: userData.clientITInfo,
 
       password: password,
-      isActive: false, 
+      isActive: false,
       isApproved: false,
 
       otpToken: String(OTP),
@@ -183,7 +172,7 @@ const registerUser = async (userData: Partial<IUser>) =>
   ">
     <div style="text-align: center; margin-bottom: 20px;">
       <h2 style="color: #ef4444; margin: 0;">Campus Connect</h2>
-      <p style="color: #6b7280; font-size: 14px;">Empowering Students. Connecting Campuses.</p>
+      <p style="color: #6b7280; font-size: 14px;">Reliable Transport Tracking.</p>
     </div>
 
     <div style="background-color: #ffffff; padding: 25px; border-radius: 8px; text-align: center;">
@@ -220,8 +209,7 @@ const registerUser = async (userData: Partial<IUser>) =>
   `,
         'Your Campus Connect OTP'
       );
-    } catch (e) {
-    }
+    } catch (e) {}
 
     return null;
   });
@@ -289,12 +277,13 @@ const adminCreateUser = async (payload: any) => {
 
   const userDoc: Partial<IUser> = {
     email,
-    password: tempPassword,
+    password: payload.password || tempPassword,
     name: payload.name,
     role,
     isActive: true,
     isApproved: true, // ✅ admin created means approved
-    needPasswordChange: true,
+    needPasswordChange:
+      payload.needPasswordChange !== undefined ? payload.needPasswordChange : true,
 
     profileImage: payload.profileImage ?? null,
     approvalLetter: payload.approvalLetter ?? null,
@@ -305,12 +294,14 @@ const adminCreateUser = async (payload: any) => {
     clientInfo: payload.clientInfo ?? {},
   };
 
+  /*
   if ((role === 'admin' || role === 'superadmin' || role === 'driver') && !userDoc.profileImage) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Photo is required for admin/driver');
   }
   if ((role === 'admin' || role === 'superadmin' || role === 'driver') && !userDoc.approvalLetter) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Approval letter is required for admin/driver');
   }
+  */
   if (role === 'driver' && !userDoc.assignedBus) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver');
   }
@@ -325,7 +316,7 @@ const adminCreateUser = async (payload: any) => {
         <h3>Campus Connect - Account Created</h3>
         <p>Hello ${created.name || ''},</p>
         <p>An admin has created your account.</p>
-        <p><b>Temporary Password:</b> ${tempPassword}</p>
+        <p><b>Temporary Password:</b> ${payload.password || tempPassword}</p>
         <p>Please login and change your password immediately.</p>
       </div>
       `,
@@ -351,12 +342,13 @@ const adminCreateDriver = async (payload: any) => {
 
   const userDoc: Partial<IUser> = {
     email,
-    password: tempPassword,
+    password: payload.password || tempPassword,
     name: payload.name,
     role: 'driver',
     isActive: true,
     isApproved: true,
-    needPasswordChange: true,
+    needPasswordChange:
+      payload.needPasswordChange !== undefined ? payload.needPasswordChange : true,
 
     profileImage: payload.profileImage,
     approvalLetter: payload.approvalLetter,
@@ -367,12 +359,14 @@ const adminCreateDriver = async (payload: any) => {
     clientInfo: payload.clientInfo ?? {},
   };
 
+  /*
   if (!userDoc.profileImage) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Driver photo is required');
   }
   if (!userDoc.approvalLetter) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Approval letter is required');
   }
+  */
   if (!userDoc.assignedBus) {
     throw new AppError(StatusCodes.BAD_REQUEST, 'Assigned bus is required for driver');
   }
@@ -387,7 +381,7 @@ const adminCreateDriver = async (payload: any) => {
         <h3>Campus Connect - Driver Account Created</h3>
         <p>Hello ${created.name || ''},</p>
         <p>An admin has created your driver account.</p>
-        <p><b>Temporary Password:</b> ${tempPassword}</p>
+        <p><b>Temporary Password:</b> ${payload.password || tempPassword}</p>
         <p>Please login and change your password immediately.</p>
       </div>
       `,
@@ -446,22 +440,24 @@ const getAllDrivers = async () => {
   return await UserModel.find({ role: 'driver' }).select('-password').sort({ createdAt: -1 });
 };
 
-// Get all students
-const getAllStudents = async () => {
-  return await UserModel.find({ role: 'student' }).select('-password').sort({ createdAt: -1 });
+const getMe = async (userId: string) => {
+  const user = await UserModel.findById(userId).select('-password');
+  if (!user) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+  return user;
 };
 
 export const UserServices = {
   registerUser,
   verifyEmail,
   updateProfile,
-
+  getMe,
   getAllUsers,
   adminCreateUser,
   adminCreateDriver,
   adminUpdateUser,
   adminDeleteUser,
   getAllDrivers,
-  getAllStudents,
   updateDriverStatus,
 };

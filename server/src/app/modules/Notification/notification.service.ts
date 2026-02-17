@@ -7,7 +7,7 @@ const notificationSchema = z.object({
   message: z.string().min(1),
   category: z.enum(['system', 'alert', 'reminder']).optional(),
   recipient: z.any().nullable().optional(),
-  targetRole: z.enum(['superadmin', 'admin', 'student', 'driver', 'all']).optional(),
+  targetRole: z.enum(['superadmin', 'admin', 'driver', 'all']).optional(),
   isRead: z.boolean().optional(),
   sentAt: z.coerce.date().optional(),
 });

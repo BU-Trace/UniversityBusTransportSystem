@@ -1,4 +1,5 @@
-import { ClientITInfo } from '@/type/User';
+// DECOMMISSIONED: ClientITInfo import removed
+import { IUser } from '@/type/User';
 
 const RAW_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
@@ -14,20 +15,11 @@ type ApiResponse<T = unknown> = {
   data: T;
 };
 
+/*
 export type RegisterUserPayload = {
-  name: string;
-  email: string;
-  password: string;
-  role: 'student' | 'driver' | 'admin'| 'staff';
-  clientInfo?: {
-    bio?: string;
-    department?: string;
-    rollNumber?: string;
-    licenseNumber?: string;
-    designation?: string;
-  };
-  clientITInfo: ClientITInfo;
+...
 };
+*/
 
 const safeJson = async (response: Response) => {
   const text = await response.text().catch(() => '');
@@ -79,19 +71,7 @@ async function apiFetch<T>(path: string, init: RequestInit) {
   }
 }
 
-export const registerUser = (payload: RegisterUserPayload) => {
-  return apiFetch<null>('/user', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-};
-
-export const verifyEmail = (payload: { email: string; otpToken: string }) => {
-  return apiFetch<{ message: string | null }>('/user/verify-email', {
-    method: 'POST',
-    body: JSON.stringify(payload),
-  });
-};
+// DECOMMISSIONED: registerUser and verifyEmail
 
 export const requestPasswordReset = async (email: string) => {
   // Keeping your existing backend behavior
@@ -122,5 +102,12 @@ export const resetPassword = (token: string, newPassword: string) => {
   return apiFetch<null>('/auth/reset-password', {
     method: 'POST',
     body: JSON.stringify({ token, newPassword }),
+  });
+};
+
+export const getMe = (accessToken?: string) => {
+  return apiFetch<IUser>('/user/me', {
+    method: 'GET',
+    headers: accessToken ? { Authorization: accessToken } : {},
   });
 };

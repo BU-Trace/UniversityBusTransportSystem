@@ -15,20 +15,20 @@ interface Developer {
 
 const DEVELOPERS: Developer[] = [
   {
-    name: 'Md Mahruf Alam',
-    role: 'Frontend Developer and Database Designer',
-    imageSrc: '/static/mah.png',
-    bio: 'Specializes in full-stack development, UI/UX and system architecture.',
-  },
-  {
     name: 'Md Imam Hosen',
-    role: 'Backend Developer & Security Specialist',
+    role: 'Team Lead & Full-Stack Developer',
     imageSrc: '/static/im1.png',
     bio: 'Full-stack developer, focused on Typescript, Nest.js and DevOps design systems.',
   },
   {
+    name: 'Md Mahruf Alam',
+    role: 'Backend Developer and Database Designer',
+    imageSrc: '/static/mah.png',
+    bio: 'Specializes in full-stack development, UI/UX and system architecture.',
+  },
+  {
     name: 'Imam Hossen',
-    role: 'API Developer  Deployment & Maintenance Engineer',
+    role: 'API Developer Deployment & Maintenance Engineer',
     imageSrc: '/static/im2.png',
     bio: 'Handles APIs, databases, versions and system security.',
   },
@@ -40,7 +40,7 @@ const DEVELOPERS: Developer[] = [
   },
   {
     name: 'Sourav Debnath',
-    role: 'UI/UX Designer & Frontend Developer',
+    role: 'UI/UX Designer & Backend Developer',
     imageSrc: '/static/sss.png',
     bio: 'UI/UX specialist, creates intuitive and modern interfaces for all platforms.',
   },
@@ -74,7 +74,7 @@ const TeamButton: React.FC = () => {
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 120 }}
-            className="fixed bottom-8 left-8 z-[1000]"
+            className="relative z-[1000] inline-flex"
           >
             {}
             <motion.div
@@ -100,7 +100,7 @@ const TeamButton: React.FC = () => {
               whileHover={{ scale: 1.1, rotate: [0, -2, 2, 0] }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
-              className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-2xl bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
+              className="relative flex items-center justify-center w-12 h-12 rounded-full shadow-2xl bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
               aria-label="Team HEXAGON"
             >
               {}
@@ -121,7 +121,7 @@ const TeamButton: React.FC = () => {
                   rotate: [0, 3, -3, 0],
                 }}
                 transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut' }}
-                className="text-2xl relative z-10"
+                className="text-lg relative z-10"
               >
                 <FaUsers />
               </motion.div>
@@ -179,7 +179,7 @@ const TeamButton: React.FC = () => {
                     Meet the Team — HEXAGON
                   </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-8">
                     {DEVELOPERS.map((dev, index) => (
                       <motion.div
                         key={index}

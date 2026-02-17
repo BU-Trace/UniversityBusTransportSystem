@@ -2,7 +2,7 @@
 
 import React from 'react';
 import IntroAnimation from '@/components/IntroAnimation';
-import HomePage from '../home/page';
+import HomePageComponent from '@/modules/home';
 import { useIntro } from '@/context/IntroContext';
 
 const Home = () => {
@@ -12,7 +12,7 @@ const Home = () => {
     return <IntroAnimation />;
   }
 
-  return <HomePage />;
+  return <HomePageComponent />;
 };
 
 export default Home;

@@ -1,11 +1,10 @@
 // ---------------------- User Roles ----------------------
-export const USER_ROLES = ['superadmin', 'admin', 'student', 'driver'] as const;
+export const USER_ROLES = ['superadmin', 'admin', 'driver'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
 export type IUserRole = {
   SUPERADMIN: 'superadmin';
   ADMIN: 'admin';
-  STUDENT: 'student';
   DRIVER: 'driver';
 };
 
@@ -22,11 +21,6 @@ export type ClientITInfo = {
 // ---------------------- Role-specific Info ----------------------
 export type BaseClientInfo = {
   bio?: string;
-};
-
-export type StudentClientInfo = BaseClientInfo & {
-  department: string;
-  rollNumber: string;
 };
 
 export type DriverClientInfo = BaseClientInfo & {
@@ -49,8 +43,6 @@ export interface IUser {
   // Optional security-related fields (usually backend-only)
   needPasswordChange?: boolean;
 
-  // Optional role-specific info
-  studentInfo?: StudentClientInfo;
   driverInfo?: DriverClientInfo;
 
   // Timestamps

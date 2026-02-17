@@ -2,163 +2,147 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useIntro } from '@/context/IntroContext';
+import { ArrowRight } from 'lucide-react';
 
 const IntroAnimation: React.FC = () => {
   const router = useRouter();
   const { setIsIntroActive } = useIntro();
   const [showContent, setShowContent] = useState(false);
-  const [canClick, setCanClick] = useState(false);
+
+  const handleProceed = React.useCallback(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('campusConnectIntroCompleted', 'true');
+    }
+    setIsIntroActive(false);
+    router.push('/');
+  }, [router, setIsIntroActive]);
 
   useEffect(() => {
+    // Show content after a short delay
     const timer = setTimeout(() => setShowContent(true), 500);
-    const enableClickTimer = setTimeout(() => setCanClick(true), 2000);
+
+    // Auto-proceed after 3.5 seconds (allowing time for animations)
+    const autoProceedTimer = setTimeout(() => {
+      handleProceed();
+    }, 3500);
+
     return () => {
       clearTimeout(timer);
-      clearTimeout(enableClickTimer);
+      clearTimeout(autoProceedTimer);
     };
-  }, []);
-
-  const handleStartJourney = () => {
-    if (canClick) {
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('campusConnectIntroCompleted', 'true');
-      }
-      setIsIntroActive(false);
-      router.push('/home');
-    }
-  };
+  }, [handleProceed]);
 
   return (
-    <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center bg-gradient-to-br from-black via-red-900 to-black text-white">
-      {}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/static/waves.svg')] bg-repeat-x bg-bottom opacity-25 animate-[waveMove_8s_linear_infinite]" />
-        <div className="absolute inset-0 bg-linear-to-b from-red-800/40 to-black/60" />
-        <div className="absolute inset-0 animate-[pulseGlow_3s_ease-in-out_infinite] bg-red-700/10 blur-3xl" />
-      </div>
+    <div className="relative min-h-screen overflow-hidden flex flex-col items-center justify-center bg-linear-to-br from-gray-900 via-gray-800 to-brick-900 text-white">
+      {/* Background Decorative Blobs */}
+      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-brick-600/20 rounded-full blur-[100px] animate-blob-1" />
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-brick-900/40 rounded-full blur-[100px] animate-blob-2" />
 
-      {}
-      <motion.div
-        className="absolute top-1/4 left-1/3 w-48 h-48 bg-red-500 rounded-full blur-3xl opacity-20"
-        animate={{
-          x: [0, 40, -40, 0],
-          y: [0, -20, 20, 0],
-        }}
-        transition={{ repeat: Infinity, duration: 6, ease: 'easeInOut' }}
-      />
-      <motion.div
-        className="absolute bottom-1/3 right-1/4 w-64 h-64 bg-red-400 rounded-full blur-3xl opacity-20"
-        animate={{
-          x: [0, -30, 30, 0],
-          y: [0, 20, -20, 0],
-        }}
-        transition={{ repeat: Infinity, duration: 7, ease: 'easeInOut' }}
-      />
+      <AnimatePresence>
+        {showContent && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="relative z-10 flex flex-col items-center justify-center px-6 text-center"
+          >
+            {/* Logo Section */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="relative w-32 h-32 md:w-40 md:h-40 mb-10"
+            >
+              <div className="absolute inset-0 bg-brick-500/20 rounded-full blur-2xl animate-pulse" />
+              <Image
+                src="/static/logo.png"
+                alt="BUTRACE Logo"
+                fill
+                className="object-contain relative z-10"
+                sizes="(max-width: 768px) 128px, 160px"
+                priority
+              />
+            </motion.div>
 
-      {}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{
-          opacity: showContent ? 1 : 0,
-          scale: showContent ? 1 : 0.9,
-        }}
-        transition={{ duration: 1 }}
-        className="relative z-10 flex flex-col items-center justify-center"
-      >
-        {}
-        <motion.button
-          onClick={handleStartJourney}
-          disabled={!canClick}
-          whileHover={{
-            scale: canClick ? 1.01 : 1,
-            rotate: canClick ? [0, 1, -1, 0] : 0,
-          }}
-          animate={{
-            scale: [1, 1.3, 1],
-            rotate: [0, 18, -18, 0],
-          }}
-          transition={{
-            duration: 1.6,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-          className={`relative w-36 h-36 md:w-48 md:h-48 rounded-full bg-linear-to-br from-red-600 via-red-700 to-red-900 shadow-[0_0_40px_rgba(255,0,0,0.6)] flex items-center justify-center overflow-hidden transition-all ${
-            canClick ? 'cursor-pointer' : 'cursor-not-allowed'
-          }`}
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.2),transparent_70%)] animate-[waveDistort_3s_ease-in-out_infinite]" />
-          <Image
-            src="/static/logo2.png"
-            alt="Campus Connect Logo"
-            fill
-            className="object-contain p-4 md:p-6"
-            sizes="(max-width: 768px) 144px, 192px"
-            priority
-          />
-        </motion.button>
+            {/* Title Section */}
+            <div className="space-y-4">
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6 }}
+                className="text-5xl md:text-7xl font-black tracking-tighter italic uppercase"
+              >
+                BU<span className="text-brick-500">TRACE</span>
+              </motion.h1>
 
-        {}
-        <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{
-            opacity: showContent ? 1 : 0,
-            y: showContent ? 0 : 20,
-          }}
-          transition={{ duration: 1, delay: 0.4 }}
-          className="text-4xl md:text-6xl font-extrabold text-center mt-10 tracking-wide"
-        >
-          Welcome to{' '}
-          <span className="text-transparent bg-clip-text bg-linear-to-r from-red-400 to-red-600 drop-shadow-lg">
-            Campus Connect
-          </span>
-        </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6, duration: 0.6 }}
+                className="text-gray-400 font-bold tracking-[0.3em] text-[10px] md:text-xs uppercase bg-white/5 py-2.5 px-8 rounded-full border border-white/10 backdrop-blur-md inline-block"
+              >
+                Welcome to the next level
+              </motion.p>
+            </div>
 
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{
-            opacity: showContent ? 1 : 0,
-            y: showContent ? 0 : 10,
-          }}
-          transition={{ duration: 1, delay: 0.8 }}
-          className="text-lg md:text-xl text-red-100 text-center mt-4"
-        >
-          Let’s begin your journey through innovation.
-        </motion.p>
-      </motion.div>
+            {/* Skip/Action Hint */}
+            <motion.button
+              onClick={handleProceed}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1, duration: 0.5 }}
+              className="mt-16 flex items-center gap-2 text-xs font-black uppercase text-brick-400 hover:text-brick-300 transition-colors tracking-widest group"
+            >
+              Starting Journey{' '}
+              <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+            </motion.button>
 
-      {}
+            {/* Auto-proceed Bar */}
+            <div className="absolute bottom-[-60px] h-1 w-32 bg-white/5 rounded-full overflow-hidden border border-white/10">
+              <motion.div
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 3, ease: 'linear' }}
+                className="h-full bg-brick-500 shadow-[0_0_10px_rgba(180,77,92,0.6)]"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style jsx>{`
-        @keyframes waveMove {
-          from {
-            background-position-x: 0;
-          }
-          to {
-            background-position-x: 1000px;
-          }
-        }
-        @keyframes waveDistort {
-          0% {
-            transform: scale(1) rotate(0deg);
-          }
-          50% {
-            transform: scale(1.05) rotate(1deg);
-          }
-          100% {
-            transform: scale(1) rotate(0deg);
-          }
-        }
-        @keyframes pulseGlow {
+        @keyframes blob1 {
           0%,
           100% {
-            opacity: 0.4;
-            transform: scale(1);
+            transform: translateY(0) translateX(0) scale(1);
           }
-          50% {
-            opacity: 0.7;
-            transform: scale(1.1);
+          33% {
+            transform: translateY(-20px) translateX(20px) scale(1.1);
           }
+          66% {
+            transform: translateY(20px) translateX(-20px) scale(0.9);
+          }
+        }
+        @keyframes blob2 {
+          0%,
+          100% {
+            transform: translateY(0) translateX(0) scale(1);
+          }
+          33% {
+            transform: translateY(30px) translateX(-30px) scale(0.95);
+          }
+          66% {
+            transform: translateY(-30px) translateX(30px) scale(1.05);
+          }
+        }
+        .animate-blob-1 {
+          animation: blob1 12s infinite ease-in-out;
+        }
+        .animate-blob-2 {
+          animation: blob2 15s infinite reverse ease-in-out;
         }
       `}</style>
     </div>

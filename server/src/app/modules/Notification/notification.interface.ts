@@ -7,7 +7,7 @@ export interface INotification {
   message: string;
   category?: 'system' | 'alert' | 'reminder';
   recipient?: Types.ObjectId | null;
-  targetRole?: 'superadmin' | 'admin' | 'student' | 'driver' | 'all';
+  targetRole?: 'superadmin' | 'admin' | 'driver' | 'all';
   isRead?: boolean;
   sentAt?: Date;
   createdAt?: Date;
