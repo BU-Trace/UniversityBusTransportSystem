@@ -20,22 +20,55 @@ import {
   MdWarning,
   MdBarChart,
 } from 'react-icons/md';
+import Image from 'next/image';
+
+/** * Custom types to extend the default Session 
+ */
+interface CustomUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  fullName?: string;
+  username?: string;
+  photoUrl?: string;
+  profileImage?: string;
+  role?: string;
+}
+
+interface CustomSession {
+  user?: CustomUser;
+  expires: string;
+}
 
 function getInitial(name?: string) {
   const n = (name || '').trim();
   return n ? n[0].toUpperCase() : 'U';
 }
 
-function getDisplayName(session: any) {
-  return session?.user?.name || session?.user?.fullName || session?.user?.username || 'User';
+function getDisplayName(session: CustomSession | null) {
+  if (!session?.user) return 'User';
+  return (
+    session.user.name ||
+    session.user.fullName ||
+    session.user.username ||
+    'User'
+  );
 }
 
-function getProfilePhoto(session: any) {
-  return session?.user?.photoUrl || session?.user?.profileImage || session?.user?.image || '';
+function getProfilePhoto(session: CustomSession | null) {
+  if (!session?.user) return '';
+  return (
+    session.user.photoUrl ||
+    session.user.profileImage ||
+    session.user.image ||
+    ''
+  );
 }
 
 export default function MergedDashboard() {
-  const { data: session } = useSession();
+  // Use manual casting to our custom session type
+  const { data } = useSession();
+  const session = data as CustomSession | null;
 
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -137,14 +170,14 @@ export default function MergedDashboard() {
             {/*Brand*/}
             <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
               <h1 className="text-xl font-black mb-6 tracking-tight italic">
-                CAMPUS<span className="text-white/70">CONNECT</span>
+                BU<span className="text-white/70">Trace</span>
               </h1>
 
               {/*Avatar*/}
               <div className="relative mb-3">
                 <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
                   {profilePhoto ? (
-                    <img
+                    <Image
                       src={profilePhoto}
                       alt={displayName}
                       className="w-full h-full object-cover"
@@ -164,12 +197,10 @@ export default function MergedDashboard() {
                 </Link>
               </div>
 
-              { }
               <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
                 {displayName}
               </h2>
 
-              { }
               <Link
                 href="/dashboard/editProfile"
                 onClick={() => setIsOpen(false)}
@@ -204,7 +235,7 @@ export default function MergedDashboard() {
             <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
+                className="flex items-center gap-4 w-full px-4 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
               >
                 <MdLogout size={20} />
                 <span className="text-sm">Log Out</span>

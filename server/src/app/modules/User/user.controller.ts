@@ -19,6 +19,7 @@ const updateDriverStatus = catchAsync(async (req: Request, res: Response) => {
 });
 
 
+
 const registerUser = catchAsync(async (req: Request, res: Response) => {
   await UserServices.registerUser(req.body);
 

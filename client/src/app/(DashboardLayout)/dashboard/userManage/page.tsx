@@ -118,6 +118,20 @@ type RawUser = {
   createdAt?: string;
 };
 
+interface CustomSession {
+  user?: {
+    name?: string;
+    fullName?: string;
+    username?: string;
+    email?: string;
+    role?: string;
+    photoUrl?: string;
+    profileImage?: string;
+    image?: string;
+  };
+  accessToken?: string;
+}
+
 type RawPending = RawUser;
 
 function joinUrl(pathOrUrl: string) {
@@ -314,7 +328,8 @@ function HeaderModal({
 
 export default function UserManagementPage() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data } = useSession();
+  const session = data as CustomSession | null;
   const displayName = getDisplayName(session);
   const profilePhoto = getProfilePhoto(session);
   const initial = getInitial(displayName);
@@ -404,7 +419,7 @@ export default function UserManagementPage() {
     return n ? n[0].toUpperCase() : "U";
   }
 
-  function getDisplayName(session: any) {
+  function getDisplayName(session: CustomSession | null) {
     return (
       session?.user?.name ||
       session?.user?.fullName ||
@@ -413,7 +428,7 @@ export default function UserManagementPage() {
     );
   }
 
-  function getProfilePhoto(session: any) {
+  function getProfilePhoto(session: CustomSession | null) {
     return (
       session?.user?.photoUrl ||
       session?.user?.profileImage ||
@@ -421,6 +436,8 @@ export default function UserManagementPage() {
       ""
     );
   }
+
+
 
 
   const menuItems = [
@@ -864,11 +881,10 @@ export default function UserManagementPage() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${
-                    pathname === item.href
-                      ? 'bg-white text-[#E31E24] shadow-md'
-                      : 'hover:bg-white/10 text-white/90'
-                  }`}
+                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
+                    ? 'bg-white text-[#E31E24] shadow-md'
+                    : 'hover:bg-white/10 text-white/90'
+                    }`}
                 >
                   <item.icon size={20} /> <span className="text-sm">{item.label}</span>
                 </Link>
@@ -938,11 +954,10 @@ export default function UserManagementPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as UserRole)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#E31E24] text-white shadow-lg shadow-red-200'
-                    : 'text-gray-500 hover:bg-gray-50'
-                }`}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${activeTab === tab.id
+                  ? 'bg-[#E31E24] text-white shadow-lg shadow-red-200'
+                  : 'text-gray-500 hover:bg-gray-50'
+                  }`}
               >
                 <tab.icon size={18} />
                 {tab.label}
@@ -1075,9 +1090,8 @@ export default function UserManagementPage() {
               className="bg-white rounded-[2.2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-gray-100"
             >
               <HeaderModal
-                title={`${modalType === 'add' ? 'Add' : 'Update'} ${
-                  prettyRole(form.role as UserRole) || 'User'
-                }`}
+                title={`${modalType === 'add' ? 'Add' : 'Update'} ${prettyRole(form.role as UserRole) || 'User'
+                  }`}
                 subtitle="Fill the same fields as registration. Admin/Driver require documents."
                 onClose={() => setIsModalOpen(false)}
               />
@@ -1220,11 +1234,10 @@ export default function UserManagementPage() {
                             type="button"
                             onClick={pickPhoto}
                             disabled={uploadingPhoto}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
-                              uploadingPhoto
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                            }`}
+                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingPhoto
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                              }`}
                           >
                             <Upload size={16} /> {uploadingPhoto ? 'Uploading...' : 'Upload'}
                           </button>
@@ -1266,11 +1279,10 @@ export default function UserManagementPage() {
                             type="button"
                             onClick={pickLetter}
                             disabled={uploadingLetter}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${
-                              uploadingLetter
-                                ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                                : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                            }`}
+                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingLetter
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                              : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
+                              }`}
                           >
                             <Upload size={16} /> {uploadingLetter ? 'Uploading...' : 'Upload'}
                           </button>
@@ -1319,11 +1331,10 @@ export default function UserManagementPage() {
                   <button
                     type="submit"
                     disabled={uploadingPhoto || uploadingLetter}
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${
-                      uploadingPhoto || uploadingLetter
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-[#E31E24] hover:bg-red-700'
-                    }`}
+                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploadingPhoto || uploadingLetter
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-[#E31E24] hover:bg-red-700'
+                      }`}
                   >
                     <Save size={18} />
                     {modalType === 'add' ? 'Save User' : 'Save Changes'}
