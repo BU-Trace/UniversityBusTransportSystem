@@ -22,12 +22,6 @@ const updateDriverStatus = async (driverId: string, status: any) => {
   return driver;
 };
 
-<<<<<<< HEAD
-
-
-
-=======
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 type ClientInfo = NonNullable<IUser['clientInfo']>;
 
 const ROLE_CLIENT_FIELDS: Record<UserRole, (keyof ClientInfo)[]> = {

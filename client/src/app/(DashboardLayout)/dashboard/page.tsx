@@ -16,27 +16,6 @@ import {
   MdList,
   MdRefresh,
 } from 'react-icons/md';
-<<<<<<< HEAD
-import Image from 'next/image';
-
-/** * Custom types to extend the default Session 
- */
-interface CustomUser {
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-  fullName?: string;
-  username?: string;
-  photoUrl?: string;
-  profileImage?: string;
-  role?: string;
-}
-
-interface CustomSession {
-  user?: CustomUser;
-  expires: string;
-}
-=======
 import { RefreshCcw } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
@@ -57,7 +36,6 @@ import {
 import { toast } from 'sonner';
 import DashboardWatch from '@/components/DashboardWatch';
 import DashboardCalendar from '@/components/DashboardCalendar';
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 
 interface ActiveSession {
   id: string;
@@ -66,34 +44,6 @@ interface ActiveSession {
   profileImage?: string;
 }
 
-<<<<<<< HEAD
-function getDisplayName(session: CustomSession | null) {
-  if (!session?.user) return 'User';
-  return (
-    session.user.name ||
-    session.user.fullName ||
-    session.user.username ||
-    'User'
-  );
-}
-
-function getProfilePhoto(session: CustomSession | null) {
-  if (!session?.user) return '';
-  return (
-    session.user.photoUrl ||
-    session.user.profileImage ||
-    session.user.image ||
-    ''
-  );
-}
-
-export default function MergedDashboard() {
-  // Use manual casting to our custom session type
-  const { data } = useSession();
-  const session = data as CustomSession | null;
-
-  const [isOpen, setIsOpen] = useState(false);
-=======
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 interface DashboardData {
@@ -130,7 +80,6 @@ const COLORS = ['#ef4444', '#f97316', '#3b82f6', '#10b981', '#8b5cf6', '#ec4899'
 
 const MergedDashboard = () => {
   const { data: session } = useSession();
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
   const [mounted, setMounted] = useState(false);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -448,25 +397,6 @@ const MergedDashboard = () => {
           </div>
         </motion.div>
 
-<<<<<<< HEAD
-            {/*Brand*/}
-            <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
-              <h1 className="text-xl font-black mb-6 tracking-tight italic">
-                BU<span className="text-white/70">Trace</span>
-              </h1>
-
-              {/*Avatar*/}
-              <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg overflow-hidden">
-                  {profilePhoto ? (
-                    <Image
-                      src={profilePhoto}
-                      alt={displayName}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="text-3xl font-black italic text-white/80">{initial}</span>
-=======
         {/* Dynamic Stats Row (3 items now) */}
         <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {stats.slice(0, 3).map((stat, i) => (
@@ -775,7 +705,6 @@ const MergedDashboard = () => {
                     <div className="w-full py-3 bg-white/5 text-emerald-500 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 italic">
                       <MdCheckCircle size={14} /> System Fixed
                     </div>
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                   )}
                 </div>
               </div>
@@ -790,19 +719,6 @@ const MergedDashboard = () => {
         </div>
       </motion.div>
 
-<<<<<<< HEAD
-              <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
-                {displayName}
-              </h2>
-
-              <Link
-                href="/dashboard/editProfile"
-                onClick={() => setIsOpen(false)}
-                className="text-[10px] opacity-70 underline mt-0.5 hover:opacity-100"
-              >
-                Edit Profile
-              </Link>
-=======
       {/* Quick Resolve Modal */}
       {selectedReport && (
         <div className="fixed inset-0 z-1000 flex items-center justify-center p-4">
@@ -824,7 +740,6 @@ const MergedDashboard = () => {
               <h3 className="text-xl font-black text-white uppercase tracking-tight">
                 Quick Resolve
               </h3>
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
             </div>
 
             <div className="space-y-4 mb-8">
@@ -850,13 +765,8 @@ const MergedDashboard = () => {
 
             <div className="flex gap-4">
               <button
-<<<<<<< HEAD
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-4 w-full px-4 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
-=======
                 onClick={() => setSelectedReport(null)}
                 className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all"
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
               >
                 Cancel
               </button>
@@ -873,10 +783,6 @@ const MergedDashboard = () => {
       )}
     </div>
   );
-<<<<<<< HEAD
-}
-=======
 };
 
 export default MergedDashboard;
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207

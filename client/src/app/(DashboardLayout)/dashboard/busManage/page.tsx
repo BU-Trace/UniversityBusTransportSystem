@@ -35,37 +35,8 @@ interface BusData {
   photo: string;
 }
 
-<<<<<<< HEAD
-const initialRoutes: Route[] = [
-  {
-    id: '1',
-    name: 'Route 1 (Nothullabad)',
-    startPoint: 'Campus',
-    endPoint: 'Nothullabad',
-    activeHoursComing: ['08:00 AM - 10:00 AM'],
-    activeHoursGoing: ['02:00 PM - 04:00 PM'],
-  },
-];
-
-const initialBuses: BusData[] = [
-  {
-    id: '1',
-    name: 'Baikali',
-    plateNumber: 'DHK-METRO-KA-1234',
-    routeId: '1',
-    routeName: 'Route 1 (Nothullabad)',
-    activeHoursComing: ['08:00 AM - 10:00 AM'],
-    activeHoursGoing: ['02:00 PM - 04:00 PM'],
-    photo:
-      'https://th.bing.com/th/id/R.ffa99e6ef783e2154e18cc2aa9f3e873?rik=6Ic5jyNHg4Ht1w&pid=ImgRaw&r=0',
-  },
-];
-
-
-=======
 const CLOUD_NAME = 'dpiofecgs';
 const UPLOAD_PRESET = 'butrace';
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 
 function getErrorMessage(e: unknown) {
   if (e instanceof Error) return e.message;
@@ -74,18 +45,10 @@ function getErrorMessage(e: unknown) {
 }
 
 async function uploadToCloudinary(file: File): Promise<string> {
-<<<<<<< HEAD
-  const url = `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUD_NAME}/image/upload`;
-
-=======
   const url = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
   const form = new FormData();
   form.append('file', file);
-  form.append(
-    'upload_preset',
-    process.env.NEXT_PUBLIC_UPLOAD_PRESET || ''
-  );
+  form.append('upload_preset', UPLOAD_PRESET);
 
   const res = await fetch(url, { method: 'POST', body: form });
   const data = await res.json().catch(() => ({}));
@@ -287,228 +250,6 @@ export default function BusManagementPage() {
   if (!mounted) return null;
 
   return (
-<<<<<<< HEAD
-    <div className="flex min-h-screen bg-[#F8F9FA] relative font-sans text-gray-800">
-      { }
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="lg:hidden fixed top-4 left-4 z-[60] p-2 bg-[#E31E24] text-white rounded-xl shadow-lg"
-        >
-          <MdMenu size={24} />
-        </button>
-      )}
-
-      { }
-      <AnimatePresence>
-        {(isOpen || (typeof window !== 'undefined' && window.innerWidth >= 1024)) && (
-          <motion.aside
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'tween', duration: 0.3 }}
-            className="fixed lg:sticky top-0 left-0 z-50 bg-[#E31E24] text-white flex flex-col shadow-2xl w-full lg:w-72 h-screen overflow-hidden"
-          >
-            <button
-              onClick={() => setIsOpen(false)}
-              className="lg:hidden absolute top-4 left-4 p-2 rounded-md bg-white/20"
-            >
-              <MdClose size={24} />
-            </button>
-
-            <div className="p-6 flex flex-col items-center border-b border-white/10 mt-12 lg:mt-0">
-              <h1 className="text-xl font-black mb-6 tracking-tight italic">
-                CAMPUS<span className="text-white/70">CONNECT</span>
-              </h1>
-              <div className="relative mb-3">
-                <div className="w-20 h-20 rounded-full border-2 border-white/30 bg-white/10 flex items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold italic opacity-50">ADMIN</span>
-                </div>
-                <button className="absolute bottom-0 right-0 p-1.5 bg-white text-[#E31E24] rounded-full shadow-md">
-                  <MdEdit size={12} />
-                </button>
-              </div>
-              <h2 className="font-bold text-base uppercase tracking-widest">{admin.name}</h2>
-            </div>
-
-            <nav className="flex-1 mt-4 px-4 space-y-1">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
-                    ? 'bg-white text-[#E31E24] shadow-md'
-                    : 'hover:bg-white/10 text-white/90'
-                    }`}
-                >
-                  <item.icon size={20} /> <span className="text-sm">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-
-            <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
-              >
-                <MdLogout size={20} /> <span className="text-sm">Log Out</span>
-              </button>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      { }
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-7xl mx-auto">
-          { }
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
-                Bus Management
-              </h1>
-              <p className="text-gray-500 text-sm font-medium">
-                Register buses, upload photos, assign routes, and manage fleet.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative w-full md:w-80">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by bus / plate / route..."
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white shadow-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all"
-                />
-              </div>
-
-              <button
-                onClick={openAdd}
-                className="bg-[#E31E24] text-white px-5 py-3 rounded-2xl font-bold text-sm hover:bg-red-700 transition-all shadow-lg shadow-red-200 flex items-center gap-2 whitespace-nowrap"
-              >
-                <Plus size={18} /> Register Bus
-              </button>
-            </div>
-          </div>
-
-          { }
-          <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="font-bold text-lg text-gray-800 flex items-center gap-2 uppercase tracking-wide">
-                <Bus size={20} className="text-[#E31E24]" />
-                Fleet List
-              </h3>
-              <div className="text-xs font-bold text-gray-400">
-                Total: <span className="text-gray-700">{filteredBuses.length}</span>
-              </div>
-            </div>
-
-            <div className="p-6 overflow-x-auto">
-              {filteredBuses.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="mx-auto w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
-                    <Bus className="text-[#E31E24]" />
-                  </div>
-                  <h4 className="mt-4 font-black text-gray-900">No buses found</h4>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Register your first bus with a mandatory photo upload.
-                  </p>
-                  <button
-                    onClick={openAdd}
-                    className="mt-6 inline-flex items-center gap-2 bg-[#E31E24] text-white px-5 py-3 rounded-2xl font-bold text-sm hover:bg-red-700 transition-all shadow-lg shadow-red-200"
-                  >
-                    <Plus size={18} /> Register Bus
-                  </button>
-                </div>
-              ) : (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                      <th className="pb-4">Bus</th>
-                      <th className="pb-4">Plate</th>
-                      <th className="pb-4">Route</th>
-                      <th className="pb-4">Active Hours</th>
-                      <th className="pb-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-
-                  <tbody className="text-sm">
-                    {filteredBuses.map((bus) => (
-                      <tr
-                        key={bus.id}
-                        className="border-b border-gray-50 hover:bg-red-50/30 transition-colors group"
-                      >
-                        <td className="py-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
-                              { }
-                              <Image
-                                src={bus.photo}
-                                alt={bus.name}
-                                width={48}
-                                height={48}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                            </div>
-                            <div>
-                              <div className="font-black text-gray-900">{bus.name}</div>
-                              <div className="text-xs text-gray-500 flex items-center gap-1">
-                                <ImageIcon size={12} /> Photo Verified
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="py-4">
-                          <span className="text-gray-700 font-mono text-xs bg-gray-100 px-2 py-1 rounded-lg border border-gray-200">
-                            {bus.plateNumber}
-                          </span>
-                        </td>
-
-                        <td className="py-4 text-gray-600 text-xs">
-                          <div className="font-bold text-blue-600">{bus.routeName}</div>
-                          <div className="mt-1 opacity-70 flex items-center gap-1">
-                            <MapPin size={12} />
-                            {routes.find((r) => r.id === bus.routeId)?.startPoint || 'Start'} ➝{' '}
-                            {routes.find((r) => r.id === bus.routeId)?.endPoint || 'End'}
-                          </div>
-                        </td>
-
-                        <td className="py-4 text-xs text-gray-500">
-                          <div className="flex items-center gap-1">
-                            <Clock size={12} /> Coming: {bus.activeHoursComing}
-                          </div>
-                          <div className="mt-1 opacity-70">Going: {bus.activeHoursGoing}</div>
-                        </td>
-
-                        <td className="py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            <button
-                              onClick={() => openEdit(bus)}
-                              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
-                            >
-                              <Edit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(bus.id)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors"
-                            >
-                              <Trash2 size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-=======
     <div className="space-y-12 pb-12">
       {/* header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
@@ -552,13 +293,9 @@ export default function BusManagementPage() {
           </h3>
           <div className="text-xs font-black text-gray-400 tracking-widest bg-white/5 px-6 py-2 rounded-full border border-white/10">
             TOTAL: <span className="text-brick-400 ml-1">{filteredBuses.length}</span>
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
           </div>
         </div>
 
-<<<<<<< HEAD
-      { }
-=======
         <div className="p-8 overflow-x-auto custom-scrollbar">
           {filteredBuses.length === 0 ? (
             <div className="py-24 text-center">
@@ -671,7 +408,6 @@ export default function BusManagementPage() {
       </div>
 
       {/* modal */}
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
       <AnimatePresence>
         {isModalOpen && (
           <Overlay onClose={() => setIsModalOpen(false)}>
@@ -687,19 +423,11 @@ export default function BusManagementPage() {
                 onClose={() => setIsModalOpen(false)}
               />
 
-<<<<<<< HEAD
-              <form onSubmit={handleSave} className="p-8 space-y-6">
-                { }
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-bold uppercase text-gray-500 mb-1 block">
-=======
               <form onSubmit={handleSave} className="p-8 space-y-8">
                 {/* core fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2">
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                       Bus Name
                     </label>
                     <input
@@ -722,16 +450,6 @@ export default function BusManagementPage() {
                   </div>
                 </div>
 
-<<<<<<< HEAD
-                { }
-                <div className="bg-gray-50 rounded-2xl border border-gray-200 p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-xs font-black uppercase text-gray-600">
-                        No of Active Hours
-                      </div>
-                      <div className="text-[11px] text-gray-500 mt-1">Number of trips a day.</div>
-=======
                 {/* route assignment */}
                 <div className="space-y-3">
                   <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 flex items-center gap-2">
@@ -773,7 +491,6 @@ export default function BusManagementPage() {
                         }
                         className="w-20 bg-black/20 border border-white/5 rounded-xl p-3 text-center text-white font-black text-xs outline-none focus:border-brick-500/40"
                       />
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                     </div>
                   </div>
 
@@ -818,31 +535,6 @@ export default function BusManagementPage() {
                   </div>
                 </div>
 
-<<<<<<< HEAD
-                { }
-                <div className="rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                  <div className="p-4 bg-gray-50 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-black uppercase text-gray-600">
-                        Bus Photo {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
-                      </div>
-                      <div className="text-[11px] text-gray-500 mt-1">Recheck before upload.</div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={handlePickFile}
-                      disabled={uploading}
-                      className={`px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 transition-all ${uploading
-                        ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                        : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                        }`}
-                    >
-                      <Upload size={18} />
-                      {uploading ? 'Uploading...' : 'Upload'}
-                    </button>
-
-=======
                 {/* photo upload */}
                 <div className="space-y-4">
                   <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em] ml-2 flex items-center gap-2">
@@ -892,7 +584,6 @@ export default function BusManagementPage() {
                         </p>
                       </>
                     )}
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                     <input
                       ref={fileRef}
                       type="file"
@@ -901,87 +592,10 @@ export default function BusManagementPage() {
                       onChange={handleFileChange}
                     />
                   </div>
-<<<<<<< HEAD
-
-                  <div className="p-4">
-                    {busForm.photo ? (
-                      <div className="flex items-center gap-4">
-                        <div className="w-24 h-20 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100">
-                          { }
-                          <Image
-                            src={busForm.photo}
-                            alt="Bus preview"
-                            width={96}
-                            height={80}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="text-sm">
-                          <div className="font-black text-gray-900">Photo Ready</div>
-                          <div className="text-xs text-gray-500">
-                            Saved as secure Cloudinary URL.
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 flex items-center gap-2">
-                        <ImageIcon size={18} className="text-gray-400" />
-                        {modalType === 'add'
-                          ? 'Photo is required to register a new bus.'
-                          : 'No photo selected (keeping existing photo is okay).'}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                { }
-                <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                  <label className="text-xs font-bold uppercase text-blue-600 mb-2 block">
-                    Assign Route
-                  </label>
-                  <select
-                    value={busForm.routeId || ''}
-                    onChange={(e) => handleBusRouteChange(e.target.value)}
-                    className="w-full p-3 rounded-2xl border border-gray-200 focus:border-blue-500 outline-none bg-white font-semibold"
-                  >
-                    <option value="">-- Select a Route --</option>
-                    {routes.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </select>
-
-                  {busForm.routeId && (
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-white p-3 rounded-xl border border-gray-100">
-                        <span className="text-[10px] uppercase text-gray-400 font-black block">
-                          Active Coming
-                        </span>
-                        <span className="text-sm font-black text-gray-700">
-                          {busForm.activeHoursComing}
-                        </span>
-                      </div>
-                      <div className="bg-white p-3 rounded-xl border border-gray-100">
-                        <span className="text-[10px] uppercase text-gray-400 font-black block">
-                          Active Going
-                        </span>
-                        <span className="text-sm font-black text-gray-700">
-                          {busForm.activeHoursGoing}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                { }
-                <div className="pt-2 flex gap-3">
-=======
                 </div>
 
                 {/* actions */}
                 <div className="pt-4 flex gap-4 sticky bottom-0 bg-gray-900 pb-2">
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -992,12 +606,7 @@ export default function BusManagementPage() {
                   <button
                     type="submit"
                     disabled={uploading}
-<<<<<<< HEAD
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploading ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#E31E24] hover:bg-red-700'
-                      }`}
-=======
                     className="flex-1 py-5 rounded-3xl font-black text-white bg-brick-500 hover:bg-brick-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xl shadow-brick-500/20 flex justify-center items-center gap-3 text-sm uppercase tracking-widest border border-white/10"
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                   >
                     {uploading ? (
                       <Loader2 className="animate-spin" size={20} />

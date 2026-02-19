@@ -25,7 +25,7 @@ const PageBanner: React.FC<PageBannerProps> = ({
         className={`object-cover ${position === 'bottom' ? 'object-bottom' : 'object-center'} opacity-60`}
       />
 
-      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent flex items-center justify-center">
+      <div className="absolute inset-0 bg-linear-to-t from-gray-900/90 via-gray-900/40 to-transparent flex items-center justify-center">
         <div className="text-center px-6 max-w-4xl mx-auto z-10">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}

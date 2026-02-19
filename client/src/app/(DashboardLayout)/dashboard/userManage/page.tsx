@@ -88,25 +88,6 @@ type RawUser = {
   createdAt?: string;
 };
 
-<<<<<<< HEAD
-interface CustomSession {
-  user?: {
-    name?: string;
-    fullName?: string;
-    username?: string;
-    email?: string;
-    role?: string;
-    photoUrl?: string;
-    profileImage?: string;
-    image?: string;
-  };
-  accessToken?: string;
-}
-
-type RawPending = RawUser;
-
-=======
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 function joinUrl(pathOrUrl: string) {
   const isFullUrl = /^https?:\/\//i.test(pathOrUrl);
   if (isFullUrl) return pathOrUrl;
@@ -285,16 +266,7 @@ function HeaderModal({
   );
 }
 export default function UserManagementPage() {
-<<<<<<< HEAD
-  const pathname = usePathname();
-  const { data } = useSession();
-  const session = data as CustomSession | null;
-  const displayName = getDisplayName(session);
-  const profilePhoto = getProfilePhoto(session);
-  const initial = getInitial(displayName);
-=======
   const { data: session } = useSession();
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 
   // const staffRole = toStaffRole(session?.user?.role ?? null);
 
@@ -357,49 +329,7 @@ export default function UserManagementPage() {
     return () => {
       document.body.style.overflow = 'auto';
     };
-<<<<<<< HEAD
-  }, [isOpen, isModalOpen, pendingOpen, approvalOpen, assignBusOpen]);
-
-  function getInitial(name?: string) {
-    const n = (name || "").trim();
-    return n ? n[0].toUpperCase() : "U";
-  }
-
-  function getDisplayName(session: CustomSession | null) {
-    return (
-      session?.user?.name ||
-      session?.user?.fullName ||
-      session?.user?.username ||
-      "User"
-    );
-  }
-
-  function getProfilePhoto(session: CustomSession | null) {
-    return (
-      session?.user?.photoUrl ||
-      session?.user?.profileImage ||
-      session?.user?.image ||
-      ""
-    );
-  }
-
-
-
-
-  const menuItems = [
-    { label: 'Dashboard Overview', href: '/dashboard', icon: MdDashboard },
-    {
-      label: 'Bus Management',
-      href: '/dashboard/busManage',
-      icon: MdDirectionsBus,
-    },
-    { label: 'User Management', href: '/dashboard/userManage', icon: MdPeople },
-    { label: 'Route Management', href: '/dashboard/routeManage', icon: MdMap },
-    { label: 'Notice Publish', href: '/dashboard/notice', icon: MdNotifications },
-  ];
-=======
   }, [isModalOpen]);
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
 
   const loadBuses = async () => {
     try {
@@ -688,189 +618,6 @@ export default function UserManagementPage() {
               <div className="mx-auto w-20 h-20 rounded-3xl bg-brick-500/10 flex items-center justify-center mb-6 text-brick-500">
                 <Users size={32} />
               </div>
-<<<<<<< HEAD
-
-              <h2 className="font-bold text-base uppercase tracking-widest truncate max-w-[220px] text-center">
-                {displayName}
-              </h2>
-            </div>
-
-            <nav className="flex-1 mt-4 px-4 space-y-1">
-              {menuItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all ${pathname === item.href
-                    ? 'bg-white text-[#E31E24] shadow-md'
-                    : 'hover:bg-white/10 text-white/90'
-                    }`}
-                >
-                  <item.icon size={20} /> <span className="text-sm">{item.label}</span>
-                </Link>
-              ))}
-            </nav>
-
-            <div className="p-6 border-t border-white/10 mb-4 lg:mb-0">
-              <button
-                onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-4 w-full px-18.5 py-3 hover:bg-white/10 rounded-xl font-bold transition-colors"
-              >
-                <MdLogout size={20} /> <span className="text-sm">Log Out</span>
-              </button>
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-        <div className="p-4 lg:p-8 pt-16 lg:pt-8 w-full max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-            <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight uppercase">
-                User Management
-              </h1>
-              <p className="text-gray-500 text-sm font-medium">
-                Manage Students, Drivers and Admins.
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="relative w-full md:w-80">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  size={18}
-                />
-                <input
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search by name / email / id / bus..."
-                  className="w-full pl-10 pr-4 py-3 rounded-2xl border border-gray-200 bg-white shadow-sm outline-none focus:border-red-500 focus:ring-2 focus:ring-red-100 transition-all"
-                />
-              </div>
-
-              <button
-                onClick={openAdd}
-                className="bg-[#E31E24] text-white px-5 py-3 rounded-2xl font-black text-sm hover:bg-red-700 transition-all shadow-lg shadow-red-200 flex items-center gap-2 whitespace-nowrap"
-              >
-                <Plus size={18} /> Add User
-              </button>
-
-              <button
-                onClick={openPending}
-                className="bg-white border border-gray-200 px-5 py-3 rounded-2xl font-black text-sm hover:bg-gray-50 transition-all shadow-sm flex items-center gap-2 whitespace-nowrap"
-              >
-                <Clock size={18} className="text-[#E31E24]" /> Pending Requests
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2 mb-8 flex flex-wrap gap-2">
-            {[
-              { id: 'student', label: 'Students', icon: Users },
-              { id: 'driver', label: 'Drivers', icon: Bus },
-              { id: 'admin', label: 'Admins', icon: ShieldCheck },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as UserRole)}
-                className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-black text-sm transition-all ${activeTab === tab.id
-                  ? 'bg-[#E31E24] text-white shadow-lg shadow-red-200'
-                  : 'text-gray-500 hover:bg-gray-50'
-                  }`}
-              >
-                <tab.icon size={18} />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-xl overflow-hidden min-h-[520px] flex flex-col">
-            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h3 className="font-black text-lg text-gray-800 uppercase tracking-wide flex items-center gap-2">
-                <MdPeople className="text-[#E31E24]" /> {prettyRole(activeTab)} List
-              </h3>
-              <div className="text-xs font-black text-gray-400">
-                Total: <span className="text-gray-700">{filteredUsers.length}</span>
-              </div>
-            </div>
-
-            <div className="p-6 overflow-x-auto">
-              {filteredUsers.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="mx-auto w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center">
-                    <Users className="text-[#E31E24]" />
-                  </div>
-                  <h4 className="mt-4 font-black text-gray-900">No users found</h4>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Add a new user or approve a pending request.
-                  </p>
-                </div>
-              ) : (
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="text-xs font-black text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                      <th className="pb-4">Name</th>
-                      <th className="pb-4">Email</th>
-                      <th className="pb-4">Role Details</th>
-                      {activeTab === 'driver' && <th className="pb-4">Assigned Bus</th>}
-                      <th className="pb-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-sm">
-                    {filteredUsers.map((u) => (
-                      <tr
-                        key={u.id}
-                        className="border-b border-gray-50 hover:bg-red-50/30 transition-colors"
-                      >
-                        <td className="py-4 font-black text-gray-900">{u.name}</td>
-                        <td className="py-4 text-gray-600">{u.email}</td>
-                        <td className="py-4 text-xs text-gray-600">
-                          {u.role === 'student' && (
-                            <div className="font-semibold">
-                              Student ID: <span className="font-black">{u.studentId || '—'}</span>
-                            </div>
-                          )}
-                          {u.role === 'driver' && (
-                            <div className="font-semibold">
-                              License: <span className="font-black">{u.licenseNumber || '—'}</span>
-                            </div>
-                          )}
-                          {u.role === 'admin' && (
-                            <div className="font-black text-red-600">System Admin</div>
-                          )}
-
-                          {(u.photoUrl || u.approvalLetterUrl) && (
-                            <div className="mt-2 flex flex-wrap gap-2">
-                              {u.photoUrl ? (
-                                <button
-                                  type="button"
-                                  onClick={() => safeOpen(u.photoUrl)}
-                                  className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
-                                >
-                                  <Users size={12} /> Photo
-                                </button>
-                              ) : null}
-                              {u.approvalLetterUrl ? (
-                                <button
-                                  type="button"
-                                  onClick={() => safeOpen(u.approvalLetterUrl)}
-                                  className="inline-flex items-center gap-1 text-[11px] font-black px-2 py-1 rounded-lg bg-gray-100 hover:bg-gray-200"
-                                >
-                                  <FileText size={12} /> Letter
-                                </button>
-                              ) : null}
-                            </div>
-                          )}
-                        </td>
-
-                        {activeTab === 'driver' && (
-                          <td className="py-4 text-xs text-gray-600">
-                            <span className="font-black text-blue-600">
-                              {u.assignedBusName || 'Not Assigned'}
-                            </span>
-                          </td>
-=======
               <h4 className="text-2xl font-black text-white mb-2 uppercase tracking-wide">
                 No users found
               </h4>
@@ -912,7 +659,6 @@ export default function UserManagementPage() {
                           <div className="w-full h-full flex items-center justify-center text-gray-600">
                             <Users size={20} />
                           </div>
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                         )}
                       </div>
                     </td>
@@ -988,8 +734,9 @@ export default function UserManagementPage() {
               className="bg-gray-900/90 backdrop-blur-3xl rounded-[3rem] shadow-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-white/10 relative custom-scrollbar"
             >
               <HeaderModal
-                title={`${modalType === 'add' ? 'Add' : 'Update'} ${prettyRole(form.role as UserRole) || 'User'
-                  }`}
+                title={`${modalType === 'add' ? 'Add' : 'Update'} ${
+                  prettyRole(form.role as UserRole) || 'User'
+                }`}
                 subtitle="Fill the same fields as registration. Admin/Driver require documents."
                 onClose={() => setIsModalOpen(false)}
               />
@@ -1174,18 +921,11 @@ export default function UserManagementPage() {
                             type="button"
                             onClick={pickPhoto}
                             disabled={uploadingPhoto}
-<<<<<<< HEAD
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingPhoto
-                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                              : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                              }`}
-=======
                             className={`px-4 py-2 rounded-xl font-black text-[10px] flex items-center gap-2 transition-all uppercase tracking-widest ${
                               uploadingPhoto
                                 ? 'bg-white/5 text-gray-600 cursor-not-allowed'
                                 : 'bg-brick-500 text-white hover:bg-brick-600 shadow-lg shadow-brick-500/20'
                             }`}
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                           >
                             <Upload size={14} /> {uploadingPhoto ? '...' : 'Upload'}
                           </button>
@@ -1198,63 +938,6 @@ export default function UserManagementPage() {
                           />
                         </div>
 
-<<<<<<< HEAD
-                        <div className="mt-3">
-                          {form.photoUrl ? (
-                            <button
-                              type="button"
-                              onClick={() => safeOpen(form.photoUrl)}
-                              className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
-                            >
-                              <div className="text-sm font-black text-gray-900">Photo Ready</div>
-                              <div className="text-xs text-gray-500 break-all">{form.photoUrl}</div>
-                            </button>
-                          ) : (
-                            <div className="text-sm text-gray-500">
-                              {modalType === 'add'
-                                ? 'Upload a photo to continue.'
-                                : 'No photo selected.'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="rounded-2xl border border-gray-200 p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="text-xs font-black uppercase text-gray-600">
-                            Approval Letter {modalType === 'add' ? '(Mandatory)' : '(Optional)'}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={pickLetter}
-                            disabled={uploadingLetter}
-                            className={`px-3 py-2 rounded-xl font-black text-xs flex items-center gap-2 transition-all ${uploadingLetter
-                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
-                              : 'bg-[#E31E24] text-white hover:bg-red-700 shadow-lg shadow-red-200'
-                              }`}
-                          >
-                            <Upload size={16} /> {uploadingLetter ? 'Uploading...' : 'Upload'}
-                          </button>
-                          <input
-                            ref={letterRef}
-                            type="file"
-                            accept="image/*,application/pdf"
-                            className="hidden"
-                            onChange={onLetterChange}
-                          />
-                        </div>
-
-                        <div className="mt-3">
-                          {form.approvalLetterUrl ? (
-                            <button
-                              type="button"
-                              onClick={() => safeOpen(form.approvalLetterUrl)}
-                              className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-colors"
-                            >
-                              <div className="text-sm font-black text-gray-900">Letter Ready</div>
-                              <div className="text-xs text-gray-500 break-all">
-                                {form.approvalLetterUrl}
-=======
                         <div className="mt-4 flex flex-col items-center gap-4">
                           <div className="relative w-32 h-32 rounded-3xl overflow-hidden border-2 border-dashed border-white/10 bg-white/5 flex items-center justify-center">
                             {uploadingPhoto && (
@@ -1263,7 +946,6 @@ export default function UserManagementPage() {
                                 <div className="text-[8px] font-black text-brick-400 uppercase tracking-widest animate-pulse">
                                   Uploading
                                 </div>
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                               </div>
                             )}
 
@@ -1308,20 +990,12 @@ export default function UserManagementPage() {
                   </button>
                   <button
                     type="submit"
-<<<<<<< HEAD
-                    disabled={uploadingPhoto || uploadingLetter}
-                    className={`flex-1 py-4 rounded-2xl font-black text-white transition-colors shadow-lg flex justify-center items-center gap-2 ${uploadingPhoto || uploadingLetter
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-[#E31E24] hover:bg-red-700'
-                      }`}
-=======
                     disabled={uploadingPhoto}
                     className={`flex-1 py-5 rounded-3xl font-black text-white transition-all shadow-2xl flex justify-center items-center gap-3 text-sm uppercase tracking-widest border border-white/10 ${
                       uploadingPhoto
                         ? 'bg-white/5 text-gray-600 cursor-not-allowed border-white/5'
                         : 'bg-brick-500 hover:bg-brick-600 shadow-brick-500/20'
                     }`}
->>>>>>> 574663e24ae34190ec7dc9c066a1f9be874b5207
                   >
                     <Save size={18} />
                     {modalType === 'add' ? 'Create User' : 'Update User'}
