@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -15,13 +14,8 @@ type UserRole = 'driver' | 'admin' | 'superadmin';
 
 function isRoleAllowedForPath(role: UserRole | undefined, path: string) {
   if (!role) return false;
-
-  // Admin dashboard
   if (path.startsWith('/dashboard')) return role === 'admin' || role === 'superadmin';
-
   if (path.startsWith('/driver-dashboard')) return role === 'driver';
-
-  // Public / other routes: allow
   return true;
 }
 
@@ -35,17 +29,13 @@ function normalizeCallbackUrl(callbackUrl: string | null) {
   const raw = (callbackUrl || '').trim();
   if (!raw) return null;
 
-  // If next-auth gives absolute URL, convert to pathname
   try {
     if (/^https?:\/\//i.test(raw)) {
       const u = new URL(raw);
       return u.pathname + (u.search || '');
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 
-  // Ensure it starts with /
   if (!raw.startsWith('/')) return `/${raw}`;
   return raw;
 }
@@ -57,8 +47,6 @@ const LoginPageComponent = () => {
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // keep your callbackUrl support, but we will enforce role access after login
   const callbackUrl = normalizeCallbackUrl(searchParams.get('callbackUrl'));
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,166 +77,191 @@ const LoginPageComponent = () => {
         email,
         password,
         redirect: false,
-        // keep it, but final navigation will be decided by role below
         callbackUrl: callbackUrl || '/dashboard',
       });
 
       if (result?.error) {
-        const message = result.error || 'Unable to sign in.';
-        setErrors({ form: message });
-        toast.error(message);
+        setErrors({ form: result.error });
+        toast.error(result.error);
         setIsSubmitting(false);
         return;
       }
 
-      // Pull session after successful sign-in (important for role-based routing)
       const session = await getSession();
-      const role = (session?.user as { role?: UserRole })?.role as UserRole | undefined;
-
+      const role = (session?.user as { role?: UserRole })?.role;
       const safeDefault = defaultRouteForRole(role);
 
-      // If callbackUrl exists AND role is allowed to access it, keep it.
-      // Otherwise redirect to the role’s default dashboard.
       const nextPath =
-        callbackUrl && isRoleAllowedForPath(role, callbackUrl) ? callbackUrl : safeDefault;
+        callbackUrl && isRoleAllowedForPath(role, callbackUrl)
+          ? callbackUrl
+          : safeDefault;
 
       toast.success('Signed in successfully');
       router.replace(nextPath);
-    } catch (err: unknown) {
-      let message = 'Sign in failed (network error).';
-      if (
-        err &&
-        typeof err === 'object' &&
-        'message' in err &&
-        typeof (err as Record<string, unknown>).message === 'string'
-      ) {
-        message = (err as { message: string }).message;
-      }
-      setErrors({ form: message });
-      toast.error(message);
+    } catch {
+      toast.error('Sign in failed.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-200 overflow-hidden relative">
-      {/* blobs */}
+    <div className="
+      min-h-screen
+      flex items-center justify-center
+      bg-gradient-to-br
+      from-[#0f172a]
+      via-[#111827]
+      to-black
+      px-4
+      relative
+    ">
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border-none rounded-none   shadow-none lg:shadow-2xl overflow-hidden w-full   h-screen z-10"
+        className="
+          w-full
+          max-w-6xl
+          grid
+          grid-cols-1
+          lg:grid-cols-2
+          bg-white/5
+          backdrop-blur-xl
+          border border-white/10
+          rounded-3xl
+          shadow-2xl
+          overflow-hidden
+        "
       >
-        {/* Left banner */}
-        <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
-          <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-black/60 z-10 lg:hidden" />
 
+        {/* LEFT IMAGE */}
+        <div className="relative hidden lg:block">
           <Image
-            width={1000}
-            height={1000}
             src="/static/loginpagebanner.png"
             alt="Login Banner"
-            priority
-            className="w-full h-full object-cover transition-transform duration-[2s] ease-in-out group-hover:scale-105"
+            fill
+            className="object-cover opacity-80"
           />
-
-          <div className="absolute inset-0 z-20 lg:hidden flex items-end justify-center pb-8">
-            <h3 className="text-3xl font-black text-white tracking-tight drop-shadow-md">
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+            <h3 className="text-4xl font-black text-white">
               Welcome Back
             </h3>
           </div>
         </div>
 
-        {/* Right glass box */}
-        <div className="w-full lg:w-[35%] p-8 lg:p-12 flex flex-col justify-center h-full bg-white relative">
+        {/* RIGHT FORM */}
+        <div className="p-8 lg:p-12 flex flex-col justify-center">
+
           <div className="mb-8 text-center">
             <Link href="/" className="inline-block mb-4">
-              <Image src="/static/logo.png" alt="Logo" width={80} height={80} className="mx-auto" />
+              <Image
+                src="/static/logo.png"
+                alt="Logo"
+                width={80}
+                height={80}
+                className="mx-auto"
+              />
             </Link>
-            <h2 className="text-4xl font-black text-gray-900 uppercase tracking-tighter mb-2">
+
+            <h2 className="text-4xl font-black text-white uppercase tracking-tight">
               Login
             </h2>
-            <div className="h-1.5 w-12 bg-[#E31E24] mx-auto rounded-full" />
-            <p className="text-gray-500 text-sm mt-4 font-medium">
+
+            <div className="h-1.5 w-12 bg-brick-600 mx-auto rounded-full mt-3" />
+
+            <p className="text-gray-400 text-sm mt-4">
               Enter your credentials to access your account
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col space-y-6 w-full max-w-sm mx-auto">
-            <div className="space-y-4">
-              <InputField
-                label="Email Address"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                error={errors.email}
-              />
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col space-y-6 w-full max-w-sm mx-auto"
+          >
+          
+            <InputField
+              label="Email Address"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              error={errors.email}
+            />
 
-              <InputField
-                label="Password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                error={errors.password}
-              />
-            </div>
+            <InputField
+              label="Password"
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              error={errors.password}
+            />
 
             {errors.form && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="p-3 bg-red-50 border border-red-100 rounded-lg"
-              >
-                <p className="text-red-600 text-sm text-center font-medium">{errors.form}</p>
-              </motion.div>
+              <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-400 text-sm text-center">
+                  {errors.form}
+                </p>
+              </div>
             )}
 
             <button
               type="submit"
               disabled={isSubmitting}
               className={`
-                w-full py-4 rounded-xl font-bold text-white tracking-wide shadow-lg flex items-center justify-center gap-2
-                transition-all duration-300 transform
-                ${isSubmitting
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-[#E31E24] hover:bg-red-700 hover:shadow-red-500/30 hover:-translate-y-0.5 active:scale-95'
+                w-full py-4 rounded-xl font-bold text-white
+                transition-all duration-300
+                ${
+                  isSubmitting
+                    ? 'bg-gray-600 cursor-not-allowed'
+                    : 'bg-brick-600 hover:bg-brick-700 shadow-lg'
                 }
               `}
             >
               {isSubmitting ? (
-                <>
+                <div className="flex items-center justify-center gap-2">
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Signing In...</span>
-                </>
+                  Signing In...
+                </div>
               ) : (
                 'Sign In'
               )}
             </button>
 
-            <div className="flex flex-col items-center space-y-4 pt-4 border-t border-gray-100 mt-2">
+            <div className="flex justify-center pt-4 border-t border-white/10">
               <Link
                 href="/forget-password"
-                className="text-sm font-semibold text-gray-500 hover:text-[#E31E24] transition-colors"
+                className="text-sm text-gray-400 hover:text-white transition"
               >
                 Forgot Password?
               </Link>
             </div>
+
           </form>
         </div>
+
       </motion.div>
 
-      {/* Home button */}
+      {/* Home Button */}
       <Link
         href="/"
-        title="Back to Home"
-        className="fixed top-6 right-6 p-4 bg-white/90 backdrop-blur text-[#E31E24] border border-red-100 rounded-full shadow-lg hover:bg-[#E31E24] hover:text-white transition-all duration-300 transform hover:scale-110 z-50 group"
+        className="
+          fixed top-6 right-6
+          p-4
+          bg-white/10
+          backdrop-blur
+          text-white
+          rounded-full
+          border border-white/10
+          hover:bg-brick-600
+          transition-all
+        "
       >
-        <Home size={24} className="group-hover:animate-pulse" />
+        <Home size={24} />
       </Link>
+
     </div>
   );
 };
