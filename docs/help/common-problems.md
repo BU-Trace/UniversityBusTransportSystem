@@ -433,11 +433,11 @@ This page lists common problems users face in the Bus Tracking System and how to
 ---
 
 ## Quick Checklist (fast debug)
-- ✅ Backend running?
-- ✅ Correct API base URL?
-- ✅ Logged in with correct role?
-- ✅ Token present in requests?
-- ✅ MongoDB connected to correct DB?
-- ✅ Route exists in backend?
-- ✅ CORS allowed?
-- ✅ Location permission allowed (for maps)?
+- Backend running?
+- Correct API base URL?
+- Logged in with correct role?
+- Token present in requests?
+- MongoDB connected to correct DB?
+- Route exists in backend?
+- CORS allowed?
+- Location permission allowed (for maps)?

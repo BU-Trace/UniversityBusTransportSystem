@@ -223,7 +223,7 @@ export default function RouteManagementPage() {
       endPointMapUrl: '',
       stops: stopNames.map((name) => ({ name, mapUrl: '' })),
     };
-  }, []);
+  };
 
   const loadRoutes = useCallback(async () => {
     setLoading(true);
