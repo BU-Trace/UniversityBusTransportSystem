@@ -45,7 +45,9 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/
 async function fetchStops(routeKey: RouteKey): Promise<Stop[]> {
   // Example idea:
   // GET /route/public/stops?routeKey=nothullabad
-  const res = await fetch(`${BASE_URL}/route/public/stops?routeKey=${routeKey}`, { cache: 'no-store' });
+  const res = await fetch(`${BASE_URL}/route/public/stops?routeKey=${routeKey}`, {
+    cache: 'no-store',
+  });
   const json = (await res.json().catch(() => ({}))) as { data?: unknown; message?: string };
   if (!res.ok) throw new Error(json?.message || 'Failed to load stops');
 
@@ -206,10 +208,7 @@ export default function NearestStopsButton() {
 
   const refreshTimerRef = useRef<number | null>(null);
 
-  const ROUTES: RouteKey[] = useMemo(
-    () => ['nothullabad', 'bangla_bazar', 'notun_bazar'],
-    []
-  );
+  const ROUTES: RouteKey[] = useMemo(() => ['nothullabad', 'bangla_bazar', 'notun_bazar'], []);
 
   const handleRipple = () => {
     const id = Date.now();
@@ -297,7 +296,9 @@ export default function NearestStopsButton() {
       // (optional) show a tiny hint if live bus missing
       const missing = livePairs.filter(([, v]) => !v?.position).length;
       if (missing === livePairs.length) {
-        toast.message('Live bus GPS not available now — showing nearest stops based on route only.');
+        toast.message(
+          'Live bus GPS not available now — showing nearest stops based on route only.'
+        );
       } else {
         // use userPos just to avoid lint unused
         void userPos;
@@ -354,9 +355,18 @@ export default function NearestStopsButton() {
     if (!loc) return null;
 
     const result: Record<RouteKey, Record<Direction, NearestResult>> = {
-      nothullabad: { from_university: { stop: null, distanceMeters: null }, to_university: { stop: null, distanceMeters: null } },
-      bangla_bazar: { from_university: { stop: null, distanceMeters: null }, to_university: { stop: null, distanceMeters: null } },
-      notun_bazar: { from_university: { stop: null, distanceMeters: null }, to_university: { stop: null, distanceMeters: null } },
+      nothullabad: {
+        from_university: { stop: null, distanceMeters: null },
+        to_university: { stop: null, distanceMeters: null },
+      },
+      bangla_bazar: {
+        from_university: { stop: null, distanceMeters: null },
+        to_university: { stop: null, distanceMeters: null },
+      },
+      notun_bazar: {
+        from_university: { stop: null, distanceMeters: null },
+        to_university: { stop: null, distanceMeters: null },
+      },
     };
 
     for (const rk of ROUTES) {
@@ -389,7 +399,7 @@ export default function NearestStopsButton() {
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 120 }}
-            className="fixed bottom-28 left-8 z-[1000]"
+            className="fixed bottom-40 right-8 z-[1000]"
           >
             <motion.div
               animate={{ scale: [1, 1.6, 1], opacity: [0.4, 0.1, 0.4] }}
@@ -418,7 +428,7 @@ export default function NearestStopsButton() {
               whileHover={{ scale: 1.1, rotate: [0, -2, 2, 0] }}
               whileTap={{ scale: 0.95 }}
               transition={{ type: 'tween', duration: 0.4, ease: 'easeInOut' }}
-              className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-2xl bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
+              className="relative flex items-center justify-center w-12 h-12 rounded-full shadow-2xl bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
               aria-label="Nearest Stops"
               title="Nearest Stops"
             >
@@ -435,7 +445,7 @@ export default function NearestStopsButton() {
               <motion.div
                 animate={{ y: [0, -2, 0, 2, 0], rotate: [0, 3, -3, 0] }}
                 transition={{ repeat: Infinity, duration: 2, ease: 'easeInOut', type: 'tween' }}
-                className="text-2xl relative z-10"
+                className="text-lg relative z-10"
               >
                 <Navigation />
               </motion.div>
@@ -488,17 +498,17 @@ export default function NearestStopsButton() {
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.95, opacity: 0, y: 20 }}
                   transition={{ type: 'spring', stiffness: 120 }}
-                  className="relative w-full max-w-5xl bg-white/90 backdrop-blur-2xl rounded-3xl shadow-2xl border-t-4 border-red-700 overflow-hidden"
+                  className="relative w-full max-w-5xl bg-gray-900/90 backdrop-blur-2xl rounded-3xl shadow-2xl border border-white/10 overflow-hidden"
                 >
                   {/* header */}
-                  <div className="p-6 border-b border-gray-100 flex items-start justify-between gap-4 bg-white/70">
+                  <div className="p-6 border-b border-white/10 flex items-start justify-between gap-4 bg-white/5">
                     <div>
-                      <h2 className="text-2xl font-extrabold text-red-800 flex items-center gap-2">
-                        <MapPin className="w-6 h-6" />
-                        Nearest Stops
+                      <h2 className="text-2xl font-black text-white flex items-center gap-2 uppercase tracking-tight">
+                        <MapPin className="w-6 h-6 text-brick-500" />
+                        Nearest <span className="text-brick-500">Stops</span>
                       </h2>
-                      <p className="text-sm text-gray-600 mt-1">
-                        Shows the nearest upcoming stop for each route (not already passed by the bus).
+                      <p className="text-xs text-gray-500 mt-1 font-bold uppercase tracking-widest">
+                        Upcoming stop visualization per route
                       </p>
                     </div>
 
@@ -508,17 +518,17 @@ export default function NearestStopsButton() {
                         onClick={async () => {
                           await loadEverything();
                         }}
-                        className="px-4 py-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 font-black text-sm flex items-center gap-2"
+                        className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 font-black text-xs flex items-center gap-2 transition-all uppercase tracking-widest"
                         disabled={loadingData || locLoading}
                       >
-                        <RefreshCw size={16} className={loadingData ? 'animate-spin' : ''} />
+                        <RefreshCw size={14} className={loadingData ? 'animate-spin' : ''} />
                         Refresh
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setOpen(false)}
-                        className="p-2 bg-gray-100 rounded-full hover:bg-red-50 hover:text-red-600 transition-colors"
+                        className="p-2 bg-white/5 text-gray-400 rounded-full hover:bg-brick-500/10 hover:text-brick-400 border border-white/5 transition-all"
                         aria-label="Close"
                       >
                         <X size={20} />
@@ -555,63 +565,73 @@ export default function NearestStopsButton() {
                           return (
                             <div
                               key={rk}
-                              className="bg-white/70 border border-red-200 shadow-lg rounded-2xl p-5 backdrop-blur-sm"
+                              className="bg-white/5 border border-white/10 shadow-2xl rounded-2xl p-6 backdrop-blur-xl group hover:bg-white/10 transition-all duration-300"
                             >
-                              <div className="text-lg font-black text-red-700 mb-4">
+                              <div className="text-lg font-black text-white mb-6 uppercase tracking-tight group-hover:text-brick-400 transition-colors">
                                 {routeTitle(rk)}
                               </div>
 
-                              <div className="space-y-3">
+                              <div className="space-y-4">
                                 {/* From University */}
-                                <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                                  <div className="text-[11px] uppercase font-black text-gray-500 mb-1">
+                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-brick-500/30 transition-colors">
+                                  <div className="text-[10px] uppercase font-black text-gray-500 mb-2 tracking-widest border-b border-white/5 pb-1">
                                     {directionLabel('from_university')}
                                   </div>
 
                                   {loadingData ? (
-                                    <div className="text-sm text-gray-500 font-bold">Loading...</div>
+                                    <div className="text-sm text-gray-500 font-bold animate-pulse">
+                                      Loading...
+                                    </div>
                                   ) : fromRes?.stop ? (
                                     <div>
-                                      <div className="text-base font-black text-gray-900">
+                                      <div className="text-base font-black text-gray-200">
                                         {fromRes.stop.name}
                                       </div>
-                                      <div className="text-xs text-gray-500 mt-1">
-                                        Distance: <span className="font-black">{formatDistance(fromRes.distanceMeters)}</span>
+                                      <div className="text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-widest">
+                                        Distance:{' '}
+                                        <span className="text-brick-400 ml-1">
+                                          {formatDistance(fromRes.distanceMeters)}
+                                        </span>
                                       </div>
                                     </div>
                                   ) : (
-                                    <div className="text-sm text-gray-500 font-bold">
+                                    <div className="text-sm text-gray-600 font-bold">
                                       No upcoming stop found
                                     </div>
                                   )}
                                 </div>
 
                                 {/* To University */}
-                                <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                                  <div className="text-[11px] uppercase font-black text-gray-500 mb-1">
+                                <div className="rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-brick-500/30 transition-colors">
+                                  <div className="text-[10px] uppercase font-black text-gray-500 mb-2 tracking-widest border-b border-white/5 pb-1">
                                     {directionLabel('to_university')}
                                   </div>
 
                                   {loadingData ? (
-                                    <div className="text-sm text-gray-500 font-bold">Loading...</div>
+                                    <div className="text-sm text-gray-500 font-bold animate-pulse">
+                                      Loading...
+                                    </div>
                                   ) : toRes?.stop ? (
                                     <div>
-                                      <div className="text-base font-black text-gray-900">
+                                      <div className="text-base font-black text-gray-200">
                                         {toRes.stop.name}
                                       </div>
-                                      <div className="text-xs text-gray-500 mt-1">
-                                        Distance: <span className="font-black">{formatDistance(toRes.distanceMeters)}</span>
+                                      <div className="text-[10px] text-gray-500 mt-2 font-bold uppercase tracking-widest">
+                                        Distance:{' '}
+                                        <span className="text-brick-400 ml-1">
+                                          {formatDistance(toRes.distanceMeters)}
+                                        </span>
                                       </div>
                                     </div>
                                   ) : (
-                                    <div className="text-sm text-gray-500 font-bold">
+                                    <div className="text-sm text-gray-600 font-bold">
                                       No upcoming stop found
                                     </div>
                                   )}
                                 </div>
 
-                                <div className="text-[11px] text-gray-500 font-medium">
-                                  Updates every 10 seconds.
+                                <div className="text-[9px] text-gray-600 font-black uppercase tracking-widest pt-2">
+                                  Updates every 10 seconds
                                 </div>
                               </div>
                             </div>

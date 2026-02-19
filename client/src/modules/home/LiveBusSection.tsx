@@ -31,8 +31,8 @@ interface ProcessedBus extends BusLocationData {
 
 const LiveBusSection = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [buses, setBuses] = useState<BusLocationData[]>([]); 
-  const [sortedBuses, setSortedBuses] = useState<ProcessedBus[]>([]); 
+  const [buses, setBuses] = useState<BusLocationData[]>([]);
+  const [sortedBuses, setSortedBuses] = useState<ProcessedBus[]>([]);
   const [loading, setLoading] = useState(true);
   const [permissionDenied, setPermissionDenied] = useState(false);
 
@@ -66,7 +66,7 @@ const LiveBusSection = () => {
     socket.on('receiveLocation', (newBusData: BusLocationData) => {
       setBuses((prevBuses) => {
         const index = prevBuses.findIndex((b) => b.busId === newBusData.busId);
-        
+
         if (index !== -1) {
           const updatedBuses = [...prevBuses];
           updatedBuses[index] = newBusData;
@@ -79,9 +79,11 @@ const LiveBusSection = () => {
 
     // ✅ Fix: Replaced 'any' with 'BusStatusData'
     socket.on('receiveBusStatus', (statusData: BusStatusData) => {
-       setBuses((prevBuses) => 
-        prevBuses.map(b => b.busId === statusData.busId ? { ...b, status: statusData.status } : b)
-       );
+      setBuses((prevBuses) =>
+        prevBuses.map((b) =>
+          b.busId === statusData.busId ? { ...b, status: statusData.status } : b
+        )
+      );
     });
 
     return () => {
@@ -96,9 +98,9 @@ const LiveBusSection = () => {
 
     const processed = buses.map((bus) => {
       const dist = calculateDistance(userLocation[0], userLocation[1], bus.lat, bus.lng);
-      
+
       // Calculate ETA (Assume min speed 20km/h if traffic/slow)
-      const effectiveSpeed = bus.speed && bus.speed > 5 ? bus.speed : 20; 
+      const effectiveSpeed = bus.speed && bus.speed > 5 ? bus.speed : 20;
       const etaMinutes = Math.round((dist / effectiveSpeed) * 60);
 
       return {
@@ -132,72 +134,74 @@ const LiveBusSection = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-white/80 backdrop-blur-xl shadow-xl rounded-3xl p-1 border-t-4 border-red-600 mb-10 relative overflow-hidden"
+      className="bg-white/10 backdrop-blur-xl shadow-2xl rounded-3xl p-1 border border-white/20 mb-10 relative overflow-hidden shadow-white/5"
     >
       <div className="p-4 md:p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center flex justify-center items-center gap-2">
+        <h2 className="text-2xl font-bold text-white mb-6 text-center flex justify-center items-center gap-2">
           <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-600"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brick-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-brick-500"></span>
           </span>
           Live Nearest Buses
         </h2>
 
         {/* Loading Spinner */}
         {loading && !userLocation && (
-           <div className="flex justify-center py-8">
-             <Loader2 className="animate-spin text-red-600" />
-           </div>
+          <div className="flex justify-center py-8">
+            <Loader2 className="animate-spin text-brick-500" />
+          </div>
         )}
 
         {/* --- DESKTOP TABLE VIEW --- */}
-        <div className="hidden md:block overflow-x-auto rounded-xl border border-gray-100">
+        <div className="hidden md:block overflow-x-auto rounded-xl border border-white/10">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-linear-to-r from-red-600 to-red-800 text-white text-sm uppercase">
-                <th className="py-3 px-4 text-left">Bus ID / Route</th>
-                <th className="py-3 px-4 text-left">Distance</th>
-                <th className="py-3 px-4 text-left">Speed</th>
-                <th className="py-3 px-4 text-left">ETA</th>
-                <th className="py-3 px-4 text-right">Action</th>
+              <tr className="bg-linear-to-r from-gray-900 to-gray-800 text-gray-300 text-sm uppercase">
+                <th className="py-3 px-4 text-left border-b border-white/5">Bus ID / Route</th>
+                <th className="py-3 px-4 text-left border-b border-white/5">Distance</th>
+                <th className="py-3 px-4 text-left border-b border-white/5">Speed</th>
+                <th className="py-3 px-4 text-left border-b border-white/5">ETA</th>
+                <th className="py-3 px-4 text-right border-b border-white/5">Action</th>
               </tr>
             </thead>
-            <tbody className="bg-white">
+            <tbody className="bg-transparent">
               <AnimatePresence>
-              {sortedBuses.map((bus) => (
-                <motion.tr
-                  key={bus.busId}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="border-b border-gray-50 hover:bg-red-50/20"
-                >
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2">
-                      <div className={`p-1.5 rounded-full ${bus.status === 'running' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
-                        <Bus className="w-4 h-4" />
+                {sortedBuses.map((bus) => (
+                  <motion.tr
+                    key={bus.busId}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                  >
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`p-1.5 rounded-full ${bus.status === 'running' ? 'bg-green-500/10 text-green-400' : 'bg-brick-500/10 text-brick-400'}`}
+                        >
+                          <Bus className="w-4 h-4" />
+                        </div>
+                        <span className="font-semibold text-gray-200">{bus.busId}</span>
                       </div>
-                      <span className="font-semibold text-gray-700">{bus.busId}</span>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 font-medium text-gray-600">
-                    {bus.distance.toFixed(2)} km
-                  </td>
-                  <td className="py-3 px-4 text-gray-600">
-                    {bus.speed || 0} km/h
-                  </td>
-                  <td className="py-3 px-4">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full ${bus.eta < 5 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>
-                      {bus.formattedEta}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-right">
-                    <button className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs hover:bg-red-700 transition flex items-center gap-1 ml-auto">
-                      <Navigation className="w-3 h-3" /> Track
-                    </button>
-                  </td>
-                </motion.tr>
-              ))}
+                    </td>
+                    <td className="py-3 px-4 font-medium text-gray-400">
+                      {bus.distance.toFixed(2)} km
+                    </td>
+                    <td className="py-3 px-4 text-gray-400">{bus.speed || 0} km/h</td>
+                    <td className="py-3 px-4">
+                      <span
+                        className={`text-xs font-bold px-2 py-1 rounded-full ${bus.eta < 5 ? 'bg-green-500/20 text-green-400 border border-green-500/20' : 'bg-orange-500/20 text-orange-400 border border-orange-500/20'}`}
+                      >
+                        {bus.formattedEta}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <button className="bg-brick-600/40 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs hover:bg-brick-600/60 transition flex items-center gap-1 ml-auto shadow-lg shadow-brick-900/40 cursor-pointer border border-white/10">
+                        <Navigation className="w-3 h-3" /> Track
+                      </button>
+                    </td>
+                  </motion.tr>
+                ))}
               </AnimatePresence>
             </tbody>
           </table>
@@ -206,49 +210,57 @@ const LiveBusSection = () => {
         {/* --- MOBILE CARD VIEW --- */}
         <div className="md:hidden flex flex-col gap-3">
           <AnimatePresence>
-          {sortedBuses.map((bus) => (
-            <motion.div
-              key={bus.busId}
-              layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
-            >
-              <div className="flex justify-between items-center mb-3 border-b pb-2">
-                <div className="flex items-center gap-2">
-                  <Bus className={`w-5 h-5 ${bus.status === 'running' ? 'text-green-600' : 'text-red-500'}`} />
-                  <div>
-                    <h3 className="font-bold text-gray-800">{bus.busId}</h3>
-                    <p className="text-[10px] text-gray-500 uppercase">{bus.status}</p>
+            {sortedBuses.map((bus) => (
+              <motion.div
+                key={bus.busId}
+                layout
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-xl cursor-pointer shadow-white/5"
+              >
+                <div className="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
+                  <div className="flex items-center gap-2">
+                    <Bus
+                      className={`w-5 h-5 ${bus.status === 'running' ? 'text-green-400' : 'text-brick-500'}`}
+                    />
+                    <div>
+                      <h3 className="font-bold text-gray-200">{bus.busId}</h3>
+                      <p className="text-[10px] text-gray-500 uppercase font-black">{bus.status}</p>
+                    </div>
+                  </div>
+                  <button className="bg-white/10 backdrop-blur-md text-brick-400 p-2 rounded-lg border border-white/20 cursor-pointer hover:bg-white/20">
+                    <Navigation className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">DIST</p>
+                    <p className="font-bold text-gray-200">{bus.distance.toFixed(1)} km</p>
+                  </div>
+                  <div className="bg-white/5 p-2 rounded-lg border border-white/5">
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">SPEED</p>
+                    <p className="font-bold text-gray-200">{bus.speed || 0}</p>
+                  </div>
+                  <div
+                    className={`p-2 rounded-lg border border-white/5 ${bus.eta < 5 ? 'bg-green-500/10' : 'bg-orange-500/10'}`}
+                  >
+                    <p className="text-[10px] text-gray-500 font-bold uppercase">ETA</p>
+                    <p
+                      className={`font-bold ${bus.eta < 5 ? 'text-green-400' : 'text-orange-400'}`}
+                    >
+                      {bus.eta} m
+                    </p>
                   </div>
                 </div>
-                <button className="bg-red-100 text-red-600 p-2 rounded-lg">
-                  <Navigation className="w-4 h-4" />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="bg-gray-50 p-2 rounded-lg">
-                  <p className="text-[10px] text-gray-400">DIST</p>
-                  <p className="font-bold text-gray-700">{bus.distance.toFixed(1)} km</p>
-                </div>
-                <div className="bg-gray-50 p-2 rounded-lg">
-                  <p className="text-[10px] text-gray-400">SPEED</p>
-                  <p className="font-bold text-gray-700">{bus.speed || 0}</p>
-                </div>
-                <div className={`p-2 rounded-lg ${bus.eta < 5 ? 'bg-green-50' : 'bg-orange-50'}`}>
-                  <p className="text-[10px] text-gray-400">ETA</p>
-                  <p className={`font-bold ${bus.eta < 5 ? 'text-green-600' : 'text-orange-600'}`}>{bus.eta} m</p>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))}
           </AnimatePresence>
         </div>
 
         {/* Empty State */}
         {sortedBuses.length === 0 && !loading && (
-          <div className="text-center py-6 text-gray-500 text-sm">
+          <div className="text-center py-6 text-gray-500 text-sm font-medium">
             No buses are currently active.
           </div>
         )}

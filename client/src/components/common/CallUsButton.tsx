@@ -24,9 +24,9 @@ const CallUsButton: React.FC = () => {
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 120 }}
-          className="fixed bottom-8 right-8 z-[1000]"
+          className="fixed bottom-8 right-8 z-1000"
         >
-          {}
+          {/* Outer Glow Effect */}
           <motion.div
             animate={{
               scale: [1, 1.6, 1],
@@ -40,7 +40,7 @@ const CallUsButton: React.FC = () => {
             className="absolute inset-0 rounded-full bg-red-600/40 blur-3xl"
           />
 
-          {}
+          {/* Animated Gradient Background */}
           <motion.div
             animate={{
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
@@ -53,10 +53,10 @@ const CallUsButton: React.FC = () => {
             style={{
               backgroundSize: '200% 200%',
             }}
-            className="absolute inset-0 rounded-full blur-lg opacity-40 bg-gradient-to-r from-[#9b111e] via-[#b91c1c] to-[#9b111e]"
+            className="absolute inset-0 rounded-full blur-lg opacity-40 bg-linear-to-r from-brick-600 via-[#b91c1c] to-brick-600"
           />
 
-          {}
+          {/* Main Button */}
           <motion.a
             href="tel:+8801977987420"
             onClick={handleRipple}
@@ -70,10 +70,10 @@ const CallUsButton: React.FC = () => {
               duration: 0.4,
               ease: 'easeInOut',
             }}
-            className="relative flex items-center justify-center w-16 h-16 rounded-full shadow-2xl bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
-            aria-label="Call UBTS Support"
+            className="relative flex items-center justify-center w-12 h-12 rounded-full shadow-2xl bg-linear-to-br from-brick-600 to-[#b91c1c] text-white hover:shadow-[#b91c1c]/60 overflow-hidden"
+            aria-label="Call BU Trace Support"
           >
-            {}
+            {/* Ripple Effects */}
             {ripples.map((r) => (
               <motion.span
                 key={r.id}
@@ -84,7 +84,7 @@ const CallUsButton: React.FC = () => {
               />
             ))}
 
-            {}
+            {/* Phone Icon with Shake Animation */}
             <motion.div
               animate={{
                 y: [0, -2, 0, 2, 0],
@@ -96,12 +96,12 @@ const CallUsButton: React.FC = () => {
                 ease: 'easeInOut',
                 type: 'tween',
               }}
-              className="text-2xl relative z-10"
+              className="text-lg relative z-10"
             >
               <FaPhoneAlt />
             </motion.div>
 
-            {}
+            {/* Subtle Inner Decorative Elements */}
             <div className="absolute inset-0 overflow-hidden rounded-full">
               <svg
                 className="absolute bottom-0 left-0 w-full h-full opacity-50"
@@ -123,12 +123,12 @@ const CallUsButton: React.FC = () => {
             </div>
           </motion.a>
 
-          {}
+          {/* Floating Tooltip Label */}
           <motion.span
             initial={{ opacity: 0, y: 10 }}
             whileHover={{ opacity: 1, y: -10 }}
             transition={{ type: 'tween', duration: 0.3 }}
-            className="absolute right-20 bottom-5 bg-white text-[#9b111e] font-semibold text-sm px-3 py-1 rounded-full shadow-md border border-[#b91c1c]/30 backdrop-blur-sm"
+            className="absolute right-20 bottom-5 bg-white text-brick-600 font-semibold text-sm px-3 py-1 rounded-full shadow-md border border-[#b91c1c]/30 backdrop-blur-sm"
           >
             24/7 Surveillance
           </motion.span>

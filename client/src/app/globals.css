@@ -3,6 +3,37 @@
 @tailwind utilities;
 @import 'tailwindcss';
 
+@theme {
+  --color-brick-50: #fbf4f5;
+  --color-brick-100: #f6e5e7;
+  --color-brick-200: #eccdd1;
+  --color-brick-300: #dea6ae;
+  --color-brick-400: #cb7481;
+  --color-brick-500: #b44d5c;
+  --color-brick-600: #9b111e;
+  --color-brick-700: #810e19;
+  --color-brick-800: #6b1019;
+  --color-brick-900: #5b1219;
+  --color-brick-950: #31070b;
+}
+
+@layer base {
+  button {
+    cursor: pointer;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  * {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -89,16 +120,6 @@
   }
   66% {
     transform: translateY(-30px) translateX(30px) scale(1.05);
-  }
-}
-
-@layer utilities {
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
   }
 }
 

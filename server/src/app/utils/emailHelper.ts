@@ -15,23 +15,21 @@ const sendEmail = async (
   attachment?: { filename: string; content: Buffer; encoding?: BufferEncoding }
 ) => {
   try {
- const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: config.sender_email,
-    pass: config.sender_app_password,
-  },
-});
-
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: config.sender_email,
+        pass: config.sender_app_password,
+      },
+    });
 
     // Email configuration
-   const mailOptions: nodemailer.SendMailOptions = {
-  from: `"BUTrace" <${config.sender_email}>`,
-  to: email,
-  subject,
-  html,
-};
-
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: `"BUTrace" <${config.sender_email}>`,
+      to: email,
+      subject,
+      html,
+    };
 
     if (attachment) {
       const encoding = attachment.encoding ?? DEFAULT_ATTACHMENT_ENCODING;

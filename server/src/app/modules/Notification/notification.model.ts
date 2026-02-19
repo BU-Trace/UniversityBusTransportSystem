@@ -29,7 +29,7 @@ const NotificationSchema = new Schema(
     },
     targetRole: {
       type: String,
-      enum: ['superadmin', 'admin', 'student', 'driver', 'all'],
+      enum: ['superadmin', 'admin', 'driver', 'all'],
       default: 'all',
     },
     isRead: {

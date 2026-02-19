@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import InputField from '@/components/shared/InputField';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Home, Loader2, Mail, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Home, Loader2, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { requestPasswordReset } from '@/services/auth-client';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
@@ -39,17 +39,15 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-200 overflow-hidden relative  not-first:">
       {}
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-red-200/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-100/40 rounded-full blur-3xl pointer-events-none" />
 
       {}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2.5rem] shadow-2xl overflow-hidden w-full max-w-[95%] xl:max-w-7xl h-[85vh] lg:h-[800px] z-10"
+        className="flex flex-col lg:flex-row bg-white/80 backdrop-blur-xl  shadow-2xl overflow-hidden w-full  h-screen z-10"
       >
         {}
         <div className="w-full lg:w-[65%] relative h-1/3 lg:h-full group overflow-hidden">
@@ -82,9 +80,15 @@ const ForgetPassword = () => {
             >
               {}
               <div className="mb-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-50 mb-4 text-[#E31E24]">
-                  <Mail size={32} />
-                </div>
+                <Link href="/" className="inline-block mb-4">
+                  <Image
+                    src="/static/logo.png"
+                    alt="Logo"
+                    width={80}
+                    height={80}
+                    className="mx-auto"
+                  />
+                </Link>
                 <h2 className="text-3xl font-black text-gray-900 uppercase tracking-tighter mb-2">
                   Forget Password
                 </h2>

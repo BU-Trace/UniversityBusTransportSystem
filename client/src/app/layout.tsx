@@ -4,16 +4,15 @@ import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import Providers from '@/app/provider';
 import { Toaster } from 'sonner';
 import { IntroProvider } from '@/context/IntroContext';
-import CallUsButton from '@/components/common/CallUsButton';
-import TeamButton from '@/components/common/TeamButton';
-import BusTrackerButton from '@/components/common/BusTrackerButton';
-import NearestStopButton from '@/components/common/NearestStopButton';
-import HelpChatbot from "@/components/common/HelpChatbot";
-import NoticeLiveAlert from "@/components/NoticeLiveAlert";
+
+import TransportFab from '@/components/common/TransportFab';
 
 export const metadata: Metadata = {
-  title: 'UBTS',
-  description: 'UBTS - University Bus Transport System',
+  title: 'BU Trace',
+  description: 'BU Trace - University Bus Transport System',
+  icons: {
+    icon: '/static/BUTracelogo.png',
+  },
 };
 
 export default function RootLayout({
@@ -25,17 +24,12 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased flex flex-col min-h-screen">
         <Providers>
-          <Toaster richColors position="top-center" />
+          <Toaster richColors position="top-right" />
 
           <main className="flex-1 overflow-y-auto">{children}</main>
 
           <IntroProvider>
-            <CallUsButton />
-            <TeamButton />
-            <BusTrackerButton />
-            <NearestStopButton />
-            <HelpChatbot />
-            <NoticeLiveAlert />
+            <TransportFab />
           </IntroProvider>
           <ScrollToTopButton />
         </Providers>

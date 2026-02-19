@@ -1,9 +1,9 @@
-import type { NextAuthOptions, User } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import { jwtDecode, type JwtPayload } from "jwt-decode";
-import type { JWT } from "next-auth/jwt";
+import type { NextAuthOptions, User } from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import { jwtDecode, type JwtPayload } from 'jwt-decode';
+import type { JWT } from 'next-auth/jwt';
 
-type UserRole = "student" | "driver" | "admin" | "superadmin";
+type UserRole = 'driver' | 'admin' | 'superadmin';
 
 type DecodedUser = JwtPayload & {
   userId?: string;
@@ -16,7 +16,12 @@ type TokenUser = {
   id?: string;
   name?: string | null;
   email?: string | null;
-  role?: UserRole | null;
+  role?: UserRole | string | null;
+  image?: string | null;
+  photoUrl?: string | null;
+  profileImage?: string | null;
+  isApproved?: boolean;
+  isActive?: boolean;
 };
 
 type LoginResponse = {
@@ -26,18 +31,20 @@ type LoginResponse = {
   };
   message?: string;
 };
+
 interface AuthUser extends User {
   id: string;
-  role?: UserRole; // null removed
+  role?: UserRole | string;
   accessToken?: string;
   refreshToken?: string;
   accessTokenExpires?: number;
 }
 
-
 function toUserRole(role: string | null | undefined): UserRole | null {
-  if (role === "student" || role === "driver" || role === "admin" || role === "superadmin") {
-    return role;
+  if (!role) return null;
+  const normalized = role.toLowerCase();
+  if (normalized === 'driver' || normalized === 'admin' || normalized === 'superadmin') {
+    return normalized as UserRole;
   }
   return null;
 }
@@ -45,27 +52,27 @@ function toUserRole(role: string | null | undefined): UserRole | null {
 const API_BASE =
   process.env.NEXT_PUBLIC_BASE_API ||
   process.env.NEXT_PUBLIC_API_BASE_URL ||
-  "http://localhost:5000/api/v1";
+  'http://localhost:5000/api/v1';
 
 const refreshAccessToken = async (token: JWT): Promise<JWT> => {
   try {
     if (!token.refreshToken) {
-      throw new Error("Missing refresh token");
+      throw new Error('Missing refresh token');
     }
 
     const response = await fetch(`${API_BASE}/auth/refresh-token`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
         Authorization: `${token.refreshToken}`,
       },
-      cache: "no-store",
+      cache: 'no-store',
     });
 
     const data = (await response.json().catch(() => ({}))) as LoginResponse;
 
     if (!response.ok || !data?.data?.accessToken) {
-      throw new Error(data?.message || "Unable to refresh session");
+      throw new Error(data?.message || 'Unable to refresh session');
     }
 
     const decoded = jwtDecode<DecodedUser>(data.data.accessToken);
@@ -88,53 +95,53 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
   } catch {
     return {
       ...token,
-      error: "RefreshAccessTokenError",
+      error: 'RefreshAccessTokenError',
     };
   }
 };
 
 export const authOptions: NextAuthOptions = {
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
+    maxAge: 365 * 24 * 60 * 60, // 365 days
+    updateAge: 24 * 60 * 60, // Only update once every 24 hours
   },
   pages: {
-    signIn: "/login",
+    signIn: '/login',
   },
   providers: [
     Credentials({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
 
       async authorize(credentials, req) {
         const userAgent =
-          typeof req?.headers?.get === "function"
-            ? req.headers.get("user-agent") ?? ""
-            : "";
+          typeof req?.headers?.get === 'function' ? (req.headers.get('user-agent') ?? '') : '';
 
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Email and password are required");
+          throw new Error('Email and password are required');
         }
 
         const response = await fetch(`${API_BASE}/auth/login`, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            "user-agent": userAgent,
+            'Content-Type': 'application/json',
+            'user-agent': userAgent,
           },
           body: JSON.stringify({
             email: credentials.email,
             password: credentials.password,
           }),
-          cache: "no-store",
+          cache: 'no-store',
         });
 
         const data = (await response.json().catch(() => ({}))) as LoginResponse;
 
         if (!response.ok || !data?.data?.accessToken) {
-          throw new Error(data?.message || "Invalid credentials");
+          throw new Error(data?.message || 'Invalid credentials');
         }
 
         const decoded = jwtDecode<DecodedUser>(data.data.accessToken);
@@ -142,7 +149,7 @@ export const authOptions: NextAuthOptions = {
           id: decoded.userId ?? decoded.sub ?? credentials.email,
           email: decoded.email ?? credentials.email,
           name: decoded.name ?? credentials.email,
-          role: toUserRole(decoded.role) ?? undefined,
+          role: toUserRole(decoded.role) || decoded.role?.toLowerCase() || undefined,
 
           accessToken: data.data.accessToken,
           refreshToken: data.data.refreshToken,
@@ -154,12 +161,42 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        const u = user as AuthUser;
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === 'update' && session) {
+        const tokenUser = (token.user ?? {}) as TokenUser;
+        const newName = session.user?.name ?? tokenUser.name;
+        // Collect image from any available variant
+        const newImage =
+          session.user?.image ??
+          session.user?.photoUrl ??
+          session.user?.profileImage ??
+          tokenUser.image;
 
         return {
           ...token,
+          // Sync root fields
+          name: newName,
+          image: newImage,
+          // Sync nested user object
+          user: {
+            ...tokenUser,
+            name: newName,
+            image: newImage,
+            photoUrl: newImage,
+            profileImage: newImage,
+          },
+        };
+      }
+
+      if (user) {
+        const u = user as AuthUser;
+        const image = u.profileImage ?? u.image ?? u.photoUrl ?? null;
+
+        return {
+          ...token,
+          name: u.name,
+          email: u.email,
+          image: image,
           accessToken: u.accessToken,
           refreshToken: u.refreshToken,
           accessTokenExpires: u.accessTokenExpires,
@@ -168,16 +205,15 @@ export const authOptions: NextAuthOptions = {
             name: u.name,
             email: u.email,
             role: u.role ?? null,
-
+            image: image,
+            photoUrl: image,
+            profileImage: image,
           } satisfies TokenUser,
           error: undefined,
         };
       }
 
-      if (
-        token.accessTokenExpires &&
-        Date.now() < Number(token.accessTokenExpires) - 60 * 1000
-      ) {
+      if (token.accessTokenExpires && Date.now() < Number(token.accessTokenExpires) - 60 * 1000) {
         return token;
       }
 
@@ -185,17 +221,33 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      session.accessToken = token.accessToken as string;
-      session.error = token.error as string | undefined;
+      session.accessToken = token.accessToken;
+      session.error = token.error;
 
-      const tokenUser = token.user as TokenUser | undefined;
+      const tokenUser = token.user;
 
-      if (tokenUser) {
+      if (tokenUser || token) {
+        const role = (tokenUser?.role ??
+          token.role ??
+          session.user?.role) as UserRole;
+        const name = (tokenUser?.name ?? token?.name ?? session.user?.name) as string;
+        const email = (tokenUser?.email ?? token?.email ?? session.user?.email) as string;
+        const image = (tokenUser?.image ?? token?.image ?? session.user?.image) as string;
+
         session.user = {
           ...session.user,
-          ...tokenUser,
-          role: tokenUser.role ?? undefined,
+          id: (tokenUser?.id ?? token.userId ?? token.sub ?? session.user?.id) as string,
+          name,
+          email,
+          image,
+          role,
         };
+
+        // Add variants to user object for components that expect them
+        if (session.user) {
+          session.user.photoUrl = image;
+          session.user.profileImage = image;
+        }
       }
 
       return session;

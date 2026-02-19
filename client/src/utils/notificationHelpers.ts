@@ -11,7 +11,7 @@ export const requestNotificationPermission = () => {
 
 // Play a simple notification sound
 export const playAlertSound = () => {
-  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); 
+  const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Standard alert sound
   audio.play().catch((err) => console.log('Sound blocked:', err.message));
 };
 

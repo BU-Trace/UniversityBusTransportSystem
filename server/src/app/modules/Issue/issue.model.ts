@@ -49,8 +49,18 @@ const IssueSchema = new Schema(
     },
     submittedByRole: {
       type: String,
-      enum: ['superadmin', 'admin', 'student', 'driver'],
+      enum: ['superadmin', 'admin', 'driver'],
       required: false,
+    },
+    contactInfo: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+    solution: {
+      type: String,
+      required: false,
+      trim: true,
     },
   },
   { timestamps: true }

@@ -33,8 +33,8 @@ const ScrollToTopButton: React.FC = () => {
     <button
       onClick={scrollToTop}
       className={`
-        fixed bottom-48.5 right-8 p-5 rounded-full
-        bg-red-600 text-white shadow-xl
+        fixed bottom-40 right-8 w-12 h-12 rounded-full
+        bg-gradient-to-br from-[#9b111e] to-[#b91c1c] text-white shadow-xl flex items-center justify-center
         transition-opacity duration-300 transform hover:scale-110
         z-50
         ${isVisible ? 'opacity-100 visible' : 'opacity-0 invisible'}

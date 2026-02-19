@@ -13,3 +13,7 @@ server/dist
 .vscode/
 .idea/
 .sql
+
+# mobile apps
+app/
+StickerSmash/

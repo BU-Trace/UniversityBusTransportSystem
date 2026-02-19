@@ -3,44 +3,22 @@ import { z } from 'zod';
 const adminProfileValidationSchema = z.object({
   name: z.string().optional(),
   profileImage: z.string().optional(),
-  clientInfo: z
-    .object({
-      bio: z.string().optional(),
-    })
-    .optional(),
 });
-//student profile validation
-const studentProfileValidationSchema = z.object({
-  name: z.string().optional(),
-  profileImage: z.string().optional(),
-  clientInfo: z
-    .object({
-      bio: z.string().optional(),
-      department: z.string().optional(),
-      rollNumber: z.string().optional(),
-    })
-    .optional(),
-});
+// DECOMMISSIONED: studentProfileValidationSchema
 
 const driverProfileValidationSchema = z.object({
   name: z.string().optional(),
   profileImage: z.string().optional(),
   clientInfo: z
     .object({
-      bio: z.string().optional(),
       licenseNumber: z.string().optional(),
     })
     .optional(),
 });
 
-const baseClientInfoSchema = z.object({
-  bio: z.string().optional(),
-});
+const baseClientInfoSchema = z.object({});
 
-const studentClientInfoSchema = baseClientInfoSchema.extend({
-  department: z.string().min(1, 'Department is required'),
-  rollNumber: z.string().min(1, 'Roll number is required'),
-});
+// DECOMMISSIONED: studentClientInfoSchema
 
 const driverClientInfoSchema = baseClientInfoSchema.extend({
   licenseNumber: z.string().min(1, 'License number is required'),
@@ -71,20 +49,21 @@ const baseUserSchema = z.object({
 });
 
 export const registerUserSchema = z.discriminatedUnion('role', [
-  // ---------- Student ----------
+  /*
   baseUserSchema.extend({
     role: z.literal('student'),
     clientInfo: studentClientInfoSchema,
     clientITInfo: clientITInfoSchema,
   }),
+*/
 
   baseUserSchema.extend({
     role: z.literal('driver'),
     clientInfo: driverClientInfoSchema,
     clientITInfo: clientITInfoSchema,
 
-    profileImage: z.string().url('Driver photo is required'),
-    approvalLetter: z.string().url('Approval letter is required'),
+    profileImage: z.string().url('Driver photo is required').optional(),
+    approvalLetter: z.string().url('Approval letter is required').optional(),
 
     assignedBus: z.string().optional(),
     assignedBusName: z.string().optional(),
@@ -95,15 +74,15 @@ export const registerUserSchema = z.discriminatedUnion('role', [
     clientInfo: baseClientInfoSchema.optional(),
     clientITInfo: clientITInfoSchema,
 
-    profileImage: z.string().url('Admin photo is required'),
-    approvalLetter: z.string().url('Approval letter is required'),
+    profileImage: z.string().url('Admin photo is required').optional(),
+    approvalLetter: z.string().url('Approval letter is required').optional(),
   }),
 ]);
 
 export const loginUserSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters long'),
-  role: z.enum(['student', 'driver', 'admin', 'superadmin']).optional(),
+  role: z.enum(['driver', 'admin', 'superadmin']).optional(),
 });
 
 export const customerInfoValidationSchema = z.object({
@@ -128,17 +107,12 @@ export const customerInfoValidationSchema = z.object({
 });
 
 export const adminCreateUserSchema = z.discriminatedUnion('role', [
+  /*
   z.object({
     role: z.literal('student'),
-    name: z.string().min(1),
-    email: z.string().email(),
-    clientInfo: z.object({
-      department: z.string().optional(),
-      rollNumber: z.string().min(1),
-      bio: z.string().optional(),
-    }),
-    profileImage: z.string().url().optional(),
+...
   }),
+*/
 
   z.object({
     role: z.literal('driver'),
@@ -148,10 +122,11 @@ export const adminCreateUserSchema = z.discriminatedUnion('role', [
       licenseNumber: z.string().min(1),
       bio: z.string().optional(),
     }),
-    profileImage: z.string().url(),
-    approvalLetter: z.string().url(),
+    profileImage: z.string().url().optional(),
     assignedBus: z.string().min(1),
     assignedBusName: z.string().optional(),
+    password: z.string().min(6).optional(),
+    needPasswordChange: z.boolean().optional(),
   }),
 
   z.object({
@@ -159,8 +134,9 @@ export const adminCreateUserSchema = z.discriminatedUnion('role', [
     name: z.string().min(1),
     email: z.string().email(),
     clientInfo: z.object({ bio: z.string().optional() }).optional(),
-    profileImage: z.string().url(),
-    approvalLetter: z.string().url(),
+    profileImage: z.string().url().optional(),
+    password: z.string().min(6).optional(),
+    needPasswordChange: z.boolean().optional(),
   }),
 ]);
 
@@ -172,26 +148,20 @@ export const adminCreateDriverSchema = z.object({
     licenseNumber: z.string().min(1),
     bio: z.string().optional(),
   }),
-  profileImage: z.string().url(),
-  approvalLetter: z.string().url(),
+  profileImage: z.string().url().optional(),
   assignedBus: z.string().min(1),
   assignedBusName: z.string().optional(),
+  password: z.string().min(6).optional(),
+  needPasswordChange: z.boolean().optional(),
 });
 
 export const adminUpdateUserSchema = z.discriminatedUnion('role', [
+  /*
   z.object({
     role: z.literal('student'),
-    name: z.string().optional(),
-    email: z.string().email().optional(),
-    clientInfo: z
-      .object({
-        department: z.string().optional(),
-        rollNumber: z.string().optional(),
-        bio: z.string().optional(),
-      })
-      .optional(),
-    profileImage: z.string().url().optional(),
+...
   }),
+*/
 
   z.object({
     role: z.literal('driver'),
@@ -221,7 +191,7 @@ export const adminUpdateUserSchema = z.discriminatedUnion('role', [
 
 export const UserValidation = {
   adminProfileValidationSchema,
-  studentProfileValidationSchema,
+  // studentProfileValidationSchema,
   driverProfileValidationSchema,
   registerUserSchema,
   loginUserSchema,

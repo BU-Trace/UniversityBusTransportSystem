@@ -1,12 +1,24 @@
 import NextAuth, {
-  // type Account,
   type NextAuthOptions,
-  // type Profile,
   type Session,
-  type User,
+  type User as NextAuthUser,
 } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth-options';
+
+interface ExtendedUser {
+  id?: string;
+  userId?: string;
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+  role?: string | null;
+  isApproved?: boolean;
+  isActive?: boolean;
+  photoUrl?: string | null;
+  profileImage?: string | null;
+  _id?: string;
+}
 
 /**
  * We wrap your existing authOptions and safely extend callbacks
@@ -25,18 +37,49 @@ const enhancedAuthOptions: NextAuthOptions = {
 
       const nextToken: JWT = { ...base };
 
+      if (trigger === 'update' && session) {
+        const sUser = session.user as ExtendedUser | undefined;
+        const newName = sUser?.name ?? nextToken.name;
+        const newImage = (
+          sUser?.image ??
+          sUser?.photoUrl ??
+          sUser?.profileImage ??
+          nextToken.image
+        ) as string | null | undefined;
+
+        nextToken.name = newName;
+        nextToken.image = newImage;
+
+        if (nextToken.user) {
+          const tUser = nextToken.user as ExtendedUser;
+          tUser.name = newName;
+          tUser.image = newImage;
+          tUser.photoUrl = newImage;
+          tUser.profileImage = newImage;
+        }
+      }
+
       if (user) {
-        nextToken.userId =
-          (user as User & { userId?: string; _id?: string }).userId ||
-          (user as { _id?: string })._id ||
-          (user as User).id ||
-          nextToken.userId;
-        nextToken.role = (user as { role?: string }).role ?? nextToken.role;
-        nextToken.isApproved =
-          (user as { isApproved?: boolean }).isApproved ?? nextToken.isApproved;
-        nextToken.isActive = (user as { isActive?: boolean }).isActive ?? nextToken.isActive;
-        nextToken.email = user.email ?? nextToken.email;
-        nextToken.name = user.name ?? nextToken.name;
+        const u = user as ExtendedUser & NextAuthUser;
+        const image = (u.profileImage ?? u.image ?? u.photoUrl ?? nextToken.image) as
+          | string
+          | null
+          | undefined;
+
+        nextToken.userId = u.userId || u._id || u.id || nextToken.userId;
+        nextToken.role = u.role ?? nextToken.role;
+        nextToken.isApproved = u.isApproved ?? nextToken.isApproved;
+        nextToken.isActive = u.isActive ?? nextToken.isActive;
+        nextToken.email = u.email ?? nextToken.email;
+        nextToken.name = u.name ?? nextToken.name;
+        nextToken.image = image;
+
+        if (nextToken.user) {
+          const tUser = nextToken.user as ExtendedUser;
+          tUser.image = image;
+          tUser.photoUrl = image;
+          tUser.profileImage = image;
+        }
       }
 
       return nextToken;
@@ -45,22 +88,32 @@ const enhancedAuthOptions: NextAuthOptions = {
     async session({ session, token, user, trigger, newSession }): Promise<Session> {
       const baseSessionCb = authOptions.callbacks?.session;
       const base = baseSessionCb
-        ? await baseSessionCb({ session, token, user, trigger, newSession })
-        : session;
+        ? await baseSessionCb({ session, token, user, trigger, newSession }) as Session
+        : session as Session;
 
       if (base?.user) {
+        const tUser = (token.user ?? {}) as ExtendedUser;
+        const bUser = base.user as ExtendedUser;
+        const image = (tUser.image ?? token.image ?? bUser.image) as string | null | undefined;
+
         base.user = {
           ...base.user,
-          userId:
-            (token as { userId?: string }).userId ?? (base.user as { userId?: string }).userId,
-          role: (token as { role?: string }).role ?? (base.user as { role?: string }).role,
-          isApproved:
-            (token as { isApproved?: boolean }).isApproved ??
-            (base.user as { isApproved?: boolean }).isApproved,
-          isActive:
-            (token as { isActive?: boolean }).isActive ??
-            (base.user as { isActive?: boolean }).isActive,
-        } as Session['user'];
+          id: (tUser.id ?? token.userId ?? token.sub ?? bUser.id) as string,
+          userId: (tUser.id ?? token.userId ?? token.sub ?? bUser.userId ?? bUser.id) as string,
+          name: (tUser.name ?? token.name ?? bUser.name) as string,
+          email: (tUser.email ?? token.email ?? bUser.email) as string,
+          image,
+          role: (tUser.role ?? token.role ?? bUser.role) as string,
+          isApproved: (tUser.isApproved ?? token.isApproved ?? bUser.isApproved) as boolean,
+          isActive: (tUser.isActive ?? token.isActive ?? bUser.isActive) as boolean,
+        };
+
+        // Synchronize all image variants in session.user
+        if (base.user) {
+          const bu = base.user as ExtendedUser;
+          bu.photoUrl = image as string | null | undefined;
+          bu.profileImage = image as string | null | undefined;
+        }
       }
 
       return base;
