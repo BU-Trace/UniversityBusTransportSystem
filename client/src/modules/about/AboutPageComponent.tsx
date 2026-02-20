@@ -569,7 +569,7 @@ const AboutPageComponent: React.FC = () => {
                 {
                   name: 'Utsojit Paticor',
                   role: 'QA Engineer & Documentation Lead',
-                  imageSrc: '/static/utso.png',
+                  imageSrc: '/static/utsojet.png',
                   message:
                     'Quality is non-negotiable. I tested every feature rigorously and documented everything to ensure a flawless experience.',
                   expertise: 'Testing Automation, Documentation',
