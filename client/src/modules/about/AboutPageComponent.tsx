@@ -567,7 +567,7 @@ const AboutPageComponent: React.FC = () => {
                   expertise: 'UI/UX Design, Modern Interfaces',
                 },
                 {
-                  name: 'Utsojit Paticor',
+                  name: 'Utsojet Paticor',
                   role: 'QA Engineer & Documentation Lead',
                   imageSrc: '/static/utsojet.png',
                   message:
