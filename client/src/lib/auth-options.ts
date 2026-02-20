@@ -1,18 +1,23 @@
+//updated on 2024-06-20
+
 import type { NextAuthOptions, User } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { jwtDecode, type JwtPayload } from 'jwt-decode';
 import type { JWT } from 'next-auth/jwt';
 
+/**
+ * Define supported user roles
+ */
 type UserRole = 'driver' | 'admin' | 'superadmin';
 
-type DecodedUser = JwtPayload & {
+interface DecodedUser extends JwtPayload {
   userId?: string;
   role?: string;
   name?: string;
   email?: string;
-};
+}
 
-type TokenUser = {
+interface TokenUser {
   id?: string;
   name?: string | null;
   email?: string | null;
@@ -22,15 +27,15 @@ type TokenUser = {
   profileImage?: string | null;
   isApproved?: boolean;
   isActive?: boolean;
-};
+}
 
-type LoginResponse = {
+interface LoginResponse {
   data?: {
     accessToken?: string;
     refreshToken?: string;
   };
   message?: string;
-};
+}
 
 interface AuthUser extends User {
   id: string;
@@ -40,6 +45,9 @@ interface AuthUser extends User {
   accessTokenExpires?: number;
 }
 
+/**
+ * Normalizes role strings to UserRole type
+ */
 function toUserRole(role: string | null | undefined): UserRole | null {
   if (!role) return null;
   const normalized = role.toLowerCase();
@@ -54,18 +62,15 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   'http://localhost:5000/api/v1';
 
+/**
+ * Attempts to refresh the access token using the backend refresh endpoint
+ */
 const refreshAccessToken = async (token: JWT): Promise<JWT> => {
   try {
-    if (!token.refreshToken) {
-      throw new Error('Missing refresh token');
-    }
-
     const response = await fetch(`${API_BASE}/auth/refresh-token`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `${token.refreshToken}`,
-      },
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       cache: 'no-store',
     });
 
@@ -81,7 +86,6 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
     return {
       ...token,
       accessToken: data.data.accessToken,
-      refreshToken: data.data.refreshToken ?? token.refreshToken,
       accessTokenExpires: (decoded.exp ?? 0) * 1000,
       user: {
         ...oldUser,
@@ -92,7 +96,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
       },
       error: undefined,
     };
-  } catch {
+  } catch (error) {
     return {
       ...token,
       error: 'RefreshAccessTokenError',
@@ -103,8 +107,8 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
-    maxAge: 365 * 24 * 60 * 60, // 365 days
-    updateAge: 24 * 60 * 60, // Only update once every 24 hours
+    maxAge: 365 * 24 * 60 * 60, // 1 Year
+    updateAge: 24 * 60 * 60,    // 24 Hours
   },
   pages: {
     signIn: '/login',
@@ -116,10 +120,8 @@ export const authOptions: NextAuthOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-
       async authorize(credentials, req) {
-        const userAgent =
-          typeof req?.headers?.get === 'function' ? (req.headers.get('user-agent') ?? '') : '';
+        const userAgent = typeof req?.headers?.get === 'function' ? (req.headers.get('user-agent') ?? '') : '';
 
         if (!credentials?.email || !credentials?.password) {
           throw new Error('Email and password are required');
@@ -135,6 +137,7 @@ export const authOptions: NextAuthOptions = {
             email: credentials.email,
             password: credentials.password,
           }),
+          credentials: 'include',
           cache: 'no-store',
         });
 
@@ -145,39 +148,32 @@ export const authOptions: NextAuthOptions = {
         }
 
         const decoded = jwtDecode<DecodedUser>(data.data.accessToken);
-        const user: AuthUser = {
+
+        return {
           id: decoded.userId ?? decoded.sub ?? credentials.email,
           email: decoded.email ?? credentials.email,
           name: decoded.name ?? credentials.email,
           role: toUserRole(decoded.role) || decoded.role?.toLowerCase() || undefined,
-
           accessToken: data.data.accessToken,
-          refreshToken: data.data.refreshToken,
           accessTokenExpires: (decoded.exp ?? 0) * 1000,
-        };
-
-        return user;
+        } as AuthUser;
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
+      /**
+       * Handle client-side session updates
+       */
       if (trigger === 'update' && session) {
         const tokenUser = (token.user ?? {}) as TokenUser;
         const newName = session.user?.name ?? tokenUser.name;
-        // Collect image from any available variant
-        const newImage =
-          session.user?.image ??
-          session.user?.photoUrl ??
-          session.user?.profileImage ??
-          tokenUser.image;
+        const newImage = session.user?.image ?? session.user?.photoUrl ?? session.user?.profileImage ?? tokenUser.image;
 
         return {
           ...token,
-          // Sync root fields
           name: newName,
           image: newImage,
-          // Sync nested user object
           user: {
             ...tokenUser,
             name: newName,
@@ -188,9 +184,12 @@ export const authOptions: NextAuthOptions = {
         };
       }
 
+      /**
+       * Initial sign-in: Save data to token
+       */
       if (user) {
         const u = user as AuthUser;
-        const image = u.profileImage ?? u.image ?? u.photoUrl ?? null;
+        const image = u.image ?? u.photoUrl ?? u.profileImage ?? null;
 
         return {
           ...token,
@@ -198,7 +197,6 @@ export const authOptions: NextAuthOptions = {
           email: u.email,
           image: image,
           accessToken: u.accessToken,
-          refreshToken: u.refreshToken,
           accessTokenExpires: u.accessTokenExpires,
           user: {
             id: u.id,
@@ -213,41 +211,39 @@ export const authOptions: NextAuthOptions = {
         };
       }
 
-      if (token.accessTokenExpires && Date.now() < Number(token.accessTokenExpires) - 60 * 1000) {
+      /**
+       * Return token if access token is still valid (with 1-minute buffer)
+       */
+      if (token.accessTokenExpires && Date.now() < Number(token.accessTokenExpires) - 60000) {
         return token;
       }
 
+      /**
+       * Access token expired: Refresh it
+       */
       return refreshAccessToken(token);
     },
 
     async session({ session, token }) {
-      session.accessToken = token.accessToken;
-      session.error = token.error;
+      // Pass token data to the session object
+      session.accessToken = token.accessToken as string;
+      session.error = token.error as string;
 
-      const tokenUser = token.user;
+      const tokenUser = token.user as TokenUser;
 
       if (tokenUser || token) {
-        const role = (tokenUser?.role ??
-          token.role ??
-          session.user?.role) as UserRole;
-        const name = (tokenUser?.name ?? token?.name ?? session.user?.name) as string;
-        const email = (tokenUser?.email ?? token?.email ?? session.user?.email) as string;
         const image = (tokenUser?.image ?? token?.image ?? session.user?.image) as string;
 
         session.user = {
           ...session.user,
           id: (tokenUser?.id ?? token.userId ?? token.sub ?? session.user?.id) as string,
-          name,
-          email,
+          name: (tokenUser?.name ?? token?.name ?? session.user?.name) as string,
+          email: (tokenUser?.email ?? token?.email ?? session.user?.email) as string,
+          role: (tokenUser?.role ?? token.role ?? session.user?.role) as UserRole,
           image,
-          role,
+          photoUrl: image,
+          profileImage: image,
         };
-
-        // Add variants to user object for components that expect them
-        if (session.user) {
-          session.user.photoUrl = image;
-          session.user.profileImage = image;
-        }
       }
 
       return session;
