@@ -6,7 +6,6 @@ interface InputFieldProps {
   name: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder?: string;
   error?: string;
 }
 
@@ -16,30 +15,44 @@ const InputField: React.FC<InputFieldProps> = ({
   name,
   value,
   onChange,
-  placeholder,
   error,
 }) => {
   return (
-    <div className="flex flex-col">
-      <label className="text-black text-sm mb-1 font-medium">{label}</label>
+    <div className="w-full">
+      {/* 🔥 LABEL (CHANGED HERE) */}
+      <label className="block text-sm font-semibold text-white mb-2">
+        {label}
+      </label>
+
+      {/* 🔥 INPUT (CHANGED FOR DARK THEME) */}
       <input
         type={type}
         name={name}
         value={value}
-        placeholder={placeholder}
         onChange={onChange}
-        className={`px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 transition-all text-black ${
-          error ? 'border-red-500' : 'border-gray-300'
-        }`}
-        aria-invalid={!!error}
-        aria-describedby={error ? `${name}-error` : undefined}
-        required
+        className={`
+          w-full
+          px-4 py-3
+          rounded-xl
+          bg-white/5
+          border
+          ${error ? 'border-red-500' : 'border-white/10'}
+          text-white
+          placeholder-gray-400
+          backdrop-blur
+          focus:ring-2 focus:ring-brick-500
+          focus:border-transparent
+          outline-none
+          transition-all
+        `}
       />
-      {error ? (
-        <span id={`${name}-error`} className="text-red-600 text-xs mt-1">
+
+      {/* 🔥 ERROR MESSAGE */}
+      {error && (
+        <p className="mt-2 text-sm text-red-400 font-medium">
           {error}
-        </span>
-      ) : null}
+        </p>
+      )}
     </div>
   );
 };
