@@ -1,11 +1,10 @@
-/* global clients */
 self.addEventListener('push', function (event) {
   if (event.data) {
     const data = event.data.json();
     const options = {
       body: data.body,
       icon: data.icon || '/static/logo.png',
-      badge: '/static/favicon.ico', // fallback badge
+      badge: '/static/favicon.ico',
       vibrate: [100, 50, 100],
       data: {
         url: data.data?.url || '/dashboard/notice',

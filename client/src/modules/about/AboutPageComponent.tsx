@@ -567,9 +567,9 @@ const AboutPageComponent: React.FC = () => {
                   expertise: 'UI/UX Design, Modern Interfaces',
                 },
                 {
-                  name: 'Utsojit Paticor',
+                  name: 'Utsojet Paticor',
                   role: 'QA Engineer & Documentation Lead',
-                  imageSrc: '/static/utso.png',
+                  imageSrc: '/static/utsojet.png',
                   message:
                     'Quality is non-negotiable. I tested every feature rigorously and documented everything to ensure a flawless experience.',
                   expertise: 'Testing Automation, Documentation',
