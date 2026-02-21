@@ -52,8 +52,8 @@ export default function DriverDashboard() {
     const loadAssignedBus = async () => {
       try {
         setLoadingBus(true);
-        const session = (await getSession()) as any;
-        const token = session?.accessToken;
+        const session = await getSession();
+        const token = (session as { accessToken?: string } | null)?.accessToken;
 
         if (!token) {
           setSelectedBus(null);

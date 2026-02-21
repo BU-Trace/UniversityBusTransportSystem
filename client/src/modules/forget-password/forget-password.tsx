@@ -114,7 +114,6 @@ const ForgetPassword = () => {
                       setError(null);
                     }}
                     error={error || undefined}
-                    placeholder="name@university.edu.bd"
                   />
                 </div>
 

@@ -97,6 +97,7 @@ const refreshAccessToken = async (token: JWT): Promise<JWT> => {
       error: undefined,
     };
   } catch (error) {
+    console.log(error)
     return {
       ...token,
       error: 'RefreshAccessTokenError',

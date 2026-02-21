@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { toast } from 'sonner';
 import { getSession, signOut } from 'next-auth/react';
+import { Session } from 'next-auth';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
 
@@ -12,9 +13,16 @@ interface CustomInternalConfig extends InternalAxiosRequestConfig {
 }
 
 /**
+ * Extended Session interface to include accessToken
+ */
+interface SessionWithToken extends Session {
+  accessToken?: string;
+}
+
+/**
  * Utility to extract readable error messages from Axios responses
  */
-export const getErrorMessage = (error: any): string => {
+export const getErrorMessage = (error: unknown): string => {
   const err = error as { response?: { data?: { message?: string } }; message?: string };
   return err?.response?.data?.message || err?.message || 'An unexpected error occurred';
 };
@@ -33,8 +41,8 @@ export const api: AxiosInstance = axios.create({
  */
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (typeof window !== 'undefined') {
-    const session = await getSession();
-    const token = (session as any)?.accessToken || localStorage.getItem('accessToken');
+    const session = await getSession() as SessionWithToken | null;
+    const token = session?.accessToken || localStorage.getItem('accessToken');
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
@@ -57,8 +65,8 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const session = await getSession();
-        const newToken = (session as any)?.accessToken;
+        const session = await getSession() as SessionWithToken | null;
+        const newToken = session?.accessToken;
 
         if (newToken && originalRequest.headers) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;
