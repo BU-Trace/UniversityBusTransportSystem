@@ -1,112 +1,57 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
-import { toast } from 'sonner';
+import axios from 'axios';
 import { getSession, signOut } from 'next-auth/react';
-import { Session } from 'next-auth';
+import { toast } from 'sonner';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
+const BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ||
+  'http://localhost:5000/api/v1';
 
-/**
- * Custom interface to track retry attempts for 401 errors
- */
-interface CustomInternalConfig extends InternalAxiosRequestConfig {
-  _retry?: boolean;
-}
+export const api = axios.create({
+  baseURL: BASE_URL,
+  withCredentials: true,
+});
 
-/**
- * Extended Session interface to include accessToken
- */
-interface SessionWithToken extends Session {
-  accessToken?: string;
-}
-
-/**
- * Utility to extract readable error messages from Axios responses
- */
-export const getErrorMessage = (error: unknown): string => {
-  const err = error as { response?: { data?: { message?: string } }; message?: string };
-  return err?.response?.data?.message || err?.message || 'An unexpected error occurred';
-};
-
-/**
- * API Instance for authenticated requests
- */
-export const api: AxiosInstance = axios.create({
+export const publicApi = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
 });
 
 /**
- * Request Interceptor: Dynamically attaches the Bearer token
- * from the NextAuth session or localStorage.
+ * Attach token
  */
-api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  if (typeof window !== 'undefined') {
-    const session = await getSession() as SessionWithToken | null;
-    const token = session?.accessToken || localStorage.getItem('accessToken');
+api.interceptors.request.use(async (config) => {
+  const session = await getSession();
+  const token = session?.accessToken;
 
-    if (token && config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  if (token && config.headers) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
+
   return config;
 });
 
 /**
- * Response Interceptor: Handles automatic token retry on 401 Unauthorized
- * and triggers logout if the session cannot be restored.
+ * Auto refresh on 401
  */
 api.interceptors.response.use(
-  (response) => response,
+  (res) => res,
   async (error) => {
-    const originalRequest = error.config as CustomInternalConfig;
+    if (error.response?.status === 401) {
+      // 🔥 CHANGED → force session refresh
+      await fetch('/api/auth/session?update');
 
-    // Detect 401 errors and prevent infinite retry loops
-    if (error?.response?.status === 401 && !originalRequest?._retry) {
-      originalRequest._retry = true;
+      const session = await getSession();
+      const newToken = session?.accessToken;
 
-      try {
-        const session = await getSession() as SessionWithToken | null;
-        const newToken = session?.accessToken;
-
-        if (newToken && originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${newToken}`;
-          // Retry the original request with the fresh token
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        console.error("Token refresh failed:", refreshError);
+      if (newToken && error.config) {
+        error.config.headers.Authorization = `Bearer ${newToken}`;
+        return api.request(error.config); // 🔥 retry request
       }
 
-      // If refresh fails, force sign out
-      if (typeof window !== 'undefined') {
-        toast.error('Session expired. Please login again.');
-        await signOut({ callbackUrl: '/login' });
-      }
+      toast.error('Session expired');
+      await signOut({ callbackUrl: '/login' });
     }
 
-    // Global error notification (skipped for retriable 401s)
-    if (typeof window !== 'undefined' && error?.response?.status !== 401) {
-      toast.error(getErrorMessage(error));
-    }
-
-    return Promise.reject(error);
-  }
-);
-
-/**
- * Public API Instance for open endpoints (Login, Register, etc.)
- */
-export const publicApi: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
-  withCredentials: true,
-});
-
-publicApi.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (typeof window !== 'undefined') {
-      toast.error(getErrorMessage(error));
-    }
     return Promise.reject(error);
   }
 );
