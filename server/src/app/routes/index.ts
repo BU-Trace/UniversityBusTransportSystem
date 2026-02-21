@@ -13,7 +13,7 @@ import noticeRoutes from '../modules/Notice/notice.routes';
 import PushRoutes from '../modules/Push/push.routes';
 import { DashboardRoutes } from '../modules/Dashboard/dashboard.routes';
 import { CalendarEventRoutes } from '../modules/CalendarEvent/calendarEvent.routes';
-import { DriverRoutes } from '../modules/Driver/driver.routes';
+ 
 
 const router = Router();
 
@@ -30,6 +30,6 @@ router.use('/notice', noticeRoutes);
 router.use('/push', PushRoutes);
 router.use('/dashboard', DashboardRoutes);
 router.use('/calendar-event', CalendarEventRoutes);
-router.use('/driver', DriverRoutes);
+// router.use('/driver', DriverRoutes);
 
 export default router;

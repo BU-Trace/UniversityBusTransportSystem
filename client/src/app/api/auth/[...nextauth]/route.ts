@@ -28,6 +28,20 @@ interface ExtendedUser {
 }
 
 /**
+ * Extended JWT interface to include accessToken
+ */
+interface ExtendedJWT extends JWT {
+  accessToken?: string;
+}
+
+/**
+ * Extended Session interface to include accessToken
+ */
+interface ExtendedSession extends Session {
+  accessToken?: string;
+}
+
+/**
  * enhancedAuthOptions: Wraps base authOptions to ensure custom properties 
  * like role, userId, and accessToken are persisted in JWT and Session.
  */
@@ -36,14 +50,14 @@ const enhancedAuthOptions: NextAuthOptions = {
   callbacks: {
     ...authOptions.callbacks,
 
-    async jwt({ token, user, account, profile, trigger, session }): Promise<JWT> {
+    async jwt({ token, user, account, profile, trigger, session }): Promise<ExtendedJWT> {
       // Execute base JWT callback if it exists
       const baseJwtCb = authOptions.callbacks?.jwt;
       const base = baseJwtCb
         ? await baseJwtCb({ token, user, account, profile, trigger, session })
         : token;
 
-      const nextToken: JWT = { ...base };
+      const nextToken: ExtendedJWT = { ...base };
 
       /**
        * Handle Session Updates (client-side update() call)
@@ -80,7 +94,7 @@ const enhancedAuthOptions: NextAuthOptions = {
         nextToken.email = u.email ?? nextToken.email;
         nextToken.name = u.name ?? nextToken.name;
         nextToken.image = image;
-        (nextToken as any).accessToken = u.accessToken ?? (nextToken as any).accessToken;
+        nextToken.accessToken = u.accessToken ?? nextToken.accessToken;
 
         if (nextToken.user) {
           const tUser = nextToken.user as ExtendedUser;
@@ -93,12 +107,12 @@ const enhancedAuthOptions: NextAuthOptions = {
       return nextToken;
     },
 
-    async session({ session, token, user, trigger, newSession }): Promise<Session> {
+    async session({ session, token, user, trigger, newSession }): Promise<ExtendedSession> {
       // Execute base session callback if it exists
       const baseSessionCb = authOptions.callbacks?.session;
       const base = baseSessionCb
-        ? (await baseSessionCb({ session, token, user, trigger, newSession })) as Session
-        : (session as Session);
+        ? (await baseSessionCb({ session, token, user, trigger, newSession })) as ExtendedSession
+        : (session as ExtendedSession);
 
       /**
        * Synchronize JWT token data with the Session object
@@ -126,7 +140,7 @@ const enhancedAuthOptions: NextAuthOptions = {
         bu.profileImage = image;
         
         // Pass access token to the session for API calls
-        (base as any).accessToken = (token as any).accessToken;
+        base.accessToken = (token as ExtendedJWT).accessToken;
       }
 
       return base;

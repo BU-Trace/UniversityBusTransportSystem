@@ -31,10 +31,8 @@ export const initSocket = (httpServer: HttpServer) => {
     console.log('🔌 Socket connected:', socket.id);
 
     socket.on('registerUser', async (userData) => {
-      // Store user data associated with this socket ID
       if (userData && userData.id) {
         try {
-          // Fetch full user data to get "other info" like assigned bus
           const user = await User.findById(userData.id).select('name role profileImage assignedBusName').lean();
           
           if (user) {
@@ -46,7 +44,6 @@ export const initSocket = (httpServer: HttpServer) => {
               assignedBusName: user.assignedBusName || 'N/A'
             });
 
-            // Broadcast updated sessions
             io.emit('activeSessionsUpdate', Array.from(activeSessions.values()));
             console.log(`👤 User registered: ${user.name} (${user.role})`);
           }

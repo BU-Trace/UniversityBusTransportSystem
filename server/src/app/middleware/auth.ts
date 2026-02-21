@@ -6,6 +6,7 @@ import { StatusCodes } from 'http-status-codes';
 import { UserRole } from '../modules/User/user.interface';
 import User from '../modules/User/user.model';
 import AppError from '../errors/appError';
+import { email } from 'zod';
 
 interface AuthPayload extends JwtPayload {
   email: string;
@@ -31,7 +32,7 @@ const auth = (...requiredRoles: UserRole[]) => {
       if (!email) {
         throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid token!');
       }
-
+      
       const user = await User.findOne({ email });
 
       if (!user) {
