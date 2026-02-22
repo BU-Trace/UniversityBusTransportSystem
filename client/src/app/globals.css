@@ -134,3 +134,135 @@
   background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
 }
+
+/* ──────────────────────────────────────────────────
+   react-time-picker  ·  dark clock theme
+────────────────────────────────────────────────── */
+
+/* Wrapper (the visible input box) */
+.tp-dark .react-time-picker {
+  width: 100%;
+}
+.tp-dark .react-time-picker__wrapper {
+  background: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 10px 10px 10px 36px !important;
+  color: white !important;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.tp-dark .react-time-picker__wrapper:focus-within {
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Accent variants */
+.tp-emerald .react-time-picker__wrapper:focus-within {
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.12) !important;
+}
+.tp-blue .react-time-picker__wrapper:focus-within {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
+}
+
+/* Text inputs inside the wrapper */
+.tp-dark .react-time-picker__inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+.tp-dark .react-time-picker__inputGroup__input {
+  color: white !important;
+  background: transparent !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  outline: none !important;
+  border: none !important;
+  padding: 0 1px !important;
+}
+.tp-dark .react-time-picker__inputGroup__input:focus {
+  outline: none !important;
+  background: rgba(255,255,255,0.06) !important;
+  border-radius: 4px !important;
+}
+.tp-dark .react-time-picker__inputGroup__divider,
+.tp-dark .react-time-picker__inputGroup__leadingZero {
+  color: rgba(255, 255, 255, 0.3) !important;
+  font-weight: 700;
+  font-size: 14px;
+}
+.tp-dark .react-time-picker__inputGroup__amPm {
+  color: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255,255,255,0.05) !important;
+  border-radius: 6px !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+}
+
+/* Clear & Clock icon buttons */
+.tp-dark .react-time-picker__button {
+  background: transparent !important;
+  border: none !important;
+  padding: 2px 4px !important;
+  cursor: pointer;
+}
+.tp-dark .react-time-picker__button svg {
+  stroke: rgba(255, 255, 255, 0.3) !important;
+  transition: stroke 0.15s;
+}
+.tp-dark .react-time-picker__button:hover svg {
+  stroke: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* The popup clock container */
+.tp-clock {
+  background: #0d0d1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.95), 0 0 0 6px rgba(0, 0, 0, 0.4) !important;
+  padding: 20px !important;
+  overflow: visible !important;
+}
+
+/* react-clock face */
+.tp-clock .react-clock__face {
+  border: 2px solid rgba(255, 255, 255, 0.08) !important;
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, rgba(0,0,0,0.2) 100%) !important;
+}
+.tp-clock .react-clock__hand__body {
+  background-color: rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 0 6px rgba(255,255,255,0.3) !important;
+}
+.tp-clock .react-clock__second-hand__body {
+  background-color: #b44d5c !important;
+  box-shadow: 0 0 8px rgba(180, 77, 92, 0.8) !important;
+}
+.tp-clock .react-clock__minute-hand__body {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+.tp-clock .react-clock__hour-hand__body {
+  background-color: rgba(255, 255, 255, 0.7) !important;
+}
+.tp-clock .react-clock__mark__body {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+.tp-clock .react-clock__mark__number {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 9px !important;
+  font-weight: 700 !important;
+}
+
+/* Emerald accent for the second hand glow on Coming slots */
+.tp-emerald .tp-clock .react-clock__second-hand__body {
+  background-color: #10b981 !important;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8) !important;
+}
+
+/* Blue accent for Going slots */
+.tp-blue .tp-clock .react-clock__second-hand__body {
+  background-color: #3b82f6 !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.8) !important;
+}
