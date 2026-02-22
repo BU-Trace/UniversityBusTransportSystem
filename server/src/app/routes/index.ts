@@ -12,8 +12,6 @@ import noticeRoutes from '../modules/Notice/notice.routes';
 import PushRoutes from '../modules/Push/push.routes';
 import { DashboardRoutes } from '../modules/Dashboard/dashboard.routes';
 import { CalendarEventRoutes } from '../modules/CalendarEvent/calendarEvent.routes';
-import { ScheduleRoutes } from '../modules/Schedule/schedule.routes';
-import { DriverRoutes } from '../modules/Driver/driver.routes';
 
 const router = Router();
 
@@ -69,14 +67,6 @@ const moduleRoutes = [
   {
     path: '/calendar-event',
     route: CalendarEventRoutes,
-  },
-  {
-    path: '/schedule',
-    route: ScheduleRoutes,
-  },
-  {
-    path: '/driver',
-    route: DriverRoutes,
   }
 ];
 
