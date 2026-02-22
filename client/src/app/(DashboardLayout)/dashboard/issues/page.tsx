@@ -12,6 +12,7 @@ import {
   ChevronRight,
   MoreHorizontal,
   Trash2,
+  Search,
   Hash,
   Filter,
 } from 'lucide-react';
@@ -234,21 +235,25 @@ const IssuesManagementPage = () => {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="relative group">
+        <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto">
+          <div className="relative flex-1 md:w-80 group">
+            <Search
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brick-400 transition-colors"
+              size={18}
+            />
             <input
               type="text"
-              placeholder="Search reports or ID..."
+              placeholder="Search issues..."
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full sm:w-64 bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-brick-500/50 focus:bg-white/10 transition-all font-medium text-sm"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brick-500/50 transition-all font-medium"
             />
           </div>
 
-          <div className="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+          <div className="flex bg-white/5 p-1.5 rounded-3xl border border-white/5 w-full lg:w-auto">
             {(['all', 'open', 'in_progress', 'resolved'] as const).map((s) => (
               <button
                 key={s}
@@ -256,7 +261,7 @@ const IssuesManagementPage = () => {
                   setFilterStatus(s);
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+                className={`flex-1 lg:flex-none px-6 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-all ${
                   filterStatus === s
                     ? 'bg-brick-600 text-white shadow-lg'
                     : 'text-gray-500 hover:text-white'
@@ -476,7 +481,7 @@ const IssuesManagementPage = () => {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-[2rem] p-4 px-8">
+            <div className="flex items-center justify-between bg-white/5 border border-white/10 rounded-4xl p-4 px-8">
               <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
                 Showing{' '}
                 <span className="text-white">

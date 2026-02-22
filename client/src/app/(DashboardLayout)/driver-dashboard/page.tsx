@@ -1,13 +1,21 @@
-'use client';
 
+//updated on 2024-06-20
+
+'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { Navigation, MapPin, Pause, Play, Square, Wifi, BusFront } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { getSession } from 'next-auth/react';
+import api from '@/lib/axios';
 
-// --- CONFIG ---
+/** * Socket configuration 
+ */
 const socket = io('http://localhost:5000', { autoConnect: false });
 
+/**
+ * Dynamically import Map component to prevent SSR issues with Leaflet/Google Maps
+ */
 const BusMap = dynamic(() => import('./Map'), {
   ssr: false,
   loading: () => (
@@ -37,36 +45,71 @@ export default function DriverDashboard() {
 
   const watchId = useRef<number | null>(null);
 
-  // --- MOCK DATA LOAD ---
+  /**
+   * Fetch assigned bus details on component mount
+   */
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setSelectedBus({
-        busNo: 'BRTC-PADMA',
-        reg: 'DHK-11-2233',
-        route: 'Route 1',
-      });
-      setLoadingBus(false);
-    }, 700);
+    const loadAssignedBus = async () => {
+      try {
+        setLoadingBus(true);
+        const session = await getSession();
+        const token = (session as { accessToken?: string } | null)?.accessToken;
+
+        if (!token) {
+          setSelectedBus(null);
+          return;
+        }
+
+        const res = await api.get('/driver/me/assigned');
+        const json = res.data;
+
+        if (json?.success && json?.data?.bus) {
+          const bus = json.data.bus;
+          const routeId = bus?.route?._id || bus?.route?.id || bus?.route || 'unknown-route';
+
+          setSelectedBus({
+            busNo: bus.bus_id,
+            reg: bus.plateNumber,
+            route: routeId,
+          });
+        } else {
+          setSelectedBus(null);
+        }
+      } catch (err) {
+        console.error('Assigned bus fetch error:', err);
+        setSelectedBus(null);
+      } finally {
+        setLoadingBus(false);
+      }
+    };
+
+    loadAssignedBus();
 
     return () => {
-      clearTimeout(timer);
       if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
       if (socket.connected) socket.disconnect();
     };
   }, []);
 
-  // --- SOCKET EVENTS ---
+  /**
+   * Monitor Socket.io connection status
+   */
   useEffect(() => {
-    socket.on('connect', () => setSocketConnected(true));
-    socket.on('disconnect', () => setSocketConnected(false));
+    const onConnect = () => setSocketConnected(true);
+    const onDisconnect = () => setSocketConnected(false);
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
 
     return () => {
-      socket.off('connect');
-      socket.off('disconnect');
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
     };
   }, []);
 
-  // --- GPS LOGIC ---
+  /**
+   * Initialize GPS tracking and emit location to server
+   */
   const initTracking = () => {
     if (!navigator.geolocation || !selectedBus) return;
     if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
@@ -92,43 +135,81 @@ export default function DriverDashboard() {
         }
       },
       (err) => console.error('GPS Error:', err),
-      { enableHighAccuracy: true, maximumAge: 0 }
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
     );
   };
 
-  // --- ACTIONS ---
+  /**
+   * Starts trip, connects socket, and begins tracking
+   */
   const handleStart = () => {
     if (!selectedBus) return;
 
     setIsMapVisible(true);
-
-    if (!socket.connected) socket.connect();
     setStatus('sharing');
 
-    socket.emit('joinRoute', { routeId: selectedBus.route });
-    socket.emit('busStatus', { busId: selectedBus.busNo, routeId: selectedBus.route, status: 'running' });
+    if (!socket.connected) {
+      socket.connect();
+    }
+
+    // Emit initial status once connected
+    const emitStatus = () => {
+      socket.emit('joinRoute', { routeId: selectedBus.route });
+      socket.emit('busStatus', {
+        busId: selectedBus.busNo,
+        routeId: selectedBus.route,
+        status: 'running',
+      });
+    };
+
+    if (socket.connected) {
+      emitStatus();
+    } else {
+      socket.once('connect', emitStatus);
+    }
 
     initTracking();
   };
 
+  /**
+   * Pauses location broadcasting
+   */
   const handlePause = () => {
     if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
     setStatus('paused');
-    socket.emit('busStatus', { busId: selectedBus?.busNo, routeId: selectedBus?.route, status: 'paused' });
+    socket.emit('busStatus', {
+      busId: selectedBus?.busNo,
+      routeId: selectedBus?.route,
+      status: 'paused',
+    });
   };
 
+  /**
+   * Resumes location broadcasting
+   */
   const handleResume = () => {
     setStatus('sharing');
-    socket.emit('busStatus', { busId: selectedBus?.busNo, routeId: selectedBus?.route, status: 'running' });
+    socket.emit('busStatus', {
+      busId: selectedBus?.busNo,
+      routeId: selectedBus?.route,
+      status: 'running',
+    });
     initTracking();
   };
 
+  /**
+   * Terminates the trip and cleans up
+   */
   const handleStop = () => {
     if (watchId.current) navigator.geolocation.clearWatch(watchId.current);
 
     if (socket.connected) {
-      socket.emit('busStatus', { busId: selectedBus?.busNo, routeId: selectedBus?.route, status: 'offline' });
-      setTimeout(() => socket.disconnect(), 120);
+      socket.emit('busStatus', {
+        busId: selectedBus?.busNo,
+        routeId: selectedBus?.route,
+        status: 'offline',
+      });
+      setTimeout(() => socket.disconnect(), 200);
     }
 
     setStatus('idle');
@@ -139,15 +220,12 @@ export default function DriverDashboard() {
 
   return (
     <div className="relative h-screen w-full bg-zinc-950 text-white overflow-hidden flex flex-col">
-      {/* --- MAP LAYER --- */}
-      <div
-        className={`absolute inset-0 z-0 transition-opacity duration-700 ${isMapVisible ? 'opacity-100' : 'opacity-0'
-          }`}
-      >
+      {/* Map Layer */}
+      <div className={`absolute inset-0 z-0 transition-opacity duration-700 ${isMapVisible ? 'opacity-100' : 'opacity-0'}`}>
         {isMapVisible && <BusMap location={location} />}
       </div>
 
-      {/* --- IDLE SCREEN --- */}
+      {/* Entry Screen */}
       {!isMapVisible && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 bg-gradient-to-b from-zinc-900 to-zinc-950">
           <div className="w-full max-w-sm">
@@ -160,16 +238,16 @@ export default function DriverDashboard() {
 
             <div className="text-center space-y-2 mb-10">
               <h1 className="text-3xl font-black uppercase tracking-tighter text-white">
-                {loadingBus ? 'Fetching Schedule...' : selectedBus?.busNo}
+                {loadingBus ? 'Fetching Schedule...' : selectedBus?.busNo || 'No Bus Found'}
               </h1>
               <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">
-                {selectedBus?.route || 'No Route Assigned'}
+                {selectedBus?.route ? 'Route Assigned' : 'No Route Assigned'}
               </p>
             </div>
 
             <button
               onClick={handleStart}
-              disabled={loadingBus}
+              disabled={loadingBus || !selectedBus}
               className="group w-full py-4 bg-red-600 hover:bg-red-500 active:scale-95 transition-all rounded-xl font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(220,38,38,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Play size={20} fill="currentColor" />
@@ -179,22 +257,10 @@ export default function DriverDashboard() {
         </div>
       )}
 
-      {/* --- TOP HUD --- */}
+      {/* Tracking HUD */}
       {isMapVisible && (
         <div className="absolute top-0 left-0 right-0 z-30 p-4 pointer-events-none flex flex-col items-center">
-          <div
-            className={`
-              pointer-events-auto
-              flex items-center gap-4 pl-4 pr-5 py-3 
-              bg-zinc-950/80 backdrop-blur-xl 
-              border border-red-500/30
-              shadow-[0_10px_30px_-5px_rgba(0,0,0,0.8)]
-              rounded-full
-              transition-all duration-300
-              ${status === 'sharing' ? 'shadow-[0_0_30px_-5px_rgba(239,68,68,0.3)] border-red-500/50' : 'border-zinc-700'}
-            `}
-          >
-            {/* Live Indicator */}
+          <div className={`pointer-events-auto flex items-center gap-4 pl-4 pr-5 py-3 bg-zinc-950/80 backdrop-blur-xl border border-red-500/30 shadow-2xl rounded-full transition-all duration-300 ${status === 'sharing' ? 'border-red-500/50' : 'border-zinc-700'}`}>
             <div className="relative flex items-center justify-center h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 shrink-0">
               {status === 'sharing' ? (
                 <>
@@ -206,7 +272,6 @@ export default function DriverDashboard() {
               )}
             </div>
 
-            {/* Speed */}
             <div className="flex flex-col">
               <span className="text-[10px] text-zinc-400 font-bold tracking-wider uppercase leading-none mb-1">
                 {status === 'sharing' ? 'Live Tracking' : 'Paused'}
@@ -221,7 +286,6 @@ export default function DriverDashboard() {
 
             <div className="h-8 w-px bg-white/10 mx-1"></div>
 
-            {/* Bus No */}
             <div className="text-right">
               <div className="flex items-center gap-1.5 justify-end text-zinc-400">
                 <BusFront size={12} />
@@ -233,26 +297,18 @@ export default function DriverDashboard() {
         </div>
       )}
 
-      {/* --- BOTTOM CONTROLS --- */}
+      {/* Control Panel */}
       {isMapVisible && (
-        <div className="mt-auto relative z-30 bg-zinc-950 border-t border-white/5 pb-6 pt-4 px-6 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div className="mt-auto relative z-30 bg-zinc-950 border-t border-white/5 pb-6 pt-4 px-6 shadow-2xl">
           <div className="grid grid-cols-2 gap-4 max-w-lg mx-auto">
-            {/* Pause/Resume */}
             <button
               onClick={status === 'paused' ? handleResume : handlePause}
-              className={`
-                flex items-center justify-center gap-2 py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-transform active:scale-95
-                ${status === 'paused'
-                  ? 'bg-amber-500 text-black hover:bg-amber-400'
-                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border border-white/5'
-                }
-              `}
+              className={`flex items-center justify-center gap-2 py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-transform active:scale-95 ${status === 'paused' ? 'bg-amber-500 text-black hover:bg-amber-400' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
             >
               {status === 'paused' ? <Play size={18} fill="currentColor" /> : <Pause size={18} fill="currentColor" />}
               {status === 'paused' ? 'Resume' : 'Pause'}
             </button>
 
-            {/* Stop Trip */}
             <button
               onClick={handleStop}
               className="flex items-center justify-center gap-2 py-4 rounded-xl bg-red-900/30 text-red-200 border border-red-900/50 hover:bg-red-900/50 font-black uppercase tracking-widest text-sm transition-transform active:scale-95"
@@ -262,16 +318,9 @@ export default function DriverDashboard() {
             </button>
           </div>
 
-          {/* Connection Status */}
           <div className="flex justify-center mt-4">
-            <div
-              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${socketConnected ? 'text-zinc-500' : 'text-red-500'
-                }`}
-            >
-              <div
-                className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'
-                  }`}
-              ></div>
+            <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${socketConnected ? 'text-zinc-500' : 'text-red-500'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></div>
               {socketConnected ? 'Server Connected' : 'Disconnected'}
             </div>
           </div>

@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import 'react-time-picker/dist/TimePicker.css';
+import 'react-clock/dist/Clock.css';
 import ScrollToTopButton from '@/components/common/ScrollToTopButton';
 import Providers from '@/app/provider';
 import { Toaster } from 'sonner';
