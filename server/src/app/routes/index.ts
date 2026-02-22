@@ -1,4 +1,5 @@
 import { Router } from 'express';
+
 import { UserRoutes } from '../modules/User/user.routes';
 import { AuthRoutes } from '../modules/Auth/auth.routes';
 import StopageRoutes from '../modules/Stopage/stopage.routes';
@@ -12,7 +13,7 @@ import noticeRoutes from '../modules/Notice/notice.routes';
 import PushRoutes from '../modules/Push/push.routes';
 import { DashboardRoutes } from '../modules/Dashboard/dashboard.routes';
 import { CalendarEventRoutes } from '../modules/CalendarEvent/calendarEvent.routes';
-import { ScheduleRoutes } from '../modules/Schedule/schedule.routes';
+// import { ScheduleRoutes } from '../modules/Schedule/schedule.routes';
 import { DriverRoutes } from '../modules/Driver/driver.routes';
 
 const router = Router();
@@ -72,7 +73,7 @@ const moduleRoutes = [
   },
   {
     path: '/schedule',
-    route: ScheduleRoutes,
+    // route: ScheduleRoutes,
   },
   {
     path: '/driver',
@@ -80,6 +81,6 @@ const moduleRoutes = [
   }
 ];
 
-moduleRoutes.forEach((route) => router.use(route.path, route.route));
+// moduleRoutes.forEach((route) => router.use(route.path, route.route));
 
 export default router;

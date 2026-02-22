@@ -1,3 +1,5 @@
+//22-2-26
+
 import cors from 'cors';
 import express, { Application, Request, Response } from 'express';
 import cookieParser from 'cookie-parser';
@@ -10,19 +12,32 @@ import router from './app/routes';
 
 const app: Application = express();
 
+// ---------------- Allowed Origins ----------------
+const allowedOrigins = [
+  config.client_url,                 // production frontend
+  'http://localhost:3000',           // web dev
+  'http://localhost:3001',
+  'http://localhost:8081',           // Expo dev
+  'http://192.168.0.106:19000',      // local network mobile
+].filter(Boolean); // remove undefined
+
 // ---------------- Middleware ----------------
 app.use(
   cors({
-    origin: [
-      config.client_url || 'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:8081', // Expo dev server
-      'http://192.168.0.106:19000',
-      '*'
-    ],
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like Postman, mobile apps)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS blocked for origin: ${origin}`));
+      }
+    },
     credentials: true,
   })
 );
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -36,19 +51,21 @@ app.get('/api/v1', (req: Request, res: Response) => {
     message: 'Welcome to the API v1 root. Please use a specific endpoint.',
   });
 });
+
 app.use('/api/v1', router);
 
-// ---------------- Test Route ----------------
+// ---------------- Root Health Route ----------------
 app.get('/', (req: Request, res: Response) => {
   const now = new Date();
   const clientIp =
-    (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket.remoteAddress;
+    (req.headers['x-forwarded-for'] as string)?.split(',')[0] ||
+    req.socket.remoteAddress;
 
   const uptimeSeconds = os.uptime();
 
   res.status(200).json({
     success: true,
-    message: '🎓 Barishal University Campus Connect API',
+    message: ' Barishal University BUTrace API',
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development',
     timestamp: now.toISOString(),
@@ -77,15 +94,16 @@ app.get('/', (req: Request, res: Response) => {
     },
 
     api: {
+      baseUrl: '/api/v1',
       documentation: '/docs',
-      healthCheck: '/health',
-      status: '🟢 Operational',
+      healthCheck: '/',
+      status: ' Operational',
     },
 
     developer: {
-      name: 'Md. Imam Hosen',
-      email: 'mimam22.cse@bu.ac.bd',
-      github: 'https://github.com/mdimamhosen',
+      name: 'Team HEXAGON',
+      email: 'butrace6@gamil.com',
+      github: 'https://github.com/BU-Connect',
     },
   });
 });
