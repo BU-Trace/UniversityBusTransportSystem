@@ -13,23 +13,74 @@ import noticeRoutes from '../modules/Notice/notice.routes';
 import PushRoutes from '../modules/Push/push.routes';
 import { DashboardRoutes } from '../modules/Dashboard/dashboard.routes';
 import { CalendarEventRoutes } from '../modules/CalendarEvent/calendarEvent.routes';
- 
+// import { ScheduleRoutes } from '../modules/Schedule/schedule.routes';
+import { DriverRoutes } from '../modules/Driver/driver.routes';
 
 const router = Router();
 
-router.use('/user', UserRoutes);
-router.use('/auth', AuthRoutes);
-router.use('/stopage', StopageRoutes);
-router.use('/route', RouteRoutes);
-router.use('/bus', BusRoutes);
-router.use('/notification', NotificationRoutes);
-router.use('/issue', IssueRoutes);
-router.use('/location', LocationRoutes);
-router.use('/ai', AiRoutes);
-router.use('/notice', noticeRoutes);
-router.use('/push', PushRoutes);
-router.use('/dashboard', DashboardRoutes);
-router.use('/calendar-event', CalendarEventRoutes);
-// router.use('/driver', DriverRoutes);
+const moduleRoutes = [
+  {
+    path: '/user',
+    route: UserRoutes,
+  },
+  {
+    path: '/auth',
+    route: AuthRoutes,
+  },
+  {
+    path: '/stopage',
+    route: StopageRoutes,
+  },
+  {
+    path: '/route',
+    route: RouteRoutes,
+  },
+  {
+    path: '/bus',
+    route: BusRoutes,
+  },
+  {
+    path: '/notification',
+    route: NotificationRoutes,
+  },
+  {
+    path: '/issue',
+    route: IssueRoutes,
+  },
+  {
+    path: '/location',
+    route: LocationRoutes,
+  },
+  {
+    path: '/ai',
+    route: AiRoutes,
+  },
+  {
+    path: '/notice',
+    route: noticeRoutes,
+  },
+  {
+    path: '/push',
+    route: PushRoutes,
+  },
+  {
+    path: '/dashboard',
+    route: DashboardRoutes,
+  },
+  {
+    path: '/calendar-event',
+    route: CalendarEventRoutes,
+  },
+  {
+    path: '/schedule',
+    // route: ScheduleRoutes,
+  },
+  {
+    path: '/driver',
+    route: DriverRoutes,
+  }
+];
+
+// moduleRoutes.forEach((route) => router.use(route.path, route.route));
 
 export default router;

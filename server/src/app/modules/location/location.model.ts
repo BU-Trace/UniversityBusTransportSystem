@@ -2,20 +2,20 @@ import mongoose, { Schema } from 'mongoose';
 
 const LocationSchema = new Schema(
   {
-    busId: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    routeId: {
-      type: String,
+    bus: {
+      type: Schema.Types.ObjectId,
+      ref: 'Bus',
       required: true,
     },
-    lat: {
+    route: {
+      type: Schema.Types.ObjectId,
+      ref: 'Route',
+    },
+    latitude: {
       type: Number,
       required: true,
     },
-    lng: {
+    longitude: {
       type: Number,
       required: true,
     },
@@ -24,7 +24,7 @@ const LocationSchema = new Schema(
       enum: ['running', 'paused', 'stopped'],
       default: 'running',
     },
-    time: {
+    capturedAt: {
       type: Date,
       default: Date.now,
     },
