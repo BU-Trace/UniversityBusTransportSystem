@@ -147,67 +147,67 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             `}
           >
             {/* Sidebar Branding / Header */}
-            <div className="p-8 flex flex-col items-center border-b border-white/5">
-              <Link href="/" className="flex items-center gap-3 mb-8 group">
-                <div className="w-10 h-10 group-hover:rotate-6 transition-transform overflow-hidden flex items-center justify-center">
+            <div className="p-4 lg:p-6 flex flex-col items-center border-b border-white/5 shrink-0">
+              <Link href="/" className="flex items-center gap-3 mb-6 group">
+                <div className="w-8 h-8 group-hover:rotate-6 transition-transform overflow-hidden flex items-center justify-center">
                   <Image
                     src="/static/logo.png"
                     alt="BU Trace Logo"
-                    width={40}
-                    height={40}
+                    width={32}
+                    height={32}
                     className="w-full h-full object-contain"
                   />
                 </div>
-                <h1 className="text-xl font-black tracking-tighter italic">
+                <h1 className="text-lg font-black tracking-tighter italic">
                   BU<span className="text-brick-400">TRACE</span>
                 </h1>
               </Link>
 
               {/* Profile Section */}
-              <div className="relative mb-4">
-                <div className="w-24 h-24 rounded-2xl border-2 border-white/20 bg-white/5 flex items-center justify-center shadow-2xl overflow-hidden group">
+              <div className="relative mb-3 flex flex-col items-center">
+                <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl border-2 border-white/20 bg-white/5 flex items-center justify-center shadow-2xl overflow-hidden group">
                   {profilePhoto ? (
                     <Image
                       src={profilePhoto}
                       alt={displayName}
-                      width={96}
-                      height={96}
+                      width={80}
+                      height={80}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       unoptimized
                     />
                   ) : (
                     <div className="w-full h-full bg-linear-to-br from-brick-500/20 to-brick-500/40 flex items-center justify-center">
-                      <MdPerson className="text-brick-400 text-5xl opacity-80" />
+                      <MdPerson className="text-brick-400 text-3xl opacity-80" />
                     </div>
                   )}
                 </div>
                 <Link
                   href="/dashboard/editProfile"
-                  className="absolute -bottom-2 -right-2 p-2 bg-brick-500 text-white rounded-xl shadow-lg hover:scale-110 transition-transform border border-white/20"
+                  className="absolute -bottom-1 -right-1 p-1.5 bg-brick-500 text-white rounded-lg shadow-lg hover:scale-110 transition-transform border border-white/20"
                 >
-                  <MdEdit size={14} />
+                  <MdEdit size={12} />
                 </Link>
               </div>
 
-              <div className="text-center">
-                <h2 className="font-bold text-lg uppercase tracking-widest text-white truncate max-w-[200px]">
+              <div className="text-center w-full px-2">
+                <h2 className="font-bold text-base uppercase tracking-widest text-white truncate w-full">
                   {displayName}
                 </h2>
-                <span className="text-[10px] font-black tracking-[0.2em] text-brick-400 uppercase bg-brick-500/10 px-3 py-1 rounded-full mt-2 inline-block border border-brick-500/20">
+                <span className="text-[10px] font-black tracking-[0.2em] text-brick-400 uppercase bg-brick-500/10 px-2 py-0.5 rounded-full mt-1.5 inline-block border border-brick-500/20">
                   {role}
                 </span>
               </div>
             </div>
 
             {/* Navigation Menu */}
-            <nav className="flex-1 mt-6 px-4 space-y-2 overflow-y-auto custom-scrollbar">
+            <nav className="flex-1 mt-4 px-3 space-y-1.5 overflow-y-auto custom-scrollbar min-h-0">
               {menuItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
                   onClick={() => setIsOpen(false)}
                   className={`
-                    flex items-center gap-4 px-6 py-4 rounded-2xl font-bold transition-all group
+                    flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all group
                     ${
                       pathname === item.href
                         ? 'bg-brick-500 text-white shadow-xl shadow-brick-500/20 border border-brick-400/30'
@@ -239,23 +239,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </nav>
 
             {/* Sidebar Footer */}
-            <div className="p-6 border-t border-white/5 space-y-3">
+            <div className="p-3 lg:p-4 border-t border-white/5 space-y-1 shrink-0">
               {role !== 'driver' && (
                 <Link
                   href="/dashboard/editProfile"
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-4 w-full px-6 py-3 text-gray-400 hover:text-white transition-colors text-sm font-bold"
+                  className="flex items-center gap-3 w-full px-4 py-2 text-gray-400 hover:text-white transition-colors text-xs font-bold"
                 >
-                  <MdSettings size={20} className="text-gray-500" />
+                  <MdSettings size={16} className="text-gray-500" />
                   Settings
                 </Link>
               )}
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="flex items-center gap-4 w-full px-6 py-4 bg-white/5 hover:bg-brick-600/20 text-brick-400 hover:text-brick-300 rounded-2xl font-black transition-all border border-white/5 hover:border-brick-500/30 shadow-lg"
+                className="flex items-center gap-3 w-full px-4 py-2.5 bg-white/5 hover:bg-brick-600/20 text-brick-400 hover:text-brick-300 rounded-xl font-black transition-all border border-white/5 hover:border-brick-500/30 shadow-lg"
               >
-                <MdLogout size={22} />
-                <span className="text-sm tracking-wide">Logout</span>
+                <MdLogout size={18} />
+                <span className="text-xs tracking-wide">Logout</span>
               </button>
             </div>
           </motion.aside>

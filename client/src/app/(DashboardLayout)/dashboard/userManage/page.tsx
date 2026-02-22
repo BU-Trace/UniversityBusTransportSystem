@@ -553,28 +553,27 @@ export default function UserManagementPage() {
           </p>
         </motion.div>
 
-        <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-80">
+        <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto">
+          <div className="relative flex-1 md:w-80 group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-brick-400/60"
-              size={20}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brick-400 transition-colors"
+              size={18}
             />
             <input
+              type="text"
+              placeholder="Search users..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name / email / license..."
-              className="w-full pl-12 pr-4 py-4 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md text-white shadow-xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all placeholder:text-gray-500"
+              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brick-500/50 transition-all font-medium"
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
-            <button
-              onClick={openAdd}
-              className="flex-1 md:flex-none bg-brick-500 text-white px-8 py-4 rounded-3xl font-black text-sm hover:bg-brick-600 transition-all shadow-xl shadow-brick-500/20 flex items-center justify-center gap-2 whitespace-nowrap border border-white/10"
-            >
-              <Plus size={20} /> Add User
-            </button>
-          </div>
+          <button
+            onClick={openAdd}
+            className="w-full lg:w-auto bg-brick-500 text-white px-8 py-5 rounded-4xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-2xl shadow-brick-500/30 flex items-center justify-center gap-3 border border-white/10"
+          >
+            <Plus size={20} /> Add User
+          </button>
         </div>
       </div>
 

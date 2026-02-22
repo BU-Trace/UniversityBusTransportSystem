@@ -1,3 +1,4 @@
+import { Types } from 'mongoose';
 import { z } from 'zod';
 import { Location } from './location.model';
 import { ILocation } from './location.interface';
@@ -36,5 +37,7 @@ export const getLocation = async (id: string) => {
 };
 
 export const getLatestLocationByBus = async (busId: string) => {
-  return await Location.findOne({ bus: busId }).sort({ capturedAt: -1 }).populate('bus');
+  return await Location.findOne({ bus: new Types.ObjectId(busId) })
+    .sort({ capturedAt: -1 })
+    .populate('bus');
 };
