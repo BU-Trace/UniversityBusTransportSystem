@@ -243,17 +243,24 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="space-y-12 pb-12">
-      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-        <h1 className="text-4xl font-black text-white tracking-tighter uppercase mb-2">
-          Account Settings
-        </h1>
-        <p className="text-gray-400 text-sm font-medium leading-relaxed">
-          Manage your profile information and security settings.
-        </p>
-      </motion.div>
+ <div className="w-full min-h-screen py-8">
 
-      <div className="max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-12">
+
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+    >
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight uppercase mb-2">
+        Account Settings
+      </h1>
+      <p className="text-gray-400 text-sm sm:text-base font-medium leading-relaxed">
+        Manage your profile information and security settings.
+      </p>
+    </motion.div>
+
+
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
         {/* Left Section: Profile Info */}
         <div className="lg:col-span-7 space-y-8">
           <div className="bg-white/5 backdrop-blur-2xl rounded-[3.5rem] border border-white/10 shadow-3xl overflow-hidden p-8 md:p-12">
@@ -456,6 +463,7 @@ export default function EditProfilePage() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
