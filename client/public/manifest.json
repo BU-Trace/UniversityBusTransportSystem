@@ -1,0 +1,32 @@
+{
+  "name": "BU Trace – University Bus Transport",
+  "short_name": "BU Trace",
+  "description": "Real-time campus bus tracking, schedules and route info for University of Barishal.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#9b111e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/BUTracelogo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/BUTracelogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/BUTracelogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["education", "transportation"]
+}

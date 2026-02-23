@@ -8,12 +8,20 @@ import { Toaster } from 'sonner';
 import { IntroProvider } from '@/context/IntroContext';
 
 import TransportFab from '@/components/common/TransportFab';
+import InstallPrompt from '@/components/common/InstallPrompt';
 
 export const metadata: Metadata = {
   title: 'BU Trace',
   description: 'BU Trace - University Bus Transport System',
   icons: {
     icon: '/static/BUTracelogo.png',
+  },
+  manifest: '/manifest.json',
+  themeColor: '#9b111e',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'BU Trace',
   },
 };
 
@@ -36,6 +44,7 @@ export default function RootLayout({
           <ScrollToTopButton />
         </Providers>
         <div id="modal-root" />
+        <InstallPrompt />
       </body>
     </html>
   );
