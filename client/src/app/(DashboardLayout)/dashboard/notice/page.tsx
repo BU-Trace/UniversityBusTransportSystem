@@ -359,11 +359,11 @@ export default function NoticeManagementPage() {
           </p>
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 md:w-80 group">
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div className="relative flex-1 w-full group">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brick-400 transition-colors"
-              size={18}
+              size={20}
             />
             <input
               type="text"
@@ -373,22 +373,15 @@ export default function NoticeManagementPage() {
                 setQuery(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-3.5 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brick-500/50 transition-all font-medium"
+              className="w-full p-10 pl-12 pr-6 py-4 rounded-3xl border border-white/5 bg-white/5 text-white shadow-2xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-medium placeholder:text-gray-600"
             />
           </div>
 
           <button
             onClick={openAdd}
-            className="w-full lg:w-auto bg-brick-500 text-white px-8 py-5 rounded-4xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-2xl shadow-brick-500/30 flex items-center justify-center gap-3 border border-white/10"
+            className="flex-1 w-full bg-brick-500 text-white px-8 py-5 rounded-4xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-2xl shadow-brick-500/30 flex items-center justify-center gap-3 border border-white/10"
           >
             <Plus size={20} /> New Notice
-          </button>
-
-          <button
-            onClick={loadNotices}
-            className="p-5 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-3xl transition-all border border-white/5 shadow-xl"
-          >
-            <RefreshCw size={24} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>

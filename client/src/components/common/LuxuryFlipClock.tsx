@@ -34,7 +34,7 @@ const LuxuryFlipClock: React.FC = () => {
   }, [time]);
 
   return (
-    <div className="w-full py-16 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md border-y border-white/5 overflow-hidden">
+    <div className="w-full py-8 md:py-16 flex flex-col items-center justify-center bg-black/40 backdrop-blur-md border-y border-white/5 overflow-hidden">
       <div className="flex flex-wrap items-center justify-center gap-2 md:gap-6 lg:gap-10 w-full max-w-7xl px-4">
         {/* Hours */}
         <div className="flex gap-1 md:gap-3">
@@ -92,7 +92,7 @@ const LuxuryFlipClock: React.FC = () => {
         </div>
       </div>
 
-      <div className="mt-8 flex items-center gap-4">
+      <div className="mt-3 md:mt-8 flex items-center gap-4">
         <span className="text-[10px] md:text-sm font-black text-gray-500 uppercase tracking-[0.5em] animate-pulse">
           Precision Synchronized
         </span>

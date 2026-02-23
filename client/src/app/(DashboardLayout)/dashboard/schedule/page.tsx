@@ -35,9 +35,14 @@ interface IBus {
   plateNumber: string;
   route: string | { _id: string; name: string }; // ObjectId as string or object
   photo: string;
-  driverId: string; // ObjectId as string
+  driverId: string | { _id: string; name: string }; // ObjectId as string or populated object
   isActive?: boolean;
   status?: 'running' | 'paused' | 'stopped';
+}
+
+interface ITimeSlot {
+  time: string;
+  bus: string;
 }
 
 interface IRoute {
@@ -47,8 +52,8 @@ interface IRoute {
   stopages: string[]; // Array of ObjectIds as strings
   bus: string[]; // Array of ObjectIds as strings
   isActive?: boolean;
-  activeHoursComing?: string[];
-  activeHoursGoing?: string[];
+  activeHoursComing?: ITimeSlot[];
+  activeHoursGoing?: ITimeSlot[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -294,35 +299,55 @@ function TimeSlotPicker({
   isLast,
   onAdd,
   accentColor,
+  assignedBuses = [],
 }: {
-  value: string;
-  onChange: (v: string) => void;
+  value: ITimeSlot;
+  onChange: (v: ITimeSlot) => void;
   onRemove: () => void;
   isLast: boolean;
   onAdd: () => void;
   accentColor: 'emerald' | 'blue';
+  assignedBuses?: { _id: string; name: string }[];
 }) {
-  const { start: initStart, end: initEnd } = slotToInputs(value);
+  const { start: initStart, end: initEnd } = slotToInputs(value?.time || '');
   const [start, setStart] = useState(initStart);
   const [end, setEnd] = useState(initEnd);
-
-  // Sync local state when parent changes value (e.g. editing existing route)
-  useEffect(() => {
-    const { start: s, end: e } = slotToInputs(value);
-    setStart(s);
-    setEnd(e);
-  }, [value]);
+  const [bus, setBus] = useState(value?.bus || '');
 
   const handleStart = (e: React.ChangeEvent<HTMLInputElement>) => {
     const s = e.target.value;
     setStart(s);
-    onChange(inputsToSlot(s, end));
+    if (s && end) onChange({ time: inputsToSlot(s, end), bus });
+    else onChange({ time: '', bus });
   };
   const handleEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
     const en = e.target.value;
     setEnd(en);
-    onChange(inputsToSlot(start, en));
+    if (start && en) onChange({ time: inputsToSlot(start, en), bus });
+    else onChange({ time: '', bus });
   };
+  const handleBusSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const b = e.target.value;
+    setBus(b);
+    if (start && end) onChange({ time: inputsToSlot(start, end), bus: b });
+    else onChange({ time: '', bus: b });
+  };
+
+  // Sync ONLY on external initial load or explicit clear from parent,
+  // without erasing partial local state while typing.
+  useEffect(() => {
+    if (!value?.time) {
+      // Parent forced empty
+    }
+    const { start: s, end: e } = slotToInputs(value?.time || '');
+    if (value?.time) {
+      setStart(s);
+      setEnd(e);
+    }
+    if (value?.bus !== undefined) {
+      setBus(value.bus);
+    }
+  }, [value]);
 
   const isEmerald = accentColor === 'emerald';
   const badge = isEmerald
@@ -359,6 +384,8 @@ function TimeSlotPicker({
             value={start}
             onChange={handleStart}
             onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
+            title="Select start time"
+            aria-label="Start time"
             className={`w-full px-3 py-3 rounded-xl text-sm font-semibold text-white outline-none transition-all duration-200 [color-scheme:dark] tabular-nums border cursor-pointer ${
               isEmerald
                 ? 'bg-emerald-950/40 border-emerald-500/20 focus:border-emerald-400/60 focus:bg-emerald-950/60 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)]'
@@ -380,7 +407,9 @@ function TimeSlotPicker({
             value={end}
             onChange={handleEnd}
             onClick={(e) => (e.currentTarget as HTMLInputElement).showPicker?.()}
-            className={`w-full px-3 py-3 rounded-xl text-sm font-semibold text-white outline-none transition-all duration-200 [color-scheme:dark] tabular-nums border cursor-pointer ${
+            title="Select end time"
+            aria-label="End time"
+            className={`w-full px-3 py-3 rounded-xl text-sm font-semibold text-white outline-none transition-all duration-200 scheme-dark tabular-nums border cursor-pointer ${
               isEmerald
                 ? 'bg-emerald-950/40 border-emerald-500/20 focus:border-emerald-400/60 focus:bg-emerald-950/60 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)]'
                 : 'bg-blue-950/40 border-blue-500/20 focus:border-blue-400/60 focus:bg-blue-950/60 focus:shadow-[0_0_12px_rgba(59,130,246,0.15)]'
@@ -412,6 +441,37 @@ function TimeSlotPicker({
           >
             <Trash2 size={13} />
           </motion.button>
+        </div>
+      </div>
+
+      {/* Bus assignment dropdown */}
+      <div className="mt-3">
+        <div className="relative">
+          <select
+            value={
+              typeof bus === 'object' && bus !== null ? (bus as { _id: string })._id : bus || ''
+            }
+            onChange={handleBusSelect}
+            className={`w-full px-3 py-2.5 rounded-xl text-xs font-bold text-white outline-none transition-all duration-200 [color-scheme:dark] border cursor-pointer appearance-none pl-9 ${
+              isEmerald
+                ? 'bg-emerald-950/40 border-emerald-500/20 focus:border-emerald-400/60 focus:bg-emerald-950/60 focus:shadow-[0_0_12px_rgba(16,185,129,0.15)]'
+                : 'bg-blue-950/40 border-blue-500/20 focus:border-blue-400/60 focus:bg-blue-950/60 focus:shadow-[0_0_12px_rgba(59,130,246,0.15)]'
+            }`}
+          >
+            <option value="" disabled className="bg-gray-900 text-gray-400">
+              -- Assign Bus --
+            </option>
+            {assignedBuses?.map((b) => (
+              <option key={b._id} value={b._id} className="bg-gray-900 text-white">
+                {b.name}
+              </option>
+            ))}
+          </select>
+          <div
+            className={`absolute left-3 top-1/2 -translate-y-1/2 ${isEmerald ? 'text-emerald-400/60' : 'text-blue-400/60'}`}
+          >
+            <BusIcon size={14} />
+          </div>
         </div>
       </div>
 
@@ -617,7 +677,7 @@ export default function SchedulePage() {
   const accessToken = session?.accessToken;
 
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'buses' | 'routes' | 'stopages'>('buses');
+  const [activeTab, setActiveTab] = useState<'buses' | 'routes' | 'stopages'>('routes');
 
   // Data State
   const [buses, setBuses] = useState<IBus[]>([]);
@@ -632,9 +692,7 @@ export default function SchedulePage() {
   const [busForm, setBusForm] = useState<Partial<IBus>>({
     name: '',
     plateNumber: '',
-    route: '',
     photo: '',
-    driverId: '',
   });
 
   // Route Modal State
@@ -645,8 +703,8 @@ export default function SchedulePage() {
     name: '',
     stopages: [],
     bus: [],
-    activeHoursComing: [''],
-    activeHoursGoing: [''],
+    activeHoursComing: [{ time: '', bus: '' }],
+    activeHoursGoing: [{ time: '', bus: '' }],
     isActive: true,
   });
 
@@ -760,7 +818,7 @@ export default function SchedulePage() {
   const openAddBus = () => {
     setBusModalType('add');
     setSelectedBusId(null);
-    setBusForm({ name: '', plateNumber: '', route: '', photo: '', driverId: '' });
+    setBusForm({ name: '', plateNumber: '', photo: '' });
     setIsBusModalOpen(true);
   };
 
@@ -770,12 +828,7 @@ export default function SchedulePage() {
     setBusForm({
       name: bus.name,
       plateNumber: bus.plateNumber,
-      route:
-        typeof bus.route === 'object' && bus.route !== null
-          ? (bus.route as { _id: string })._id
-          : (bus.route as string) || '',
       photo: bus.photo,
-      driverId: bus.driverId,
     });
     setIsBusModalOpen(true);
   };
@@ -783,8 +836,6 @@ export default function SchedulePage() {
   const handleBusSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!busForm.name?.trim()) return toast.error('Bus name required');
-    if (!busForm.route) return toast.error('Select a route');
-    if (!busForm.driverId) return toast.error('Assign a driver');
 
     try {
       if (busModalType === 'edit' && selectedBusId) {
@@ -824,8 +875,8 @@ export default function SchedulePage() {
       name: '',
       stopages: [],
       bus: [],
-      activeHoursComing: [''],
-      activeHoursGoing: [''],
+      activeHoursComing: [{ time: '', bus: '' }],
+      activeHoursGoing: [{ time: '', bus: '' }],
       isActive: true,
     } as unknown as Omit<IRoute, '_id'>);
     setIsRouteModalOpen(true);
@@ -846,6 +897,10 @@ export default function SchedulePage() {
           typeof b === 'object' && b !== null ? b._id : b
         )
         .filter((id): id is string => !!id),
+      activeHoursComing: r.activeHoursComing?.length
+        ? r.activeHoursComing
+        : [{ time: '', bus: '' }],
+      activeHoursGoing: r.activeHoursGoing?.length ? r.activeHoursGoing : [{ time: '', bus: '' }],
     });
     setIsRouteModalOpen(true);
   };
@@ -856,8 +911,10 @@ export default function SchedulePage() {
     try {
       const payload = {
         ...routeForm,
-        activeHoursComing: routeForm.activeHoursComing?.filter((h) => h.trim()),
-        activeHoursGoing: routeForm.activeHoursGoing?.filter((h) => h.trim()),
+        activeHoursComing: routeForm.activeHoursComing?.filter(
+          (h) => h.time.trim() && h.bus.trim()
+        ),
+        activeHoursGoing: routeForm.activeHoursGoing?.filter((h) => h.time.trim() && h.bus.trim()),
       };
 
       if (routeModalType === 'edit' && selectedRouteId) {
@@ -996,8 +1053,16 @@ export default function SchedulePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={`Search ${activeTab === 'buses' ? 'buses...' : activeTab === 'routes' ? 'routes...' : 'stopages...'}`}
-              className="w-full p-10 pl-12 pr-6 py-4 rounded-3xl border border-white/5 bg-white/5 text-white shadow-2xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-medium placeholder:text-gray-600"
+              className="w-full pl-12 pr-10 py-4 rounded-3xl border border-white/5 bg-white/5 text-white shadow-2xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-medium placeholder:text-gray-600"
             />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
           <button
             onClick={() => {
@@ -1017,8 +1082,8 @@ export default function SchedulePage() {
       <div className="flex  p-1.5 bg-white/5 backdrop-blur-3xl rounded-[2.5rem] border border-white/10 w-fit">
         {(
           [
-            { id: 'buses', label: 'Buses', icon: BusIcon },
             { id: 'routes', label: 'Routes', icon: RouteIcon },
+            { id: 'buses', label: 'Buses', icon: BusIcon },
             { id: 'stopages', label: 'Stopages', icon: Navigation },
           ] as const
         ).map((tab) => (
@@ -1057,7 +1122,7 @@ export default function SchedulePage() {
             {activeTab === 'buses'
               ? 'Fleet Inventory'
               : activeTab === 'routes'
-                ? 'Network Routes'
+                ? 'All Routes'
                 : 'Stopages'}
           </h3>
           <div className="flex items-center gap-3">
@@ -1154,7 +1219,7 @@ export default function SchedulePage() {
                         </span>
                       </td>
                       <td className="py-8 text-right">
-                        <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+                        <div className="flex justify-end gap-3 transition-all duration-500">
                           <button
                             onClick={() => openEditStopage(s)}
                             className="p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl border border-white/10 shadow-xl"
@@ -1182,7 +1247,7 @@ export default function SchedulePage() {
                   <th className="pb-8">Bus Info</th>
                   <th className="pb-8">Plate</th>
                   <th className="pb-8">Assignment</th>
-                  <th className="pb-8">Operating Hours</th>
+                  <th className="pb-8">Driver</th>
                   <th className="pb-8 text-right">Actions</th>
                 </tr>
               </thead>
@@ -1233,22 +1298,13 @@ export default function SchedulePage() {
                     <td className="py-8">
                       <div className="flex items-center gap-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
                         <MapPin size={14} className="text-emerald-400" />
-                        {drivers.find((d) => d && d._id === bus.driverId)?.name || 'No Pilot'}
-                      </div>
-                    </td>
-                    <td className="py-8">
-                      <div className="text-[10px] font-black uppercase tracking-widest text-emerald-400/60 flex items-center gap-2">
-                        <Navigation size={12} /> Live Status
-                      </div>
-                      <div className="text-xs font-bold text-white flex items-center gap-2">
-                        <div
-                          className={`w-2 h-2 rounded-full ${bus.status === 'running' ? 'bg-emerald-500 animate-pulse' : 'bg-gray-500'}`}
-                        />
-                        {bus.status || 'Stopped'}
+                        {typeof bus.driverId === 'object' && bus.driverId !== null
+                          ? (bus.driverId as { name: string }).name
+                          : drivers.find((d) => d && d._id === bus.driverId)?.name || 'No Pilot'}
                       </div>
                     </td>
                     <td className="py-8 text-right">
-                      <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+                      <div className="flex justify-end gap-3 transition-all duration-500">
                         <button
                           onClick={() => openEditBus(bus)}
                           className="p-4 bg-white/5 text-gray-400 hover:text-brick-400 hover:bg-brick-500/20 rounded-2xl border border-white/10 shadow-xl"
@@ -1273,7 +1329,6 @@ export default function SchedulePage() {
               <thead>
                 <tr className="text-xs font-black text-gray-500 uppercase tracking-[0.3em] border-b border-white/5">
                   <th className="pb-8">Route Name</th>
-                  <th className="pb-8">Points</th>
                   <th className="pb-8">Stops</th>
                   <th className="pb-8">Created</th>
                   <th className="pb-8 text-right">Actions</th>
@@ -1290,27 +1345,6 @@ export default function SchedulePage() {
                       <div className="flex items-center gap-2 mt-2 text-xs font-bold text-gray-500">
                         <Waypoints size={14} className="text-brick-400" /> {r.stopages?.length || 0}{' '}
                         stops
-                      </div>
-                    </td>
-                    <td className="py-8">
-                      <div className="flex flex-wrap gap-2 max-w-[200px]">
-                        {(r.bus || []).map((bid: string | { _id: string } | null, i) => {
-                          const id = typeof bid === 'object' && bid !== null ? bid._id : bid;
-                          if (!id) return null;
-                          const b = buses.find((bus) => bus._id === id);
-                          if (!b) return null;
-                          return (
-                            <span
-                              key={i}
-                              className="text-[10px] font-black text-white bg-white/5 px-2 py-1 rounded-lg border border-white/10"
-                            >
-                              {b.name}
-                            </span>
-                          );
-                        })}
-                        {(r.bus || []).length === 0 && (
-                          <span className="text-gray-600 italic">No fleet</span>
-                        )}
                       </div>
                     </td>
                     <td className="py-8">
@@ -1344,7 +1378,7 @@ export default function SchedulePage() {
                       {formatDate(r.createdAt)}
                     </td>
                     <td className="py-8 text-right">
-                      <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-500">
+                      <div className="flex justify-end gap-3 transition-all duration-500">
                         <button
                           onClick={() => openEditRoute(r)}
                           className="p-4 bg-white/5 text-gray-400 hover:text-white hover:bg-brick-500 rounded-2xl border border-white/10 shadow-xl"
@@ -1414,76 +1448,6 @@ export default function SchedulePage() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-4 group">
-                    <label className="text-[10px] font-black uppercase text-white bg-brick-500/10 px-4 py-1.5 rounded-full border border-brick-500/20 tracking-[0.2em] shadow-[0_0_15px_rgba(239,68,68,0.1)] ml-2 inline-flex items-center gap-1.5">
-                      <MapPin size={14} className="text-brick-400" /> Transit Route
-                    </label>
-                    <div className="relative">
-                      <select
-                        title="Assign Route"
-                        value={
-                          (function () {
-                            if (typeof busForm.route === 'object' && busForm.route !== null) {
-                              return (busForm.route as { _id: string })._id;
-                            }
-                            return (busForm.route as string) || '';
-                          })() as string
-                        }
-                        onChange={(e) => setBusForm((p) => ({ ...p, route: e.target.value }))}
-                        className="w-full border border-white/10 rounded-4xl p-6 outline-none focus:border-brick-500/30 transition-all font-black appearance-none"
-                        style={{ backgroundColor: '#111111', color: 'white', colorScheme: 'dark' }}
-                      >
-                        <option value="" style={{ backgroundColor: '#111111', color: '#9ca3af' }}>
-                          -- Select Route --
-                        </option>
-                        {routes.map((r) => (
-                          <option
-                            key={r._id}
-                            value={r._id}
-                            style={{ backgroundColor: '#111111', color: 'white' }}
-                          >
-                            {r.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                        <Navigation size={18} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4 group">
-                    <label className="text-[10px] font-black uppercase text-white bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/20 tracking-[0.2em] shadow-[0_0_15px_rgba(16,185,129,0.1)] ml-2 inline-flex items-center gap-1.5">
-                      <Navigation size={14} className="text-emerald-400" /> Select Driver
-                    </label>
-                    <div className="relative">
-                      <select
-                        title="Assign Driver"
-                        value={busForm.driverId}
-                        onChange={(e) => setBusForm((p) => ({ ...p, driverId: e.target.value }))}
-                        className="w-full border border-white/10 rounded-4xl p-6 outline-none focus:border-brick-500/30 transition-all font-black appearance-none"
-                        style={{ backgroundColor: '#111111', color: 'white', colorScheme: 'dark' }}
-                      >
-                        <option value="" style={{ backgroundColor: '#111111', color: '#9ca3af' }}>
-                          -- Select Driver --
-                        </option>
-                        {drivers.map((d) => (
-                          <option
-                            key={d._id}
-                            value={d._id}
-                            style={{ backgroundColor: '#111111', color: 'white' }}
-                          >
-                            {d.name}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                        <Plus size={18} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
 
                 <div className="space-y-4 group">
                   <label className="text-[10px] font-black uppercase text-gray-500 tracking-[0.3em] ml-2 group-focus-within:text-blue-400 transition-colors">
@@ -1493,6 +1457,7 @@ export default function SchedulePage() {
                     ref={photoInputRef}
                     type="file"
                     accept="image/*"
+                    title="Upload bus photo"
                     className="hidden"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -1737,63 +1702,40 @@ export default function SchedulePage() {
                           </span>
                         </div>
                         <span className="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-blue-500/20">
-                          {routeForm.bus.length} Assigned
+                          {buses.length} Buses
                         </span>
                       </div>
                       <div className="bg-black/30 rounded-2xl border border-white/6 p-2 max-h-56 overflow-y-auto custom-scrollbar space-y-1">
-                        {buses.length === 0 && (
+                        {buses.length === 0 ? (
                           <div className="py-8 text-center text-gray-500 text-xs font-semibold">
                             No buses found
                           </div>
-                        )}
-                        {buses.map((b) => {
-                          const selected = routeForm.bus.includes(b._id);
-                          return (
-                            <label
-                              key={b._id}
-                              className={`flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200 border ${
-                                selected
-                                  ? 'bg-blue-500/15 border-blue-500/30 text-white'
-                                  : 'bg-transparent border-transparent text-gray-400 hover:bg-white/6 hover:text-gray-200 hover:border-white/8'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                className="hidden"
-                                checked={selected}
-                                onChange={(e) => {
-                                  const checked = e.target.checked;
-                                  setRouteForm((p) => ({
-                                    ...p,
-                                    bus: checked
-                                      ? [...p.bus, b._id]
-                                      : p.bus.filter((id) => id !== b._id),
-                                  }));
-                                }}
-                              />
+                        ) : (
+                          buses.map((b) => {
+                            const driverName =
+                              typeof b.driverId === 'object' && b.driverId !== null
+                                ? (b.driverId as { name: string }).name
+                                : drivers.find((d) => d._id === b.driverId)?.name || null;
+                            return (
                               <div
-                                className={`w-4.5 h-4.5 rounded-md border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-                                  selected
-                                    ? 'bg-blue-500 border-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]'
-                                    : 'border-gray-600'
-                                }`}
+                                key={b._id}
+                                className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-transparent border border-transparent hover:bg-white/5 transition-all duration-150"
                               >
-                                {selected && (
-                                  <svg width="9" height="7" viewBox="0 0 10 8" fill="none">
-                                    <path
-                                      d="M1 4L3.5 6.5L9 1"
-                                      stroke="white"
-                                      strokeWidth="2"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <BusIcon size={13} className="text-blue-400 shrink-0" />
+                                  <span className="text-sm font-semibold text-white truncate">
+                                    {b.name}
+                                  </span>
+                                </div>
+                                {driverName && (
+                                  <span className="text-[10px] font-black text-gray-400 bg-white/5 px-2.5 py-1 rounded-lg border border-white/8 shrink-0 whitespace-nowrap">
+                                    {driverName}
+                                  </span>
                                 )}
                               </div>
-                              <span className="text-sm font-semibold leading-tight">{b.name}</span>
-                            </label>
-                          );
-                        })}
+                            );
+                          })
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1825,28 +1767,34 @@ export default function SchedulePage() {
                         <div className="flex items-center gap-3 px-1">
                           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
                           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
-                            Morning Arrival
+                            From University
                           </span>
                         </div>
                         <AnimatePresence mode="popLayout">
                           {(routeForm.activeHoursComing?.length
                             ? routeForm.activeHoursComing
-                            : ['']
+                            : [{ time: '', bus: '' }]
                           ).map((h, i, arr) => (
                             <TimeSlotPicker
                               key={`coming-${i}`}
                               value={h}
                               accentColor="emerald"
                               isLast={i === arr.length - 1}
+                              assignedBuses={buses}
                               onChange={(v) => {
-                                const newH = [...(routeForm.activeHoursComing || [''])];
+                                const newH = [
+                                  ...(routeForm.activeHoursComing || [{ time: '', bus: '' }]),
+                                ];
                                 newH[i] = v;
                                 setRouteForm((p) => ({ ...p, activeHoursComing: newH }));
                               }}
                               onAdd={() =>
                                 setRouteForm((p) => ({
                                   ...p,
-                                  activeHoursComing: [...(p.activeHoursComing || ['']), ''],
+                                  activeHoursComing: [
+                                    ...(p.activeHoursComing || [{ time: '', bus: '' }]),
+                                    { time: '', bus: '' },
+                                  ],
                                 }))
                               }
                               onRemove={() =>
@@ -1854,7 +1802,7 @@ export default function SchedulePage() {
                                   ...p,
                                   activeHoursComing:
                                     arr.length === 1
-                                      ? ['']
+                                      ? [{ time: '', bus: '' }]
                                       : (p.activeHoursComing || []).filter((_, idx) => idx !== i),
                                 }))
                               }
@@ -1868,28 +1816,34 @@ export default function SchedulePage() {
                         <div className="flex items-center gap-3 px-1">
                           <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]" />
                           <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">
-                            Evening Return
+                            To University
                           </span>
                         </div>
                         <AnimatePresence mode="popLayout">
                           {(routeForm.activeHoursGoing?.length
                             ? routeForm.activeHoursGoing
-                            : ['']
+                            : [{ time: '', bus: '' }]
                           ).map((h, i, arr) => (
                             <TimeSlotPicker
                               key={`going-${i}`}
                               value={h}
                               accentColor="blue"
                               isLast={i === arr.length - 1}
+                              assignedBuses={buses}
                               onChange={(v) => {
-                                const newH = [...(routeForm.activeHoursGoing || [''])];
+                                const newH = [
+                                  ...(routeForm.activeHoursGoing || [{ time: '', bus: '' }]),
+                                ];
                                 newH[i] = v;
                                 setRouteForm((p) => ({ ...p, activeHoursGoing: newH }));
                               }}
                               onAdd={() =>
                                 setRouteForm((p) => ({
                                   ...p,
-                                  activeHoursGoing: [...(p.activeHoursGoing || ['']), ''],
+                                  activeHoursGoing: [
+                                    ...(p.activeHoursGoing || [{ time: '', bus: '' }]),
+                                    { time: '', bus: '' },
+                                  ],
                                 }))
                               }
                               onRemove={() =>
@@ -1897,7 +1851,7 @@ export default function SchedulePage() {
                                   ...p,
                                   activeHoursGoing:
                                     arr.length === 1
-                                      ? ['']
+                                      ? [{ time: '', bus: '' }]
                                       : (p.activeHoursGoing || []).filter((_, idx) => idx !== i),
                                 }))
                               }

@@ -23,12 +23,14 @@ const BusSchema = new Schema(
     route: {
       type: Schema.Types.ObjectId,
       ref: 'Route',
-      required: true,
+      required: false,
+      default: null,
     },
     driverId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
+      default: null,
     },
     // Photo URL or path
     photo: {

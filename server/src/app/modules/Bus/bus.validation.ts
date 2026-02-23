@@ -5,8 +5,8 @@ const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid object id');
 export const busCreateSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   plateNumber: z.string().min(1, 'Plate number is required'),
-  route: objectId,
-  driverId: objectId,
+  route: objectId.optional(),
+  driverId: objectId.optional(),
   photo: z.string().min(1, 'Photo is required'),
   isActive: z.boolean().optional(),
   status: z.enum(['running', 'paused', 'stopped']).optional(),

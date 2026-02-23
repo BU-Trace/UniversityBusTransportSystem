@@ -97,7 +97,7 @@ const ContactPage: React.FC = () => {
       />
 
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-16 -mt-20 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Contact Form */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -332,7 +332,7 @@ const ContactPage: React.FC = () => {
                 Can&apos;t find the answer you&apos;re looking for? Check out our documentation or
                 contact our support team.
               </p>
-              <div className="aspect-16/10 relative rounded-2xl shadow-md border border-white/10 overflow-hidden hidden lg:block   opacity-80   transition-all duration-500">
+              <div className="aspect-16/10 relative rounded-2xl shadow-md border border-white/10 overflow-hidden hidden lg:block opacity-80 transition-all duration-500">
                 <Image
                   src="/image/suppport.png"
                   alt="Support illustration"

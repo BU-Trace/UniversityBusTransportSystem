@@ -77,7 +77,7 @@ const moduleRoutes = [
   {
     path: '/driver',
     route: DriverRoutes,
-  }
+  },
 ];
 
 moduleRoutes.forEach((route) => router.use(route.path, route.route));

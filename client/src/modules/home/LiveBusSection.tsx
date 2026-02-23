@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bus, Navigation, AlertCircle, Loader2 } from 'lucide-react';
+import { Bus, Navigation, AlertCircle, Loader2, Gauge, Radio } from 'lucide-react';
 import { socket } from '@/lib/socket';
 import { calculateDistance } from '@/utils/locationHelpers';
+import LiveTrackingModal, { type TrackingTarget } from '@/components/transport/LiveTrackingModal';
 
 // --- Types ---
 interface BusLocationData {
   busId: string;
+  busName?: string;
   routeId: string;
   lat: number;
   lng: number;
@@ -17,17 +19,99 @@ interface BusLocationData {
   time: string;
 }
 
-// ✅ Fix: Added explicit interface for status updates
 interface BusStatusData {
   busId: string;
   status: 'running' | 'paused' | 'stopped';
 }
 
 interface ProcessedBus extends BusLocationData {
-  distance: number; // in km
-  eta: number; // in minutes
+  distance: number;
+  eta: number;
   formattedEta: string;
 }
+
+const STATUS_STYLES: Record<string, string> = {
+  running: 'bg-green-500/15 text-green-400 border-green-500/20',
+  paused: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
+  stopped: 'bg-brick-500/15 text-brick-400 border-brick-500/20',
+};
+
+const BusCard = ({ bus, onTrack }: { bus: ProcessedBus; onTrack: (bus: ProcessedBus) => void }) => {
+  const isNear = bus.eta < 5;
+  const statusStyle = STATUS_STYLES[bus.status] ?? STATUS_STYLES.stopped;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-4 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group cursor-pointer"
+    >
+      {/* Header Row */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5">
+          <div className={`p-2 rounded-xl border ${statusStyle}`}>
+            <Bus className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white leading-none">{bus.busName || bus.busId}</p>
+            <span
+              className={`inline-block mt-1 text-[9px] uppercase tracking-widest font-black px-2 py-0.5 rounded-full border ${statusStyle}`}
+            >
+              {bus.status}
+            </span>
+          </div>
+        </div>
+        <button
+          aria-label="Track bus"
+          onClick={(e) => {
+            e.stopPropagation();
+            onTrack(bus);
+          }}
+          className="flex items-center gap-1.5 bg-brick-600/30 hover:bg-brick-600/50 border border-brick-500/30 text-brick-300 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all"
+        >
+          <Navigation className="w-3 h-3" />
+          <span className="hidden sm:inline">Track</span>
+        </button>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="bg-white/5 border border-white/5 rounded-xl p-2.5 text-center">
+          <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">Dist</p>
+          <p className="text-sm font-black text-gray-200 leading-none">
+            {bus.distance.toFixed(1)}
+            <span className="text-[9px] text-gray-500 font-medium ml-0.5">km</span>
+          </p>
+        </div>
+
+        <div className="bg-white/5 border border-white/5 rounded-xl p-2.5 text-center">
+          <div className="flex justify-center mb-1">
+            <Gauge className="w-3 h-3 text-gray-500" />
+          </div>
+          <p className="text-sm font-black text-gray-200 leading-none">
+            {bus.speed || 0}
+            <span className="text-[9px] text-gray-500 font-medium ml-0.5">km/h</span>
+          </p>
+        </div>
+
+        <div
+          className={`border rounded-xl p-2.5 text-center ${
+            isNear ? 'bg-green-500/10 border-green-500/20' : 'bg-orange-500/10 border-orange-500/20'
+          }`}
+        >
+          <p className="text-[9px] text-gray-500 font-bold uppercase tracking-wider mb-1">ETA</p>
+          <p
+            className={`text-sm font-black leading-none ${isNear ? 'text-green-400' : 'text-orange-400'}`}
+          >
+            {bus.eta < 1 ? 'Now' : `${bus.eta}m`}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 const LiveBusSection = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
@@ -35,55 +119,104 @@ const LiveBusSection = () => {
   const [sortedBuses, setSortedBuses] = useState<ProcessedBus[]>([]);
   const [loading, setLoading] = useState(true);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [trackingBus, setTrackingBus] = useState<TrackingTarget | null>(null);
 
-  // 1. Get User Location
+  // 0. Hydrate from REST on mount — shows current active buses immediately
   useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude]);
-          setLoading(false);
-        },
-        (error) => {
-          console.error('Location Error:', error);
-          setPermissionDenied(true);
-          setLoading(false);
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/location`
+        );
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          const freshCutoff = Date.now() - 2 * 60 * 1000; // only buses active in last 2 min
+          interface LocationRecord {
+            bus?: { bus_id?: string; _id?: string; name?: string } | string;
+            latitude?: number;
+            longitude?: number;
+            status?: string;
+            route?: string;
+            capturedAt?: string;
+            updatedAt?: string;
+          }
+          const hydrated: BusLocationData[] = (json.data as LocationRecord[])
+            .filter(
+              (loc) =>
+                loc.bus &&
+                loc.latitude != null &&
+                loc.longitude != null &&
+                loc.status === 'running' &&
+                new Date(loc.capturedAt || loc.updatedAt || 0).getTime() > freshCutoff
+            )
+            .map((loc) => {
+              const bus = typeof loc.bus === 'object' ? loc.bus : undefined;
+              return {
+                busId: bus?.bus_id ?? bus?._id ?? String(loc.bus),
+                busName: bus?.name ?? undefined,
+                routeId: loc.route ? String(loc.route) : '',
+                lat: loc.latitude!,
+                lng: loc.longitude!,
+                speed: 0,
+                status: (loc.status as BusLocationData['status']) ?? 'running',
+                time: loc.capturedAt ?? loc.updatedAt ?? new Date().toISOString(),
+              };
+            });
+          setBuses(hydrated);
         }
-      );
-    } else {
+      } catch (e) {
+        console.warn('LiveBusSection hydration failed:', e);
+      }
+    })();
+  }, []);
+
+  // 1. Get User Location — run in parallel with REST hydration above
+  useEffect(() => {
+    if (!('geolocation' in navigator)) {
       setPermissionDenied(true);
       setLoading(false);
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation([position.coords.latitude, position.coords.longitude]);
+        setLoading(false);
+      },
+      () => {
+        setPermissionDenied(true);
+        setLoading(false);
+      },
+      { timeout: 5000, maximumAge: 30000 }
+    );
   }, []);
 
   // 2. Socket Connection & Data Handling
   useEffect(() => {
-    if (!socket.connected) {
-      socket.connect();
-    }
+    if (!socket.connected) socket.connect();
 
-    // Listen for live location updates
     socket.on('receiveLocation', (newBusData: BusLocationData) => {
-      setBuses((prevBuses) => {
-        const index = prevBuses.findIndex((b) => b.busId === newBusData.busId);
-
-        if (index !== -1) {
-          const updatedBuses = [...prevBuses];
-          updatedBuses[index] = newBusData;
-          return updatedBuses;
-        } else {
-          return [...prevBuses, newBusData];
+      setBuses((prev) => {
+        const idx = prev.findIndex((b) => b.busId === newBusData.busId);
+        if (idx !== -1) {
+          const next = [...prev];
+          next[idx] = newBusData;
+          return next;
         }
+        return [...prev, newBusData];
       });
     });
 
-    // ✅ Fix: Replaced 'any' with 'BusStatusData'
     socket.on('receiveBusStatus', (statusData: BusStatusData) => {
-      setBuses((prevBuses) =>
-        prevBuses.map((b) =>
-          b.busId === statusData.busId ? { ...b, status: statusData.status } : b
-        )
-      );
+      if (statusData.status === 'stopped') {
+        // Remove stopped buses entirely
+        setBuses((prev) => prev.filter((b) => b.busId !== statusData.busId));
+      } else {
+        setBuses((prev) =>
+          prev.map((b) =>
+            b.busId === statusData.busId ? { ...b, status: statusData.status } : b
+          )
+        );
+      }
     });
 
     return () => {
@@ -92,17 +225,23 @@ const LiveBusSection = () => {
     };
   }, []);
 
-  // 3. Calculation & Sorting
+  // 3. Auto-purge stale buses (no update for >2 min = offline)
+  useEffect(() => {
+    const iv = setInterval(() => {
+      const cutoff = Date.now() - 2 * 60 * 1000;
+      setBuses((prev) => prev.filter((b) => new Date(b.time).getTime() > cutoff));
+    }, 30_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  // 4. Calculate distances + sort nearest first
   useEffect(() => {
     if (!userLocation || buses.length === 0) return;
 
     const processed = buses.map((bus) => {
       const dist = calculateDistance(userLocation[0], userLocation[1], bus.lat, bus.lng);
-
-      // Calculate ETA (Assume min speed 20km/h if traffic/slow)
       const effectiveSpeed = bus.speed && bus.speed > 5 ? bus.speed : 20;
       const etaMinutes = Math.round((dist / effectiveSpeed) * 60);
-
       return {
         ...bus,
         distance: dist,
@@ -111,161 +250,108 @@ const LiveBusSection = () => {
       };
     });
 
-    // Sort: Nearest Distance first
-    const sorted = processed.sort((a, b) => a.distance - b.distance);
-
-    setSortedBuses(sorted);
+    setSortedBuses(processed.sort((a, b) => a.distance - b.distance));
   }, [buses, userLocation]);
 
-  // --- UI Render ---
-
+  // --- Permission denied ---
   if (permissionDenied) {
     return (
-      <div className="bg-red-50 border border-red-100 rounded-2xl p-6 text-center mb-8 shadow-sm">
-        <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-        <h3 className="font-bold text-red-700">Location Access Needed</h3>
-        <p className="text-sm text-gray-600">Please enable location to see nearest buses.</p>
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 text-center mb-6">
+        <AlertCircle className="w-7 h-7 text-amber-400 mx-auto mb-2" />
+        <h3 className="font-bold text-white text-sm">Location Access Needed</h3>
+        <p className="text-xs text-gray-400 mt-1">
+          Enable location in your browser to see nearest buses.
+        </p>
       </div>
     );
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className="bg-white/10 backdrop-blur-xl shadow-2xl rounded-3xl p-1 border border-white/20 mb-10 relative overflow-hidden shadow-white/5"
-    >
-      <div className="p-4 md:p-6">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center flex justify-center items-center gap-2">
-          <span className="relative flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brick-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-brick-500"></span>
+    <div className="mb-6">
+      {/* Section Header */}
+      <div className="flex items-center justify-between mb-3 px-0.5">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brick-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-brick-500" />
           </span>
-          Live Nearest Buses
-        </h2>
-
-        {/* Loading Spinner */}
-        {loading && !userLocation && (
-          <div className="flex justify-center py-8">
-            <Loader2 className="animate-spin text-brick-500" />
-          </div>
-        )}
-
-        {/* --- DESKTOP TABLE VIEW --- */}
-        <div className="hidden md:block overflow-x-auto rounded-xl border border-white/10">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-linear-to-r from-gray-900 to-gray-800 text-gray-300 text-sm uppercase">
-                <th className="py-3 px-4 text-left border-b border-white/5">Bus ID / Route</th>
-                <th className="py-3 px-4 text-left border-b border-white/5">Distance</th>
-                <th className="py-3 px-4 text-left border-b border-white/5">Speed</th>
-                <th className="py-3 px-4 text-left border-b border-white/5">ETA</th>
-                <th className="py-3 px-4 text-right border-b border-white/5">Action</th>
-              </tr>
-            </thead>
-            <tbody className="bg-transparent">
-              <AnimatePresence>
-                {sortedBuses.map((bus) => (
-                  <motion.tr
-                    key={bus.busId}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="border-b border-white/5 hover:bg-white/5 transition-colors group"
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`p-1.5 rounded-full ${bus.status === 'running' ? 'bg-green-500/10 text-green-400' : 'bg-brick-500/10 text-brick-400'}`}
-                        >
-                          <Bus className="w-4 h-4" />
-                        </div>
-                        <span className="font-semibold text-gray-200">{bus.busId}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 font-medium text-gray-400">
-                      {bus.distance.toFixed(2)} km
-                    </td>
-                    <td className="py-3 px-4 text-gray-400">{bus.speed || 0} km/h</td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`text-xs font-bold px-2 py-1 rounded-full ${bus.eta < 5 ? 'bg-green-500/20 text-green-400 border border-green-500/20' : 'bg-orange-500/20 text-orange-400 border border-orange-500/20'}`}
-                      >
-                        {bus.formattedEta}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <button className="bg-brick-600/40 backdrop-blur-md text-white px-3 py-1.5 rounded-lg text-xs hover:bg-brick-600/60 transition flex items-center gap-1 ml-auto shadow-lg shadow-brick-900/40 cursor-pointer border border-white/10">
-                        <Navigation className="w-3 h-3" /> Track
-                      </button>
-                    </td>
-                  </motion.tr>
-                ))}
-              </AnimatePresence>
-            </tbody>
-          </table>
+          <h2 className="text-sm font-bold text-white uppercase tracking-widest">
+            Live Nearest Buses
+          </h2>
         </div>
+        <div className="flex items-center gap-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+          <Radio className="w-3 h-3 text-brick-400" />
+          Real-time
+        </div>
+      </div>
 
-        {/* --- MOBILE CARD VIEW --- */}
-        <div className="md:hidden flex flex-col gap-3">
+      {/* Loading — only full spinner when no data at all */}
+      {loading && buses.length === 0 && (
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex flex-col items-center justify-center py-10 gap-3">
+          <Loader2 className="animate-spin text-brick-500 w-7 h-7" />
+          <p className="text-xs text-gray-400 font-semibold uppercase tracking-widest">
+            Getting your location…
+          </p>
+        </div>
+      )}
+
+      {/* Subtle locating bar — buses loaded, geoloc still pending */}
+      {loading && buses.length > 0 && (
+        <div className="flex items-center gap-2 mb-2">
+          <Loader2 className="animate-spin text-gray-600 w-3 h-3 shrink-0" />
+          <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
+            Calculating distances…
+          </p>
+        </div>
+      )}
+
+      {/* Cards grid */}
+      {sortedBuses.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           <AnimatePresence>
             {sortedBuses.map((bus) => (
-              <motion.div
-                key={bus.busId}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-xl cursor-pointer shadow-white/5"
-              >
-                <div className="flex justify-between items-center mb-3 border-b border-white/5 pb-2">
-                  <div className="flex items-center gap-2">
-                    <Bus
-                      className={`w-5 h-5 ${bus.status === 'running' ? 'text-green-400' : 'text-brick-500'}`}
-                    />
-                    <div>
-                      <h3 className="font-bold text-gray-200">{bus.busId}</h3>
-                      <p className="text-[10px] text-gray-500 uppercase font-black">{bus.status}</p>
-                    </div>
-                  </div>
-                  <button className="bg-white/10 backdrop-blur-md text-brick-400 p-2 rounded-lg border border-white/20 cursor-pointer hover:bg-white/20">
-                    <Navigation className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">DIST</p>
-                    <p className="font-bold text-gray-200">{bus.distance.toFixed(1)} km</p>
-                  </div>
-                  <div className="bg-white/5 p-2 rounded-lg border border-white/5">
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">SPEED</p>
-                    <p className="font-bold text-gray-200">{bus.speed || 0}</p>
-                  </div>
-                  <div
-                    className={`p-2 rounded-lg border border-white/5 ${bus.eta < 5 ? 'bg-green-500/10' : 'bg-orange-500/10'}`}
-                  >
-                    <p className="text-[10px] text-gray-500 font-bold uppercase">ETA</p>
-                    <p
-                      className={`font-bold ${bus.eta < 5 ? 'text-green-400' : 'text-orange-400'}`}
-                    >
-                      {bus.eta} m
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
+              <BusCard key={bus.busId} bus={bus} onTrack={(b) => setTrackingBus(b)} />
             ))}
           </AnimatePresence>
         </div>
+      ) : (
+        !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative overflow-hidden bg-linear-to-br from-white/4 to-white/1 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center"
+          >
+            {/* Decorative ring */}
+            <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full border border-white/5 opacity-40" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full border border-brick-500/10 opacity-30" />
 
-        {/* Empty State */}
-        {sortedBuses.length === 0 && !loading && (
-          <div className="text-center py-6 text-gray-500 text-sm font-medium">
-            No buses are currently active.
-          </div>
-        )}
-      </div>
-    </motion.div>
+            <div className="relative z-10 flex flex-col items-center gap-3">
+              <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
+                <Bus className="w-8 h-8 text-gray-500" />
+              </div>
+              <div>
+                <h3 className="text-sm font-black text-gray-300 uppercase tracking-widest">
+                  No Active Buses
+                </h3>
+                <p className="text-xs text-gray-600 mt-1.5 max-w-xs mx-auto leading-relaxed">
+                  Buses will appear here in real-time once a driver starts their duty.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1 text-[9px] font-bold text-gray-600 uppercase tracking-wider">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-500 opacity-50" />
+                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-gray-600" />
+                </span>
+                Listening for buses…
+              </div>
+            </div>
+          </motion.div>
+        )
+      )}
+      {/* Live Tracking Modal */}
+      {trackingBus && <LiveTrackingModal bus={trackingBus} onClose={() => setTrackingBus(null)} />}
+    </div>
   );
 };
 

@@ -227,9 +227,7 @@ export const authOptions: NextAuthOptions = {
       const tokenUser = token.user;
 
       if (tokenUser || token) {
-        const role = (tokenUser?.role ??
-          token.role ??
-          session.user?.role) as UserRole;
+        const role = (tokenUser?.role ?? token.role ?? session.user?.role) as UserRole;
         const name = (tokenUser?.name ?? token?.name ?? session.user?.name) as string;
         const email = (tokenUser?.email ?? token?.email ?? session.user?.email) as string;
         const image = (tokenUser?.image ?? token?.image ?? session.user?.image) as string;

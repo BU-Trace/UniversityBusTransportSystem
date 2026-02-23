@@ -4,7 +4,7 @@ import { IPush } from './push.interface';
 const subscribe = async (payload: Partial<IPush>) => {
   // Use endpoint as unique identifier to avoid duplicate subscriptions from same browser
   const existing = await Push.findOne({ 'subscription.endpoint': payload.subscription?.endpoint });
-  
+
   if (existing) {
     existing.user = payload.user || existing.user;
     existing.deviceInfo = payload.deviceInfo || existing.deviceInfo;

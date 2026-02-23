@@ -3,6 +3,7 @@
 import React from 'react';
 import PageBanner from '@/components/common/PageBanner';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
+import { apiFetch } from '@/lib/api';
 import {
   MapPin,
   Bell,
@@ -38,136 +39,124 @@ const CHIEF_INFO = {
 interface StaffInfo {
   name: string;
   duty: string;
-  phone: string;
+  contact: string;
   yearsOfService: string;
   busesDriven: string[];
-  imageSrc: string;
+  imageSrc?: string | null;
 }
 
-const DRIVER_STAFF_INFO: StaffInfo[] = [
-  {
-    name: 'Driver 1',
-    duty: 'Senior Bus Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '10+ Years',
-    busesDriven: ['BRTC-04 (Joyonti)', 'BRTC-05 (Chitra)'],
-    imageSrc: '/static/driver_placeholder_1.png',
-  },
-  {
-    name: 'Driver 2',
-    duty: 'Bus Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '5+ Years',
-    busesDriven: ['BRTC-06 (Boikali/Kirtonkhola)'],
-    imageSrc: '/static/driver_placeholder_2.png',
-  },
-  {
-    name: 'Driver 3',
-    duty: 'Bus Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '8 Years',
-    busesDriven: ['BRTC-11 (Double Decker)', 'BRTC-07'],
-    imageSrc: '/static/driver_placeholder_3.png',
-  },
-  {
-    name: 'Driver 4',
-    duty: 'Assistant Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '3 Years',
-    busesDriven: ['Andharmanik', 'Sugondha'],
-    imageSrc: '/static/driver_placeholder_4.png',
-  },
-  {
-    name: 'Driver 5',
-    duty: 'Bus Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '6 Years',
-    busesDriven: ['Sondha', 'Agunmukha'],
-    imageSrc: '/static/driver_placeholder_5.png',
-  },
-  {
-    name: 'Driver 6',
-    duty: 'Mechanic & Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '12 Years',
-    busesDriven: ['BRTC (Single Decker)'],
-    imageSrc: '/static/driver_placeholder_6.png',
-  },
-  {
-    name: 'Driver 7',
-    duty: 'Bus Driver',
-    phone: '+880 1xxx-xxxxxx',
-    yearsOfService: '4 Years',
-    busesDriven: ['Lata/Payra'],
-    imageSrc: '/static/driver_placeholder_7.png',
-  },
-];
+interface DriverApiInfo {
+  _id: string;
+  name: string;
+  email?: string | null;
+  profileImage?: string | null;
+  assignedBusName?: string | null;
+  createdAt?: string | null;
+}
+
+interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return 'D';
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+}
+
+function formatServiceYears(createdAt?: string | null): string {
+  if (!createdAt) return '—';
+  const created = new Date(createdAt);
+  if (Number.isNaN(created.getTime())) return '—';
+  const diffMs = Date.now() - created.getTime();
+  const years = Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000));
+  if (years <= 0) return 'Less than 1 year';
+  return `${years}+ Years`;
+}
+
+function toStaffInfo(driver: DriverApiInfo): StaffInfo {
+  const busName = driver.assignedBusName?.trim();
+  return {
+    name: driver.name,
+    duty: 'Driver',
+    contact: driver.email || '—',
+    yearsOfService: formatServiceYears(driver.createdAt),
+    busesDriven: [busName || 'Unassigned'],
+    imageSrc: driver.profileImage || null,
+  };
+}
 
 const StaffCard: React.FC<{ member: StaffInfo }> = ({ member }) => (
   <motion.div
     whileHover={{ y: -5 }}
-    className="bg-white/5 backdrop-blur-lg rounded-xl md:rounded-2xl overflow-hidden shadow-lg md:shadow-2xl border border-white/10 group transition-all duration-300 hover:shadow-brick-500/20 hover:border-brick-500/30"
+    className="bg-white/5 backdrop-blur-lg rounded-xl overflow-hidden shadow-lg border border-white/10 group transition-all duration-300 hover:shadow-brick-500/20 hover:border-brick-500/30"
   >
-    <div className="relative h-40 md:h-64 w-full overflow-hidden bg-gray-800">
-      <ImageWithFallback
-        src={member.imageSrc}
-        alt={member.name}
-        fill
-        sizes="(max-width: 600px) 50vw, 33vw"
-        className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
-      />
+    <div className="relative h-32 w-full overflow-hidden bg-gray-800">
+      {member.imageSrc ? (
+        <ImageWithFallback
+          src={member.imageSrc}
+          alt={member.name}
+          fill
+          sizes="(max-width: 600px) 50vw, 33vw"
+          className="object-cover object-top group-hover:scale-105 transition-transform duration-500"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-gray-800 to-gray-900">
+          <span className="text-2xl font-black text-brick-300">{getInitials(member.name)}</span>
+        </div>
+      )}
       <div className="absolute inset-0 bg-linear-to-t from-gray-900 via-gray-900/40 to-transparent"></div>
-      <span className="absolute bottom-2 left-2 md:bottom-3 md:left-4 bg-brick-500/90 backdrop-blur-sm text-white text-[10px] md:text-xs font-bold px-2 py-0.5 md:px-3 md:py-1 rounded-full shadow-lg border border-white/20">
+      <span className="absolute bottom-2 left-2 bg-brick-500/90 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg border border-white/20">
         {member.duty}
       </span>
     </div>
 
-    <div className="p-3 md:p-6 bg-white/5 backdrop-blur-md border-t border-white/5">
-      <h3 className="text-sm md:text-xl font-bold text-white mb-2 md:mb-4 group-hover:text-brick-400 transition-colors line-clamp-1">
+    <div className="p-3 bg-white/5 backdrop-blur-md border-t border-white/5">
+      <h3 className="text-sm font-bold text-white mb-2 group-hover:text-brick-400 transition-colors line-clamp-1">
         {member.name}
       </h3>
 
-      <div className="space-y-2 md:space-y-3 text-xs md:text-sm">
+      <div className="space-y-2 text-xs">
         <div className="flex items-center text-gray-300">
-          <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-brick-500/20 flex items-center justify-center text-brick-400 mr-2 md:mr-3 shrink-0">
-            <Calendar size={10} className="md:hidden" />
-            <Calendar size={14} className="hidden md:block" />
+          <div className="w-5 h-5 rounded-full bg-brick-500/20 flex items-center justify-center text-brick-400 mr-2 shrink-0">
+            <Calendar size={10} />
           </div>
           <div className="overflow-hidden">
-            <span className="block text-[8px] md:text-xs font-bold uppercase text-gray-500 truncate">
+            <span className="block text-[8px] font-bold uppercase text-gray-500 truncate">
               Service
             </span>
-            <span className="font-semibold text-gray-200 text-[10px] md:text-sm truncate block">
+            <span className="font-semibold text-gray-200 text-[10px] truncate block">
               {member.yearsOfService}
             </span>
           </div>
         </div>
 
         <div className="flex items-center text-gray-300">
-          <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-brick-500/20 flex items-center justify-center text-brick-400 mr-2 md:mr-3 shrink-0">
-            <Phone size={10} className="md:hidden" />
-            <Phone size={14} className="hidden md:block" />
+          <div className="w-5 h-5 rounded-full bg-brick-500/20 flex items-center justify-center text-brick-400 mr-2 shrink-0">
+            <Mail size={10} />
           </div>
           <div className="overflow-hidden">
-            <span className="block text-[8px] md:text-xs font-bold uppercase text-gray-500 truncate">
-              Contact
+            <span className="block text-[8px] font-bold uppercase text-gray-500 truncate">
+              Email
             </span>
-            <span className="font-semibold text-gray-200 text-[10px] md:text-sm truncate block">
-              {member.phone}
+            <span className="font-semibold text-gray-200 text-[10px] truncate block">
+              {member.contact}
             </span>
           </div>
         </div>
 
         <div className="flex items-start text-gray-300">
-          <div className="w-5 h-5 md:w-8 md:h-8 rounded-full bg-brick-500/20 flex items-center justify-center text-brick-400 mr-2 md:mr-3 shrink-0 md:mt-1">
-            <Bus size={10} className="md:hidden" />
-            <Bus size={14} className="hidden md:block" />
+          <div className="w-5 h-5 rounded-full bg-brick-500/20 flex items-center justify-center text-brick-400 mr-2 shrink-0">
+            <Bus size={10} />
           </div>
           <div className="overflow-hidden">
-            <span className="block text-[8px] md:text-xs font-bold uppercase text-gray-500 truncate">
+            <span className="block text-[8px] font-bold uppercase text-gray-500 truncate">
               Buses
             </span>
-            <span className="font-semibold text-gray-200 leading-tight block mt-0.5 text-[10px] md:text-sm line-clamp-1">
+            <span className="font-semibold text-gray-200 leading-tight block mt-0.5 text-[10px] line-clamp-1">
               {member.busesDriven.join(', ')}
             </span>
           </div>
@@ -271,6 +260,35 @@ interface TeamMember {
 
 const AboutPageComponent: React.FC = () => {
   const [selectedMember, setSelectedMember] = React.useState<TeamMember | null>(null);
+  const [drivers, setDrivers] = React.useState<StaffInfo[]>([]);
+  const [driversLoading, setDriversLoading] = React.useState(true);
+  const [driversError, setDriversError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    async function loadDrivers() {
+      try {
+        setDriversLoading(true);
+        const res = await apiFetch<ApiResponse<DriverApiInfo[]>>('/user/public-drivers');
+        if (!isMounted) return;
+        const mapped = (res.data || []).map(toStaffInfo);
+        setDrivers(mapped);
+        setDriversError(null);
+      } catch (error) {
+        if (!isMounted) return;
+        const message = error instanceof Error ? error.message : 'Failed to load drivers';
+        setDriversError(message);
+      } finally {
+        if (isMounted) setDriversLoading(false);
+      }
+    }
+
+    loadDrivers();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-gray-900 via-gray-800 to-brick-900 flex flex-col items-center justify-start font-sans">
@@ -483,17 +501,25 @@ const AboutPageComponent: React.FC = () => {
         <section className="py-20 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-4xl font-black text-white mb-4">Our Dedicated Team</h2>
+              <h2 className="text-4xl font-black text-white mb-4">Our Driver Team</h2>
               <p className="text-gray-300 text-lg max-w-2xl mx-auto">
                 Meet the skilled professionals who keep the wheels turning.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3 md:gap-8 mb-12">
-              {DRIVER_STAFF_INFO.map((member, index) => (
-                <StaffCard key={index} member={member} />
-              ))}
-            </div>
+            {driversLoading ? (
+              <p className="text-center text-sm text-gray-400">Loading drivers...</p>
+            ) : driversError ? (
+              <p className="text-center text-sm text-amber-300">{driversError}</p>
+            ) : drivers.length === 0 ? (
+              <p className="text-center text-sm text-gray-400">No drivers available.</p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6 mb-12">
+                {drivers.map((member, index) => (
+                  <StaffCard key={`${member.name}-${index}`} member={member} />
+                ))}
+              </div>
+            )}
 
             <p className="text-center text-sm text-gray-400 font-medium italic">
               * Driver assignments and contact details are subject to change based on operational

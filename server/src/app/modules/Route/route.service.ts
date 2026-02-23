@@ -26,6 +26,14 @@ export const createRoute = async (payload: IRoute) => {
     route_id,
     bus,
     stopages,
+    activeHoursComing: (payload.activeHoursComing || []).map((h) => ({
+      time: h.time,
+      bus: new Types.ObjectId(h.bus) as any,
+    })) as any,
+    activeHoursGoing: (payload.activeHoursGoing || []).map((h) => ({
+      time: h.time,
+      bus: new Types.ObjectId(h.bus) as any,
+    })) as any,
   });
 
   return route;
@@ -41,9 +49,18 @@ export const updateRoute = async (id: string, payload: Partial<IRoute>) => {
     route.stopages = payload.stopages.map((id) => new Types.ObjectId(id));
   }
 
-  // Update other fields if provided
-  if (payload.name !== undefined) route.name = payload.name;
-  if (payload.isActive !== undefined) route.isActive = payload.isActive;
+  if (payload.activeHoursComing !== undefined) {
+    route.activeHoursComing = payload.activeHoursComing.map((h) => ({
+      time: h.time,
+      bus: new Types.ObjectId(h.bus) as any,
+    })) as any;
+  }
+  if (payload.activeHoursGoing !== undefined) {
+    route.activeHoursGoing = payload.activeHoursGoing.map((h) => ({
+      time: h.time,
+      bus: new Types.ObjectId(h.bus) as any,
+    })) as any;
+  }
 
   // Update bus field if provided
   if (payload.bus) route.bus = payload.bus.map((id) => new Types.ObjectId(id));
@@ -57,7 +74,11 @@ export const deleteRoute = async (id: string) => {
 };
 
 export const getAllRoutes = async () => {
-  return await Route.find();
+  return await Route.find()
+    .populate('stopages')
+    .populate('bus')
+    .populate('activeHoursComing.bus')
+    .populate('activeHoursGoing.bus');
 };
 
 // Placeholder for Google Distance Matrix API integration

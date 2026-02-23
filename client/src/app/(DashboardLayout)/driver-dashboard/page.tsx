@@ -1,4 +1,3 @@
-
 //updated on 2024-06-20
 
 'use client';
@@ -9,7 +8,7 @@ import { io } from 'socket.io-client';
 import { getSession } from 'next-auth/react';
 import api from '@/lib/axios';
 
-/** * Socket configuration 
+/** * Socket configuration
  */
 const socket = io('http://localhost:5000', { autoConnect: false });
 
@@ -36,7 +35,9 @@ interface BusType {
 
 export default function DriverDashboard() {
   const [selectedBus, setSelectedBus] = useState<BusType | null>(null);
-  const [location, setLocation] = useState<{ lat: number; lng: number; heading?: number } | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number; heading?: number } | null>(
+    null
+  );
   const [speed, setSpeed] = useState<number>(0);
   const [status, setStatus] = useState<Status>('idle');
   const [loadingBus, setLoadingBus] = useState(true);
@@ -65,12 +66,17 @@ export default function DriverDashboard() {
 
         if (json?.success && json?.data?.bus) {
           const bus = json.data.bus;
-          const routeId = bus?.route?._id || bus?.route?.id || bus?.route || 'unknown-route';
+
+          // route may be a populated object, a raw ObjectId string, or null
+          const routeId: string | null =
+            (bus?.route as { _id?: string; id?: string } | null)?._id ??
+            (bus?.route as { _id?: string; id?: string } | null)?.id ??
+            (typeof bus?.route === 'string' ? bus.route : null);
 
           setSelectedBus({
             busNo: bus.bus_id,
             reg: bus.plateNumber,
-            route: routeId,
+            route: routeId ?? '',
           });
         } else {
           setSelectedBus(null);
@@ -154,10 +160,12 @@ export default function DriverDashboard() {
 
     // Emit initial status once connected
     const emitStatus = () => {
-      socket.emit('joinRoute', { routeId: selectedBus.route });
+      if (selectedBus.route) {
+        socket.emit('joinRoute', { routeId: selectedBus.route });
+      }
       socket.emit('busStatus', {
         busId: selectedBus.busNo,
-        routeId: selectedBus.route,
+        routeId: selectedBus.route || '',
         status: 'running',
       });
     };
@@ -221,7 +229,9 @@ export default function DriverDashboard() {
   return (
     <div className="relative h-screen w-full bg-zinc-950 text-white overflow-hidden flex flex-col">
       {/* Map Layer */}
-      <div className={`absolute inset-0 z-0 transition-opacity duration-700 ${isMapVisible ? 'opacity-100' : 'opacity-0'}`}>
+      <div
+        className={`absolute inset-0 z-0 transition-opacity duration-700 ${isMapVisible ? 'opacity-100' : 'opacity-0'}`}
+      >
         {isMapVisible && <BusMap location={location} />}
       </div>
 
@@ -243,6 +253,11 @@ export default function DriverDashboard() {
               <p className="text-zinc-500 text-sm font-medium uppercase tracking-widest">
                 {selectedBus?.route ? 'Route Assigned' : 'No Route Assigned'}
               </p>
+              {selectedBus && !selectedBus.route && (
+                <p className="text-amber-400 text-xs font-medium mt-1">
+                  Ask admin to assign a route to your bus.
+                </p>
+              )}
             </div>
 
             <button
@@ -260,7 +275,9 @@ export default function DriverDashboard() {
       {/* Tracking HUD */}
       {isMapVisible && (
         <div className="absolute top-0 left-0 right-0 z-30 p-4 pointer-events-none flex flex-col items-center">
-          <div className={`pointer-events-auto flex items-center gap-4 pl-4 pr-5 py-3 bg-zinc-950/80 backdrop-blur-xl border border-red-500/30 shadow-2xl rounded-full transition-all duration-300 ${status === 'sharing' ? 'border-red-500/50' : 'border-zinc-700'}`}>
+          <div
+            className={`pointer-events-auto flex items-center gap-4 pl-4 pr-5 py-3 bg-zinc-950/80 backdrop-blur-xl border border-red-500/30 shadow-2xl rounded-full transition-all duration-300 ${status === 'sharing' ? 'border-red-500/50' : 'border-zinc-700'}`}
+          >
             <div className="relative flex items-center justify-center h-10 w-10 rounded-full bg-zinc-900 border border-zinc-800 shrink-0">
               {status === 'sharing' ? (
                 <>
@@ -305,7 +322,11 @@ export default function DriverDashboard() {
               onClick={status === 'paused' ? handleResume : handlePause}
               className={`flex items-center justify-center gap-2 py-4 rounded-xl font-black uppercase tracking-widest text-sm transition-transform active:scale-95 ${status === 'paused' ? 'bg-amber-500 text-black hover:bg-amber-400' : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'}`}
             >
-              {status === 'paused' ? <Play size={18} fill="currentColor" /> : <Pause size={18} fill="currentColor" />}
+              {status === 'paused' ? (
+                <Play size={18} fill="currentColor" />
+              ) : (
+                <Pause size={18} fill="currentColor" />
+              )}
               {status === 'paused' ? 'Resume' : 'Pause'}
             </button>
 
@@ -319,8 +340,12 @@ export default function DriverDashboard() {
           </div>
 
           <div className="flex justify-center mt-4">
-            <div className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${socketConnected ? 'text-zinc-500' : 'text-red-500'}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></div>
+            <div
+              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest ${socketConnected ? 'text-zinc-500' : 'text-red-500'}`}
+            >
+              <div
+                className={`w-1.5 h-1.5 rounded-full ${socketConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}
+              ></div>
               {socketConnected ? 'Server Connected' : 'Disconnected'}
             </div>
           </div>

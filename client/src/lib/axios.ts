@@ -29,8 +29,9 @@ interface CustomSession {
 api.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   if (typeof window !== 'undefined') {
     const session = (await getSession()) as CustomSession | null;
-    const token = session?.user?.accessToken || session?.accessToken || localStorage.getItem('accessToken');
-    
+    const token =
+      session?.user?.accessToken || session?.accessToken || localStorage.getItem('accessToken');
+
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }

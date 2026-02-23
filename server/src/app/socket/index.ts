@@ -1,8 +1,9 @@
 import { Server as HttpServer } from 'http';
 import { Server as SocketIOServer } from 'socket.io';
+import { Types } from 'mongoose';
 import { Location } from '../modules/location/location.model';
+import { Bus } from '../modules/Bus/bus.model';
 import User from '../modules/User/user.model';
- 
 
 type LocationPayload = {
   busId: string;
@@ -35,15 +36,17 @@ export const initSocket = (httpServer: HttpServer) => {
       if (userData && userData.id) {
         try {
           // Fetch full user data to get "other info" like assigned bus
-          const user = await User.findById(userData.id).select('name role profileImage assignedBusName').lean();
-          
+          const user = await User.findById(userData.id)
+            .select('name role profileImage assignedBusName')
+            .lean();
+
           if (user) {
             activeSessions.set(socket.id, {
               id: user._id,
               name: user.name,
               role: user.role,
               profileImage: user.profileImage,
-              assignedBusName: user.assignedBusName || 'N/A'
+              assignedBusName: user.assignedBusName || 'N/A',
             });
 
             // Broadcast updated sessions
@@ -63,20 +66,41 @@ export const initSocket = (httpServer: HttpServer) => {
 
     socket.on('sendLocation', async (data: LocationPayload) => {
       try {
-        const saved = await Location.findOneAndUpdate(
-          { busId: data.busId },
-          {
-            busId: data.busId,
-            routeId: data.routeId,
-            lat: data.lat,
-            lng: data.lng,
-            speed: data.speed || 0,
-            time: new Date(),
-            status: data.status || 'running',
-          },
-          { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
-        io.emit('receiveLocation', saved);
+        // Look up bus by bus_id string (e.g. "bus_1") to get MongoDB ObjectId
+        const busDoc = await Bus.findOne({ bus_id: data.busId }).lean();
+
+        if (busDoc) {
+          const routeObjectId =
+            data.routeId && Types.ObjectId.isValid(data.routeId)
+              ? new Types.ObjectId(data.routeId)
+              : undefined;
+
+          await Location.findOneAndUpdate(
+            { bus: busDoc._id },
+            {
+              bus: busDoc._id,
+              ...(routeObjectId ? { route: routeObjectId } : {}),
+              latitude: data.lat,
+              longitude: data.lng,
+              status: data.status || 'running',
+              capturedAt: new Date(),
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+          );
+        }
+
+        // Emit the original payload structure so the frontend keeps working
+        const payload = {
+          busId: data.busId,
+          busName: busDoc?.name || data.busId,
+          routeId: data.routeId,
+          lat: data.lat,
+          lng: data.lng,
+          speed: data.speed || 0,
+          status: data.status || 'running',
+          time: new Date().toISOString(),
+        };
+        io.emit('receiveLocation', payload);
       } catch (err) {
         console.error('MongoDB Save Error:', err);
       }
@@ -84,15 +108,17 @@ export const initSocket = (httpServer: HttpServer) => {
 
     socket.on('busStatus', async (data: StatusPayload) => {
       try {
-        const updated = await Location.findOneAndUpdate(
-          { busId: data.busId },
-          {
-            status: data.status,
-            time: new Date(),
-          },
-          { new: true }
-        );
-        io.emit('receiveBusStatus', updated);
+        const busDoc = await Bus.findOne({ bus_id: data.busId }).lean();
+
+        if (busDoc) {
+          await Location.findOneAndUpdate(
+            { bus: busDoc._id },
+            { status: data.status, capturedAt: new Date() },
+            { new: true }
+          );
+        }
+
+        io.emit('receiveBusStatus', { busId: data.busId, status: data.status });
       } catch (err) {
         console.error('Status Update Error:', err);
       }

@@ -130,6 +130,16 @@ const getAllDrivers = catchAsync(async (_req: Request, res: Response) => {
   });
 });
 
+const getPublicDrivers = catchAsync(async (_req: Request, res: Response) => {
+  const result = await UserServices.getPublicDrivers();
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Public drivers fetched successfully',
+    data: result,
+  });
+});
+
 // DECOMMISSIONED: getAllStudents
 
 const getMe = catchAsync(async (req: Request, res: Response) => {
@@ -162,5 +172,6 @@ export const UserController = {
   adminUpdateUser,
   adminDeleteUser,
   getAllDrivers,
+  getPublicDrivers,
   // getAllStudents,
 };

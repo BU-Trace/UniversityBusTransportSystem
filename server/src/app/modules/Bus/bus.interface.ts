@@ -5,9 +5,9 @@ export interface IBus {
   bus_id?: string;
   name: string;
   plateNumber: string;
-  route: Types.ObjectId;
+  route?: Types.ObjectId;
   photo: string;
-  driverId: Types.ObjectId;
+  driverId?: Types.ObjectId;
   isActive?: boolean;
   status?: 'running' | 'paused' | 'stopped';
   // mongoose timestamps

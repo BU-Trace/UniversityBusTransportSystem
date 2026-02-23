@@ -434,6 +434,13 @@ const getAllDrivers = async () => {
   return await UserModel.find({ role: 'driver' }).select('-password').sort({ createdAt: -1 });
 };
 
+// Public drivers (limited fields)
+const getPublicDrivers = async () => {
+  return await UserModel.find({ role: 'driver', isActive: true, isApproved: true })
+    .select('name email profileImage assignedBusName createdAt clientInfo')
+    .sort({ createdAt: -1 });
+};
+
 const getMe = async (userId: string) => {
   const user = await UserModel.findById(userId).select('-password');
   if (!user) {
@@ -453,5 +460,6 @@ export const UserServices = {
   adminUpdateUser,
   adminDeleteUser,
   getAllDrivers,
+  getPublicDrivers,
   updateDriverStatus,
 };

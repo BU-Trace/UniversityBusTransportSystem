@@ -1,83 +1,31 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { MapPin, RefreshCw } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { MapPin, RefreshCw, Footprints, Bike, Car } from 'lucide-react';
 import { toast } from 'sonner';
-
-type Direction = 'from_university' | 'to_university';
 
 type LatLng = { lat: number; lng: number };
 
-type RouteKey = 'nothullabad' | 'bangla_bazar' | 'notun_bazar';
-
-type Stop = {
-  id: string;
+interface IStopage {
+  _id: string;
   name: string;
-  lat: number;
-  lng: number;
-  order: number;
-};
+  latitude: number;
+  longitude: number;
+}
 
-type LiveBus = {
-  routeKey: RouteKey;
-  direction: Direction;
-  position?: LatLng;
-  updatedAt?: string;
-};
+interface IRoute {
+  _id: string;
+  name: string;
+  stopages: IStopage[];
+  isActive?: boolean;
+}
 
-type NearestResult = {
-  stop: Stop | null;
-  distanceMeters: number | null;
+type StopDistance = {
+  stop: IStopage;
+  distanceMeters: number;
 };
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1';
-
-async function fetchStops(routeKey: RouteKey): Promise<Stop[]> {
-  const res = await fetch(`${BASE_URL}/route/public/stops?routeKey=${routeKey}`, {
-    cache: 'no-store',
-  });
-  const json = (await res.json().catch(() => ({}))) as { data?: unknown; message?: string };
-  if (!res.ok) throw new Error(json?.message || 'Failed to load stops');
-
-  const arr = Array.isArray(json.data) ? json.data : [];
-  return arr
-    .map((x) => {
-      const o = x as Partial<Stop>;
-      return {
-        id: String(o.id ?? ''),
-        name: String(o.name ?? ''),
-        lat: Number(o.lat ?? 0),
-        lng: Number(o.lng ?? 0),
-        order: Number(o.order ?? 0),
-      };
-    })
-    .filter((s) => s.id && s.name && Number.isFinite(s.lat) && Number.isFinite(s.lng))
-    .sort((a, b) => a.order - b.order);
-}
-
-async function fetchLiveBus(routeKey: RouteKey, direction: Direction): Promise<LiveBus | null> {
-  const res = await fetch(
-    `${BASE_URL}/live-location/current?routeKey=${routeKey}&direction=${direction}`,
-    { cache: 'no-store' }
-  );
-  const json = (await res.json().catch(() => ({}))) as { data?: unknown; message?: string };
-  if (!res.ok) throw new Error(json?.message || 'Failed to load live bus');
-
-  const d = json.data as Partial<LiveBus> | undefined;
-  if (!d) return null;
-
-  const lat = Number((d.position as Partial<LatLng> | undefined)?.lat);
-  const lng = Number((d.position as Partial<LatLng> | undefined)?.lng);
-
-  const hasPos = Number.isFinite(lat) && Number.isFinite(lng);
-
-  return {
-    routeKey,
-    direction,
-    position: hasPos ? { lat, lng } : undefined,
-    updatedAt: typeof d.updatedAt === 'string' ? d.updatedAt : undefined,
-  };
-}
 
 function haversineMeters(a: LatLng, b: LatLng): number {
   const R = 6371000;
@@ -92,82 +40,35 @@ function haversineMeters(a: LatLng, b: LatLng): number {
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-function formatDistance(m: number | null): string {
-  if (m === null) return '—';
+function formatDistance(m: number): string {
   if (m < 1000) return `${Math.round(m)} m`;
   return `${(m / 1000).toFixed(2)} km`;
 }
 
-function nearestUpcomingStopForUser(params: {
-  user: LatLng;
-  stopsOrdered: Stop[];
-  busPos?: LatLng;
-}): NearestResult {
-  const { user, stopsOrdered, busPos } = params;
-  if (stopsOrdered.length === 0) return { stop: null, distanceMeters: null };
-
-  if (!busPos) {
-    let best: Stop | null = null;
-    let bestD = Number.POSITIVE_INFINITY;
-    for (const s of stopsOrdered) {
-      const d = haversineMeters(user, { lat: s.lat, lng: s.lng });
-      if (d < bestD) {
-        bestD = d;
-        best = s;
-      }
-    }
-    return { stop: best, distanceMeters: Number.isFinite(bestD) ? bestD : null };
-  }
-
-  let busNearestIdx = 0;
-  let busBest = Number.POSITIVE_INFINITY;
-  for (let i = 0; i < stopsOrdered.length; i++) {
-    const s = stopsOrdered[i];
-    const d = haversineMeters(busPos, { lat: s.lat, lng: s.lng });
-    if (d < busBest) {
-      busBest = d;
-      busNearestIdx = i;
-    }
-  }
-
-  const upcoming = stopsOrdered.slice(Math.min(busNearestIdx + 1, stopsOrdered.length));
-  if (upcoming.length === 0) return { stop: null, distanceMeters: null };
-
-  let best: Stop | null = null;
-  let bestD = Number.POSITIVE_INFINITY;
-  for (const s of upcoming) {
-    const d = haversineMeters(user, { lat: s.lat, lng: s.lng });
-    if (d < bestD) {
-      bestD = d;
-      best = s;
-    }
-  }
-
-  return { stop: best, distanceMeters: Number.isFinite(bestD) ? bestD : null };
+// Simple time estimators based on distance
+function estimateWalk(meters: number): string {
+  const mins = Math.ceil(meters / 80); // ~4.8 km/h
+  if (mins < 1) return '< 1 min';
+  return `${mins} min`;
 }
 
-function routeTitle(routeKey: RouteKey): string {
-  if (routeKey === 'nothullabad') return 'Nothullabad ⇄ University';
-  if (routeKey === 'bangla_bazar') return 'Bangla Bazar ⇄ University';
-  return 'Notun Bazar ⇄ University';
+function estimateBike(meters: number): string {
+  const mins = Math.ceil(meters / 250); // ~15 km/h
+  if (mins < 1) return '< 1 min';
+  return `${mins} min`;
 }
 
-function directionLabel(d: Direction): string {
-  return d === 'from_university' ? 'From University' : 'To University';
+function estimateRickshaw(meters: number): string {
+  const mins = Math.ceil(meters / 330); // ~20 km/h
+  if (mins < 1) return '< 1 min';
+  return `${mins} min`;
 }
 
 const NearestStopsView: React.FC = () => {
   const [loc, setLoc] = useState<LatLng | null>(null);
   const [locLoading, setLocLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
-  const [stopsByRoute, setStopsByRoute] = useState<Record<RouteKey, Stop[]>>({
-    nothullabad: [],
-    bangla_bazar: [],
-    notun_bazar: [],
-  });
-  const [liveBus, setLiveBus] = useState<Record<string, LiveBus | null>>({});
-  const refreshTimerRef = useRef<number | null>(null);
-  const ROUTES: RouteKey[] = useMemo(() => ['nothullabad', 'bangla_bazar', 'notun_bazar'], []);
+  const [routes, setRoutes] = useState<IRoute[]>([]);
 
   const askLocation = async (): Promise<LatLng> => {
     setLocLoading(true);
@@ -199,38 +100,15 @@ const NearestStopsView: React.FC = () => {
     try {
       const userPos = loc ?? (await askLocation());
 
-      const stopsPairs = await Promise.all(
-        ROUTES.map(async (rk) => {
-          const stops = await fetchStops(rk);
-          return [rk, stops] as const;
-        })
-      );
+      const res = await fetch(`${BASE_URL}/route`, { cache: 'no-store' });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.message || 'Failed to load routes');
 
-      const nextStopsByRoute: Record<RouteKey, Stop[]> = {
-        nothullabad: [],
-        bangla_bazar: [],
-        notun_bazar: [],
-      };
-      for (const [rk, stops] of stopsPairs) nextStopsByRoute[rk] = stops;
-      setStopsByRoute(nextStopsByRoute);
-
-      const livePairs = await Promise.all(
-        ROUTES.flatMap((rk) => {
-          const dirs: Direction[] = ['from_university', 'to_university'];
-          return dirs.map(async (dir) => {
-            const key = `${rk}:${dir}`;
-            const b = await fetchLiveBus(rk, dir).catch(() => null);
-            return [key, b] as const;
-          });
-        })
-      );
-
-      const nextLive: Record<string, LiveBus | null> = {};
-      for (const [k, v] of livePairs) nextLive[k] = v;
-      setLiveBus(nextLive);
+      const activeRoutes = (json.data || []).filter((r: IRoute) => r.isActive !== false);
+      setRoutes(activeRoutes);
       void userPos;
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to load nearest stops');
+      toast.error(e instanceof Error ? e.message : 'Failed to load data');
     } finally {
       setLoadingData(false);
     }
@@ -238,71 +116,41 @@ const NearestStopsView: React.FC = () => {
 
   useEffect(() => {
     loadEverything();
-    refreshTimerRef.current = window.setInterval(async () => {
-      if (!loc) return;
-      try {
-        // Only refresh live bus
-        const pairs = await Promise.all(
-          ROUTES.flatMap((rk) => {
-            const dirs: Direction[] = ['from_university', 'to_university'];
-            return dirs.map(async (dir) => {
-              const key = `${rk}:${dir}`;
-              const b = await fetchLiveBus(rk, dir).catch(() => null);
-              return [key, b] as const;
-            });
-          })
-        );
-        setLiveBus((prev) => {
-          const next = { ...prev };
-          for (const [k, v] of pairs) next[k] = v;
-          return next;
-        });
-      } catch {
-        // silent fail
-      }
-    }, 10_000);
-
-    return () => {
-      if (refreshTimerRef.current) window.clearInterval(refreshTimerRef.current);
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Run once on mount
 
-  const computed = useMemo(() => {
-    if (!loc) return null;
-    const result: Record<RouteKey, Record<Direction, NearestResult>> = {
-      nothullabad: {
-        from_university: { stop: null, distanceMeters: null },
-        to_university: { stop: null, distanceMeters: null },
-      },
-      bangla_bazar: {
-        from_university: { stop: null, distanceMeters: null },
-        to_university: { stop: null, distanceMeters: null },
-      },
-      notun_bazar: {
-        from_university: { stop: null, distanceMeters: null },
-        to_university: { stop: null, distanceMeters: null },
-      },
-    };
+  const computedRoutes = useMemo(() => {
+    if (!loc) return [];
 
-    for (const rk of ROUTES) {
-      const baseStops = stopsByRoute[rk] || [];
-      (['from_university', 'to_university'] as Direction[]).forEach((dir) => {
-        const sorted = [...baseStops].sort((a, b) => a.order - b.order);
-        const ordered = dir === 'from_university' ? sorted : sorted.slice().reverse();
-        const key = `${rk}:${dir}`;
-        const busPos = liveBus[key]?.position;
+    return routes.map((route) => {
+      const stopDistances: StopDistance[] = [];
+      const validStops = route.stopages || [];
 
-        result[rk][dir] = nearestUpcomingStopForUser({
-          user: loc,
-          stopsOrdered: ordered,
-          busPos,
-        });
-      });
-    }
+      // Check if stopages is an array of objects
+      for (const stop of validStops) {
+        if (
+          typeof stop === 'object' &&
+          stop !== null &&
+          'latitude' in stop &&
+          'longitude' in stop
+        ) {
+          const d = haversineMeters(loc, {
+            lat: Number(stop.latitude),
+            lng: Number(stop.longitude),
+          });
+          stopDistances.push({ stop, distanceMeters: d });
+        }
+      }
 
-    return result;
-  }, [ROUTES, liveBus, loc, stopsByRoute]);
+      // Sort by closest first
+      stopDistances.sort((a, b) => a.distanceMeters - b.distanceMeters);
+
+      return {
+        ...route,
+        closestStops: stopDistances,
+      };
+    });
+  }, [loc, routes]);
 
   if (locLoading && !loc) {
     return (
@@ -321,8 +169,7 @@ const NearestStopsView: React.FC = () => {
         </div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">Location Required</h3>
         <p className="text-gray-500 mb-6 max-w-sm">
-          We need your location to show the nearest bus stops and arrival times for your specific
-          route.
+          We need your location to show the nearest bus stops for your specific route.
         </p>
         <button
           onClick={askLocation}
@@ -342,84 +189,77 @@ const NearestStopsView: React.FC = () => {
         <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">
           Your Nearest Stops
         </h3>
-        <button
-          onClick={loadEverything}
-          disabled={loadingData}
-          className="text-xs font-semibold text-red-600 flex items-center gap-1 hover:bg-red-50 px-2 py-1 rounded-lg transition-colors"
-        >
-          <RefreshCw size={14} className={loadingData ? 'animate-spin' : ''} /> Refresh
-        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
-        {ROUTES.map((rk) => {
-          const fromRes = computed?.[rk]?.from_university;
-          const toRes = computed?.[rk]?.to_university;
-
+        {computedRoutes.map((routeData) => {
           return (
             <div
-              key={rk}
-              className="bg-white border border-gray-100 shadow-sm rounded-2xl p-0 overflow-hidden hover:border-red-200 transition-all"
+              key={routeData._id}
+              className="bg-gray-800/50 border border-white/10 shadow-sm rounded-2xl p-0 overflow-hidden hover:border-brick-500/50 transition-all flex flex-col h-full max-h-[32rem]"
             >
-              <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
-                <div className="text-sm font-black text-gray-800">{routeTitle(rk)}</div>
+              <div className="bg-white/5 px-4 py-3 border-b border-white/10 shrink-0">
+                <div className="text-sm font-black text-white">{routeData.name}</div>
               </div>
 
-              <div className="p-4 space-y-3">
-                {/* From University */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">
-                      {directionLabel('from_university')}
-                    </div>
-                    {loadingData ? (
-                      <div className="h-4 w-24 bg-gray-100 rounded animate-pulse mt-1"></div>
-                    ) : fromRes?.stop ? (
-                      <div className="text-sm font-bold text-gray-900">{fromRes.stop.name}</div>
-                    ) : (
-                      <div className="text-xs text-gray-400 italic">No stop found</div>
-                    )}
-                  </div>
-                  {fromRes?.distanceMeters !== null && fromRes?.distanceMeters !== undefined && (
-                    <div className="text-right">
-                      <div className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg">
-                        {formatDistance(fromRes.distanceMeters)}
-                      </div>
-                    </div>
-                  )}
-                </div>
+              <div className="p-4 flex-1 overflow-y-auto custom-scrollbar bg-gray-900/40">
+                <div className="flex flex-col">
+                  {loadingData && routeData.closestStops.length === 0 ? (
+                    <div className="h-4 w-24 bg-white/10 rounded animate-pulse mt-1"></div>
+                  ) : routeData.closestStops.length > 0 ? (
+                    <div className="flex flex-col gap-3">
+                      {routeData.closestStops.map((res, i) => (
+                        <div
+                          key={res.stop._id || i}
+                          className="flex flex-col gap-2 bg-white/5 p-3 rounded-xl border border-white/5 hover:bg-white/10 transition-colors"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="text-sm font-bold text-gray-200">{res.stop.name}</div>
+                            <div className="text-xs font-bold text-brick-400 bg-brick-500/10 px-2 py-1 rounded-lg shrink-0 border border-brick-500/20">
+                              {formatDistance(res.distanceMeters)}
+                            </div>
+                          </div>
 
-                <div className="h-px bg-gray-100 w-full" />
-
-                {/* To University */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">
-                      {directionLabel('to_university')}
+                          {/* Transport Estimates */}
+                          <div className="grid grid-cols-3 gap-2 mt-1 border-t border-white/5 pt-2">
+                            <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/80 border border-white/5 text-gray-400 hover:text-white transition-colors">
+                              <Footprints size={14} className="mb-0.5 opacity-70" />
+                              <span className="text-[10px] font-medium">
+                                {estimateWalk(res.distanceMeters)}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/80 border border-white/5 text-gray-400 hover:text-white transition-colors">
+                              <Bike size={14} className="mb-0.5 opacity-70" />
+                              <span className="text-[10px] font-medium">
+                                {estimateBike(res.distanceMeters)}
+                              </span>
+                            </div>
+                            <div className="flex flex-col items-center justify-center p-1.5 rounded-lg bg-gray-800/80 border border-white/5 text-gray-400 hover:text-white transition-colors">
+                              <Car size={14} className="mb-0.5 opacity-70" />
+                              <span className="text-[10px] font-medium">
+                                {estimateRickshaw(res.distanceMeters)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    {loadingData ? (
-                      <div className="h-4 w-24 bg-gray-100 rounded animate-pulse mt-1"></div>
-                    ) : toRes?.stop ? (
-                      <div className="text-sm font-bold text-gray-900">{toRes.stop.name}</div>
-                    ) : (
-                      <div className="text-xs text-gray-400 italic">No stop found</div>
-                    )}
-                  </div>
-                  {toRes?.distanceMeters !== null && toRes?.distanceMeters !== undefined && (
-                    <div className="text-right">
-                      <div className="text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded-lg">
-                        {formatDistance(toRes.distanceMeters)}
-                      </div>
-                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-400 italic">No stops found</div>
                   )}
                 </div>
               </div>
             </div>
           );
         })}
+        {computedRoutes.length === 0 && !loadingData && (
+          <div className="col-span-full py-10 text-center text-gray-400 font-medium bg-white/5 rounded-2xl border border-white/5">
+            No active routes available.
+          </div>
+        )}
       </div>
-      <p className="text-center text-xs text-gray-400 italic mt-4">
-        Real-time updates auto-refresh every 10 seconds.
+      <p className="text-center text-xs text-gray-500 italic mt-4 mb-2">
+        Calculated dynamically based on your current location. Estimates are approximate.
       </p>
     </div>
   );

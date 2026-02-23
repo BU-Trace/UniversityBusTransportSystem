@@ -2,16 +2,19 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bus, MapPin, X, AlertCircle } from 'lucide-react';
+import { Bus, MapPin, X, AlertCircle, CalendarClock } from 'lucide-react';
 import { useIntro } from '@/context/IntroContext';
 import BusTrackerView from '../transport/BusTrackerView';
 import NearestStopsView from '../transport/NearestStopsView';
 import ReportIssueView from '../transport/ReportIssueView';
+import ScheduleView from '../transport/ScheduleView';
 
 const TransportFab: React.FC = () => {
   const { isIntroActive } = useIntro();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'tracker' | 'stops' | 'report'>('tracker');
+  const [activeTab, setActiveTab] = useState<'tracker' | 'stops' | 'schedule' | 'report'>(
+    'tracker'
+  );
   const [ripples, setRipples] = useState<{ id: number }[]>([]);
 
   if (isIntroActive) return null;
@@ -113,38 +116,28 @@ const TransportFab: React.FC = () => {
 
               {/* Tabs */}
               <div className="px-2 sm:px-6 pt-4 shrink-0">
-                <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-                  <button
-                    onClick={() => setActiveTab('tracker')}
-                    className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-black transition-all ${
-                      activeTab === 'tracker'
-                        ? 'bg-brick-600 text-white shadow-lg shadow-brick-900/40'
-                        : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    <Bus size={14} className="sm:w-4 sm:h-4" /> <span>Live Bus Tracker</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('stops')}
-                    className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black transition-all ${
-                      activeTab === 'stops'
-                        ? 'bg-brick-600 text-white shadow-lg shadow-brick-900/40'
-                        : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    <MapPin size={14} className="sm:w-3.5 sm:h-3.5" /> <span>Nearest Stops</span>
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('report')}
-                    className={`flex-1 flex items-center justify-center gap-1 sm:gap-2 py-2 sm:py-2.5 rounded-lg text-[10px] sm:text-xs font-black transition-all ${
-                      activeTab === 'report'
-                        ? 'bg-brick-600 text-white shadow-lg shadow-brick-900/40'
-                        : 'text-gray-400 hover:text-gray-200'
-                    }`}
-                  >
-                    <AlertCircle size={14} className="sm:w-3.5 sm:h-3.5" />{' '}
-                    <span>Report Issue</span>
-                  </button>
+                <div className="flex bg-white/5 p-1 rounded-xl border border-white/5 gap-0.5">
+                  {(
+                    [
+                      { key: 'tracker', icon: <Bus size={13} />, label: 'Live Tracker' },
+                      { key: 'schedule', icon: <CalendarClock size={13} />, label: 'Schedule' },
+                      { key: 'stops', icon: <MapPin size={13} />, label: 'Stops' },
+                      { key: 'report', icon: <AlertCircle size={13} />, label: 'Report' },
+                    ] as const
+                  ).map(({ key, icon, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setActiveTab(key)}
+                      className={`flex-1 flex items-center justify-center gap-1 py-2 sm:py-2.5 rounded-lg text-[9px] sm:text-[10px] font-black transition-all ${
+                        activeTab === key
+                          ? 'bg-brick-600 text-white shadow-lg shadow-brick-900/40'
+                          : 'text-gray-400 hover:text-gray-200'
+                      }`}
+                    >
+                      {icon}
+                      <span className="hidden xs:inline sm:inline">{label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -161,6 +154,18 @@ const TransportFab: React.FC = () => {
                       className="h-full"
                     >
                       <BusTrackerView onClose={() => setIsOpen(false)} />
+                    </motion.div>
+                  )}
+                  {activeTab === 'schedule' && (
+                    <motion.div
+                      key="schedule"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -12 }}
+                      transition={{ duration: 0.2 }}
+                      className="h-full"
+                    >
+                      <ScheduleView />
                     </motion.div>
                   )}
                   {activeTab === 'stops' && (

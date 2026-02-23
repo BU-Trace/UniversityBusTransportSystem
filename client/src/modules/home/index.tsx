@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bus, Users, MapPin, Clock, ArrowUpRight, Megaphone } from 'lucide-react';
 import StatCard from './StatCard';
@@ -8,7 +8,7 @@ import { RoutesSection } from '@/components/transport/RoutesSection';
 import { BusesSection } from '@/components/transport/BusesSection';
 import { BottomNav } from '@/components/transport/BottomNav';
 import LuxuryFlipClock from '@/components/common/LuxuryFlipClock';
-import LocationDisplay from '@/components/common/LocationDisplay';
+import { getCurrentLocation } from '@/lib/lib-location';
 
 const HomePageComponent: React.FC = () => {
   const featureHighlights = [
@@ -81,6 +81,18 @@ const HomePageComponent: React.FC = () => {
   ];
 
   const [activeQuickLink, setActiveQuickLink] = React.useState<(typeof quickLinks)[0] | null>(null);
+  const [miniLoc, setMiniLoc] = useState<{
+    city: string;
+    region: string;
+    lat: number;
+    lon: number;
+  } | null>(null);
+
+  useEffect(() => {
+    getCurrentLocation()
+      .then((loc) => setMiniLoc({ city: loc.city, region: loc.region, lat: loc.lat, lon: loc.lon }))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="relative min-h-screen bg-linear-to-br from-gray-900 via-[#1a0505] to-gray-900 overflow-hidden pb-24">
@@ -98,50 +110,60 @@ const HomePageComponent: React.FC = () => {
       >
         <LuxuryFlipClock />
 
-        <div className="w-full px-4 md:px-12 lg:px-20 -mt-8">
-          <LocationDisplay />
-        </div>
+        {/* Tiny location text — right corner of hero */}
+        {miniLoc && (
+          <div className="absolute top-2 right-4 md:right-12 lg:right-20 flex flex-col items-end gap-0.5 pointer-events-none select-none">
+            <span className="flex items-center gap-1 text-[9px] font-black text-gray-500 uppercase tracking-[0.15em]">
+              <MapPin className="w-2.5 h-2.5 text-brick-600 shrink-0" />
+              {miniLoc.city}, {miniLoc.region}
+            </span>
+            <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest tabular-nums">
+              {miniLoc.lat.toFixed(3)}°N · {miniLoc.lon.toFixed(3)}°E
+            </span>
+          </div>
+        )}
       </motion.div>
 
+      {/* Live Bus Section — directly after the hero clock */}
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-12 lg:px-20 mt-6 mb-2">
+        <LiveBusSection />
+      </div>
+
       {/* Main Content Grid */}
-      <div className="max-w-7xl mx-auto px-4 md:px-12 lg:px-20 py-12 -mt-16 relative z-10 flex flex-col">
+      <div className="max-w-7xl mx-auto px-4 md:px-12 lg:px-20 py-6 -mt-12 relative z-10 flex flex-col">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 order-3 lg:order-2 lg:grid-cols-4 gap-3 mb-16">
+        <div className="grid grid-cols-2 sm:grid-cols-3 order-3 lg:order-2 lg:grid-cols-4 gap-2 mb-8">
           <StatCard
-            title="Total Trips Today"
-            value="1,234"
-            icon={<Bus className="w-5 h-5" />}
+            title="Daily Campus Trips"
+            value="4+"
+            icon={<Clock className="w-5 h-5" />}
             footerText={
               <>
-                <ArrowUpRight className="w-4 h-4 mr-1" /> +12% from Yesterday
+                <ArrowUpRight className="w-4 h-4 mr-1" /> Morning & Evening Schedules
               </>
             }
           />
           <StatCard
-            title="Total Passengers"
-            value="5,678"
-            icon={<Users className="w-5 h-5" />}
+            title="Active Routes"
+            value="3"
+            icon={<MapPin className="w-5 h-5" />}
             footerText={
               <span className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full">
-                Active Routes
+                Citywide Coverage
               </span>
             }
           />
           <StatCard
-            title="Active Buses"
-            value="3/4"
+            title="Total Fleet Size"
+            value="5"
             icon={<Bus className="w-5 h-5" />}
-            footerText={
-              <>
-                <Clock className="w-4 h-4 mr-1" /> Last updated 2 min ago
-              </>
-            }
+            footerText={<>Double Decker & Single</>}
           />
           <StatCard
-            title="Total Stops"
-            value="13"
+            title="Total Stoppages"
+            value="10+"
             icon={<MapPin className="w-5 h-5" />}
-            footerText="Covering 6 Major Routes"
+            footerText="Connected to Campus"
           />
         </div>
 
@@ -151,35 +173,37 @@ const HomePageComponent: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="bg-white/10 backdrop-blur-xl shadow-2xl order-4 lg:order-3 rounded-3xl p-8 border border-white/20 mb-12 shadow-white/5"
+          className="bg-white/10 backdrop-blur-xl shadow-xl order-4 lg:order-3 rounded-2xl p-5 border border-white/20 mb-8 shadow-white/5"
         >
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
             <div>
-              <p className="text-sm font-semibold text-brick-500 uppercase tracking-widest">
+              <p className="text-xs font-semibold text-brick-500 uppercase tracking-widest">
                 Built for BU Trace
               </p>
-              <h2 className="text-3xl font-bold text-white mt-1">Campus Transport at a Glance</h2>
-              <p className="text-gray-400 mt-2 max-w-2xl">
+              <h2 className="text-xl font-bold text-white mt-1">Campus Transport at a Glance</h2>
+              <p className="text-xs text-gray-400 mt-1 max-w-2xl">
                 Everything passengers, drivers and admins need to stay aligned: live visibility,
                 accurate schedules and quick access to support.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {featureHighlights.map((feature) => (
               <div
                 key={feature.title}
-                className="flex gap-4 p-4 rounded-2xl border border-white/10 bg-white/10 hover:bg-white/15 transition-colors duration-200 shadow-sm group shadow-white/5 cursor-pointer"
+                className="flex gap-3 p-3 rounded-xl border border-white/10 bg-white/10 hover:bg-white/15 transition-colors duration-200 shadow-sm group shadow-white/5 cursor-pointer"
               >
-                <div className="p-3 bg-white/5 rounded-xl shadow-inner group-hover:scale-110 transition-transform">
+                <div className="p-2.5 bg-white/5 rounded-lg shadow-inner group-hover:scale-110 transition-transform">
                   {React.cloneElement(feature.icon as React.ReactElement<{ className?: string }>, {
-                    className: 'w-5 h-5 text-brick-500',
+                    className: 'w-4 h-4 text-brick-500',
                   })}
                 </div>
                 <div>
-                  <p className="font-semibold text-white">{feature.title}</p>
-                  <p className="text-sm text-gray-400 mt-1">{feature.description}</p>
+                  <p className="text-sm font-semibold text-white">{feature.title}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5 leading-snug">
+                    {feature.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -192,34 +216,31 @@ const HomePageComponent: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="grid order-5 lg:order-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12"
+          className="grid order-5 lg:order-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-8"
         >
           {quickLinks.map((link) => (
             <div
               key={link.title}
               onClick={() => setActiveQuickLink(link)}
-              className="group rounded-2xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-2xl p-5 flex items-center justify-between gap-4 hover:-translate-y-1 hover:bg-white/15 transition-all duration-300 shadow-white/5 cursor-pointer"
+              className="group rounded-xl border border-white/20 bg-white/10 backdrop-blur-xl shadow-xl p-3.5 flex items-center justify-between gap-3 hover:-translate-y-0.5 hover:bg-white/15 transition-all duration-300 shadow-white/5 cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-white/5 rounded-xl shadow-inner group-hover:scale-110 transition-transform">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-white/5 rounded-lg shadow-inner group-hover:scale-110 transition-transform">
                   {React.cloneElement(link.icon as React.ReactElement<{ className?: string }>, {
-                    className: 'w-5 h-5 text-brick-500',
+                    className: 'w-4 h-4 text-brick-500',
                   })}
                 </div>
                 <div>
-                  <p className="font-semibold text-white">{link.title}</p>
-                  <p className="text-xs text-gray-400">{link.description}</p>
+                  <p className="text-sm font-semibold text-white">{link.title}</p>
+                  <p className="text-[10px] text-gray-400">{link.description}</p>
                 </div>
               </div>
-              <ArrowUpRight className="w-5 h-5 text-brick-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              <ArrowUpRight className="w-4 h-4 text-brick-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             </div>
           ))}
         </motion.div>
 
-        {/* LiveBusSection */}
-        <div className="order-2 lg:order-5 mb-16">
-          <LiveBusSection />
-        </div>
+        {/* LiveBusSection — moved to after hero */}
 
         {/* Transport Info Sections */}
         <div className="max-w-7xl mx-auto w-full">

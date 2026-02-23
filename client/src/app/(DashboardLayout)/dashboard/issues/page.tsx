@@ -235,11 +235,11 @@ const IssuesManagementPage = () => {
           </p>
         </div>
 
-        <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto">
-          <div className="relative flex-1 md:w-80 group">
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+          <div className="relative flex-1 w-full group">
             <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brick-400 transition-colors"
-              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brick-400 transition-colors"
+              size={20}
             />
             <input
               type="text"
@@ -249,11 +249,22 @@ const IssuesManagementPage = () => {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-brick-500/50 transition-all font-medium"
+              className="w-full pl-12 pr-10 py-4 rounded-3xl border border-white/5 bg-white/5 text-white shadow-2xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-medium placeholder:text-gray-600"
             />
+            {searchQuery && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded-full text-gray-500 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <X size={16} />
+              </button>
+            )}
           </div>
 
-          <div className="flex bg-white/5 p-1.5 rounded-3xl border border-white/5 w-full lg:w-auto">
+          <div className="flex flex-1 w-full bg-white/5 p-2 rounded-4xl border border-white/5">
             {(['all', 'open', 'in_progress', 'resolved'] as const).map((s) => (
               <button
                 key={s}
@@ -261,10 +272,10 @@ const IssuesManagementPage = () => {
                   setFilterStatus(s);
                   setCurrentPage(1);
                 }}
-                className={`flex-1 lg:flex-none px-6 py-3 text-[10px] font-black uppercase tracking-widest rounded-[1.25rem] transition-all ${
+                className={`flex-1 px-4 py-3 sm:py-4 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-3xl transition-all ${
                   filterStatus === s
-                    ? 'bg-brick-600 text-white shadow-lg'
-                    : 'text-gray-500 hover:text-white'
+                    ? 'bg-brick-500 text-white shadow-lg'
+                    : 'text-gray-500 hover:text-white hover:bg-white/10'
                 }`}
               >
                 {s.replace('_', ' ')}

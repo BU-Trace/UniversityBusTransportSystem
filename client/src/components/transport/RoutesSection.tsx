@@ -1,92 +1,119 @@
 'use client';
 
-import { Clock, ExternalLink } from 'lucide-react';
-import ImageWithFallback from '@/components/common/ImageWithFallback';
+import { MapPin, ArrowRight, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 import { SectionHeader } from './SectionHeader';
 
-interface RouteData {
-  id: string;
+interface IStopage {
+  _id: string;
   name: string;
-  stops: string[];
-  duration: string;
-  image: string;
+  latitude?: number;
+  longitude?: number;
 }
 
-const ROUTES_DATA: RouteData[] = [
-  {
-    id: '1',
-    name: 'Campus - Rupatoli',
-    stops: ['Main Gate', 'Dapdapia', 'Rupatoli Stand'],
-    duration: '25 min',
-    image: '/static/route-rupatoli.jpg',
-  },
-  {
-    id: '2',
-    name: 'Campus - Nathullabad',
-    stops: ['Campus', 'Amtola', 'Kashipur', 'Nathullabad'],
-    duration: '35 min',
-    image: '/static/route-nathullabad.jpg',
-  },
-  {
-    id: '3',
-    name: 'Campus - Sadar Road',
-    stops: ['Campus', 'Launch Ghat', 'Sadar Road'],
-    duration: '40 min',
-    image: '/static/route-sadar.jpg',
-  },
-];
+interface IRoute {
+  _id: string;
+  name: string;
+  stopages: IStopage[] | string[];
+  isActive?: boolean;
+}
 
-const RouteCard = ({ route }: { route: RouteData }) => (
-  <div className="bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden shadow-2xl border border-white/20 group hover:bg-white/15 transition-all duration-300 cursor-pointer shadow-white/5">
-    <div className="h-32 bg-gray-800 relative">
-      <ImageWithFallback
-        src={route.image}
-        alt={route.name}
-        fill
-        className="object-cover group-hover:scale-105 transition-transform duration-700 opacity-80"
-        fallbackText="Map Preview"
-      />
-      <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-md px-2 py-1 rounded-lg text-xs font-bold shadow-lg border border-white/10 flex items-center gap-1 text-white">
-        <Clock size={12} className="text-brick-500" /> {route.duration}
-      </div>
-    </div>
-    <div className="p-5">
-      <h3 className="font-bold text-gray-100 text-lg mb-3">{route.name}</h3>
+const RouteTimelineCard = ({ route }: { route: IRoute }) => {
+  const stops = Array.isArray(route.stopages)
+    ? route.stopages.map((s) =>
+        typeof s === 'object' && s !== null ? (s as IStopage).name : 'Unknown Stop'
+      )
+    : [];
 
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-2 h-2 rounded-full bg-brick-500 shadow-lg shadow-brick-500/50"></div>
-        <div className="h-[2px] flex-1 bg-white/10 relative">
-          <div className="absolute inset-y-0 left-0 w-1/2 bg-brick-500/30"></div>
+  return (
+    <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-white/20 group hover:bg-white/15 transition-all duration-300 shadow-white/5">
+      <h3 className="font-black text-gray-100 text-xl mb-6 tracking-tight flex items-center gap-3">
+        <div className="p-2 rounded-lg bg-brick-500/20 text-brick-400 border border-brick-500/30">
+          <MapPin size={18} strokeWidth={2.5} />
         </div>
-        <div className="w-2 h-2 rounded-full bg-gray-700 border-2 border-gray-900 ring-1 ring-white/10"></div>
-      </div>
+        {route.name}
+      </h3>
 
-      <div className="flex flex-wrap gap-1.5">
-        {route.stops.map((stop: string, idx: number) => (
-          <span
-            key={idx}
-            className="bg-white/10 text-gray-300 text-[10px] font-bold px-2 py-1 rounded border border-white/10 uppercase tracking-tight shadow-sm shadow-black/20"
-          >
-            {stop}
-          </span>
+      <div className="relative pl-3 space-y-4 before:absolute before:inset-y-2 before:left-[15px] before:w-[2px] before:bg-white/10">
+        {stops.map((stopName, idx) => (
+          <div key={idx} className="relative flex items-center gap-4 group/stop">
+            {/* Timeline Dot */}
+            <div
+              className={`w-3 h-3 rounded-full border-2 z-10 bg-gray-900 transition-colors duration-300 ${
+                idx === 0 || idx === stops.length - 1
+                  ? 'border-brick-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                  : 'border-white/30 group-hover/stop:border-white/60'
+              }`}
+            />
+
+            {/* Stop Name */}
+            <div
+              className={`flex-1 flex items-center gap-2 ${
+                idx === 0 || idx === stops.length - 1
+                  ? 'text-white font-bold'
+                  : 'text-gray-400 font-medium'
+              }`}
+            >
+              {stopName}
+              {idx < stops.length - 1 && (
+                <ArrowRight size={12} className="text-white/20 ml-auto mr-2" />
+              )}
+            </div>
+          </div>
         ))}
+        {stops.length === 0 && (
+          <div className="text-sm text-gray-500 italic pl-6">No stopages defined.</div>
+        )}
       </div>
     </div>
-  </div>
-);
+  );
+};
 
-export const RoutesSection = () => (
-  <section id="routes" className="mb-20 scroll-mt-24">
-    <SectionHeader number="2" title="Routes" subtitle="Where do we go?" />
+export const RoutesSection = () => {
+  const [routes, setRoutes] = useState<IRoute[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {ROUTES_DATA.map((route) => (
-        <RouteCard key={route.id} route={route} />
-      ))}
-    </div>
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000/api/v1'}/route`
+        );
+        const json = await res.json();
+        if (json.success && json.data) {
+          setRoutes(json.data.filter((r: IRoute) => r.isActive !== false));
+        }
+      } catch (err) {
+        console.error('Failed to fetch routes:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchRoutes();
+  }, []);
 
-    <button className="w-full mt-8 py-4 rounded-xl bg-white/10 backdrop-blur-md text-brick-400 font-bold border border-white/20 hover:bg-white/15 hover:text-brick-300 transition-all flex items-center justify-center gap-2 text-sm shadow-xl cursor-pointer shadow-white/5">
-      View Full Interactive Map <ExternalLink size={16} />
-    </button>
-  </section>
-);
+  return (
+    <section id="routes" className="mb-20 scroll-mt-24">
+      <SectionHeader number="2" title="Routes" subtitle="Where do we go?" />
+
+      {isLoading ? (
+        <div className="flex flex-col justify-center items-center py-16 gap-3">
+          <Loader2 className="animate-spin text-brick-500" size={32} />
+          <p className="text-gray-400 text-sm font-semibold uppercase tracking-widest">
+            Loading Map Data...
+          </p>
+        </div>
+      ) : routes.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {routes.map((route) => (
+            <RouteTimelineCard key={route._id} route={route} />
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12 bg-white/5 border border-white/10 rounded-2xl shadow-inner">
+          <p className="text-gray-400 font-semibold mb-1">No operational routes found.</p>
+        </div>
+      )}
+    </section>
+  );
+};

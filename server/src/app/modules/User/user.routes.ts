@@ -32,6 +32,9 @@ router.get(
   UserController.getAllDrivers
 );
 
+// Public drivers (limited fields, no auth)
+router.get('/public-drivers', UserController.getPublicDrivers);
+
 // Admin adds a driver (dedicated)
 router.post(
   '/add-driver',

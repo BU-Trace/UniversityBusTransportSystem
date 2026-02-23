@@ -2,14 +2,18 @@ import mongoose, { Schema } from 'mongoose';
 
 const RouteSchema = new Schema(
   {
-    activeHoursComing: {
-      type: [String],
-      default: [],
-    },
-    activeHoursGoing: {
-      type: [String],
-      default: [],
-    },
+    activeHoursComing: [
+      {
+        time: { type: String, required: true },
+        bus: { type: Schema.Types.ObjectId, ref: 'Bus', required: true },
+      },
+    ],
+    activeHoursGoing: [
+      {
+        time: { type: String, required: true },
+        bus: { type: Schema.Types.ObjectId, ref: 'Bus', required: true },
+      },
+    ],
     route_id: {
       type: String,
       required: true,

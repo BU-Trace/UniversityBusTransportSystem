@@ -35,6 +35,7 @@ export default function RootLayout({
           </IntroProvider>
           <ScrollToTopButton />
         </Providers>
+        <div id="modal-root" />
       </body>
     </html>
   );

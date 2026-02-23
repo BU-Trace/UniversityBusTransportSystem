@@ -18,7 +18,7 @@ app.use(
       'http://localhost:3001',
       'http://localhost:8081', // Expo dev server
       'http://192.168.0.106:19000',
-      '*'
+      '*',
     ],
     credentials: true,
   })

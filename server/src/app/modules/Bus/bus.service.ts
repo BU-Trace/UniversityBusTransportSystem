@@ -24,8 +24,8 @@ export const createBus = async (payload: IBus) => {
 
   const bus = await Bus.create({
     ...data,
-    route: new Types.ObjectId(data.route),
-    driverId: new Types.ObjectId(data.driverId),
+    route: data.route ? new Types.ObjectId(data.route) : undefined,
+    driverId: data.driverId ? new Types.ObjectId(data.driverId) : undefined,
     bus_id,
   });
 
@@ -59,7 +59,37 @@ export const deleteBus = async (id: string) => {
 };
 
 export const getAllBuses = async () => {
-  return await Bus.find().populate('route');
+  const buses = await Bus.find().populate('route').populate('driverId');
+
+  // Fallback: also fetch users whose assignedBus matches each bus,
+  // since the driver-bus relationship is written to User.assignedBus
+  // by the user management flow (not necessarily to Bus.driverId).
+  const User = (await import('../User/user.model')).default;
+  const drivers = await User.find({ assignedBus: { $ne: null }, role: 'driver' })
+    .select('_id name assignedBus profileImage')
+    .lean();
+
+  const driverByBusId = new Map<string, { _id: string; name: string }>();
+  for (const d of drivers) {
+    if (d.assignedBus) {
+      driverByBusId.set(d.assignedBus.toString(), { _id: d._id.toString(), name: d.name });
+    }
+  }
+
+  // Attach assignedDriver to each bus (prefer User.assignedBus over Bus.driverId populate)
+  const enriched = buses.map((bus) => {
+    const busObj = bus.toObject() as Record<string, unknown>;
+    const fromUser = driverByBusId.get(bus._id.toString());
+    if (fromUser) {
+      busObj.assignedDriver = fromUser;
+    } else if (busObj.driverId && typeof busObj.driverId === 'object') {
+      // driverId was populated successfully via Bus.driverId ref
+      busObj.assignedDriver = busObj.driverId;
+    }
+    return busObj;
+  });
+
+  return enriched;
 };
 
 export const getSingleBus = async (id: string) => {

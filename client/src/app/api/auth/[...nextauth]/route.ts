@@ -1,8 +1,4 @@
-import NextAuth, {
-  type NextAuthOptions,
-  type Session,
-  type User as NextAuthUser,
-} from 'next-auth';
+import NextAuth, { type NextAuthOptions, type Session, type User as NextAuthUser } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 import { authOptions } from '@/lib/auth-options';
 
@@ -40,12 +36,10 @@ const enhancedAuthOptions: NextAuthOptions = {
       if (trigger === 'update' && session) {
         const sUser = session.user as ExtendedUser | undefined;
         const newName = sUser?.name ?? nextToken.name;
-        const newImage = (
-          sUser?.image ??
+        const newImage = (sUser?.image ??
           sUser?.photoUrl ??
           sUser?.profileImage ??
-          nextToken.image
-        ) as string | null | undefined;
+          nextToken.image) as string | null | undefined;
 
         nextToken.name = newName;
         nextToken.image = newImage;
@@ -88,8 +82,8 @@ const enhancedAuthOptions: NextAuthOptions = {
     async session({ session, token, user, trigger, newSession }): Promise<Session> {
       const baseSessionCb = authOptions.callbacks?.session;
       const base = baseSessionCb
-        ? await baseSessionCb({ session, token, user, trigger, newSession }) as Session
-        : session as Session;
+        ? ((await baseSessionCb({ session, token, user, trigger, newSession })) as Session)
+        : (session as Session);
 
       if (base?.user) {
         const tUser = (token.user ?? {}) as ExtendedUser;

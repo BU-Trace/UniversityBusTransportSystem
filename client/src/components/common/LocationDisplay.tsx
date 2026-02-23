@@ -64,37 +64,37 @@ const LocationDisplay: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-7xl mx-auto py-8 px-6 bg-white/5 backdrop-blur-xl rounded-4xl border border-white/10 shadow-2xl overflow-hidden relative group"
+      className="w-full max-w-7xl mx-auto py-4 px-5 bg-white/5 backdrop-blur-xl rounded-3xl border border-white/10 shadow-2xl overflow-hidden relative group"
     >
       {/* Background Decorative Element */}
       <div className="absolute -right-10 -bottom-10 text-white/5 opacity-5 pointer-events-none transform rotate-12 scale-[3]">
         <MdPublic />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 relative z-10">
         {/* Left: Detailed Address (Occupies more space) */}
-        <div className="lg:col-span-12 xl:col-span-8 flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-brick-500 mb-1">
-            <MdLocationOn size={18} />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+        <div className="lg:col-span-12 xl:col-span-8 flex flex-col gap-0.5">
+          <div className="flex items-center gap-1.5 text-brick-500 mb-0.5">
+            <MdLocationOn size={14} />
+            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-400">
               Exact Location Detected
             </span>
           </div>
-          <h4 className="text-xl md:text-3xl font-black text-white italic tracking-tighter">
+          <h4 className="text-base md:text-lg lg:text-xl font-black text-white italic tracking-tighter">
             {location.fullAddress ||
               [location.city, location.region, location.country].filter(Boolean).join(', ') ||
               'Location details unavailable'}
           </h4>
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-2">
-              <MdMyLocation className="text-brick-400" size={14} />
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+          <div className="flex items-center gap-3 mt-1.5">
+            <div className="flex items-center gap-1">
+              <MdMyLocation className="text-brick-400" size={12} />
+              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
                 LAT: {location.lat.toFixed(4)}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <MdMyLocation className="text-brick-400" size={14} />
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+            <div className="flex items-center gap-1">
+              <MdMyLocation className="text-brick-400" size={12} />
+              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest">
                 LON: {location.lon.toFixed(4)}
               </span>
             </div>
@@ -102,27 +102,27 @@ const LocationDisplay: React.FC = () => {
         </div>
 
         {/* Right: Metadata */}
-        <div className="lg:col-span-12 xl:col-span-4 flex flex-col md:flex-row xl:flex-col items-start md:items-center xl:items-end justify-between xl:justify-center gap-6">
+        <div className="lg:col-span-12 xl:col-span-4 flex flex-col md:flex-row xl:flex-col items-start md:items-center xl:items-end justify-between xl:justify-center gap-3">
           <div className="flex flex-col xl:items-end">
-            <div className="flex items-center gap-2 text-brick-500 mb-1">
-              <MdAccessTime size={18} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+            <div className="flex items-center gap-1.5 text-brick-500 mb-0.5">
+              <MdAccessTime size={14} />
+              <span className="text-[9px] font-black uppercase tracking-[0.15em] text-gray-400">
                 Local Timezone
               </span>
             </div>
-            <h4 className="text-lg font-black text-white tracking-tight">
+            <h4 className="text-sm font-black text-white tracking-tight">
               {location.timezone.replace('_', ' ') || 'Unknown'}
             </h4>
           </div>
 
-          <div className="flex flex-col items-start md:items-center xl:items-end">
-            <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20 mb-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">
+          <div className="flex flex-col items-start md:items-center xl:items-end mt-1">
+            <div className="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 mb-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">
                 {location.isIPBased ? 'IP Network Lock' : 'GPS Satellite Verified'}
               </span>
             </div>
-            <p className="text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">
+            <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em]">
               Live Signal Secured
             </p>
           </div>

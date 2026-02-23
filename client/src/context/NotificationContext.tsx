@@ -187,20 +187,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
         });
 
-        // 6. Send to Server (using authenticated api if available, otherwise public)
-        // Note: The middleware requires auth, so we should attempt with authenticated 'api'
-        // If not logged in, we can't save the subscription yet (middleware blocks it)
+        // 6. Send to Server (using public api since route is now open)
         try {
-          const { api } = await import('@/lib/axios');
-          await api.post('/push/subscribe', {
+          await publicApi.post('/push/subscribe', {
             subscription,
             deviceInfo: navigator.userAgent,
           });
           console.log('Push subscription saved to server');
-        } catch {
-          // If 401, it just means they are guest for now.
-          // We could potentially allow guest subscriptions if we update the route middleware.
-          console.log('Auth required for push subscription sync. Skipping for guest.');
+        } catch (err) {
+          console.error('Failed to sync push subscription:', err);
         }
       } catch (err) {
         console.error('Error initializing Web Push:', err);

@@ -12,17 +12,14 @@ export type LocationData = {
 export async function getCurrentLocation(): Promise<LocationData> {
   // IP-based fallback function using multiple providers
   const getIPLocation = async (): Promise<LocationData> => {
-    const providers = [
-      'https://ipapi.co/json/',
-      'https://ip-api.com/json/',
-    ];
+    const providers = ['https://ipapi.co/json/', 'https://ip-api.com/json/'];
 
     for (const url of providers) {
       try {
         const res = await fetch(url);
         if (!res.ok) continue;
         const data = await res.json();
-        
+
         // Normalize data based on provider
         if (url.includes('ipapi.co')) {
           const city = data.city || '';
@@ -85,11 +82,16 @@ export async function getCurrentLocation(): Promise<LocationData> {
           );
           if (!res.ok) throw new Error('Reverse geocoding failed');
           const data = await res.json();
-          
+
           const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
           resolve({
-            city: data.address?.city || data.address?.town || data.address?.village || data.address?.suburb || '',
+            city:
+              data.address?.city ||
+              data.address?.town ||
+              data.address?.village ||
+              data.address?.suburb ||
+              '',
             region: data.address?.state || '',
             country: data.address?.country || '',
             timezone: timezone,

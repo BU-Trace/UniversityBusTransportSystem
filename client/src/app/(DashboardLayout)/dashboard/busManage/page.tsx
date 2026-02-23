@@ -17,7 +17,6 @@ import {
   Clock,
   Loader2,
   MapPin,
-  RefreshCw,
   UserCircle,
 } from 'lucide-react';
 import { api } from '@/lib/axios';
@@ -107,7 +106,7 @@ function Overlay({ children, onClose }: { children: React.ReactNode; onClose: ()
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+      className="fixed inset-0 z-100 bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -293,9 +292,9 @@ export default function BusManagementPage() {
           </p>
         </motion.div>
 
-        <div className="flex flex-col lg:flex-row items-center gap-4 w-full lg:w-auto">
+        <div className="flex flex-col md:flex-row items-center gap-4 w-full">
           {/* Search with clear */}
-          <div className="relative w-full lg:w-96 group">
+          <div className="relative flex-1 w-full group">
             <Search
               className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-brick-400 transition-colors"
               size={20}
@@ -304,7 +303,7 @@ export default function BusManagementPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by name, plate, route, driver..."
-              className="w-full pl-12 pr-12 py-4 rounded-3xl border border-white/5 bg-white/5 text-white shadow-2xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-medium placeholder:text-gray-600"
+              className="w-full pl-12 pr-10 py-4 rounded-3xl border border-white/5 bg-white/5 text-white shadow-2xl outline-none focus:border-brick-500/50 focus:ring-4 focus:ring-brick-500/10 transition-all font-medium placeholder:text-gray-600"
             />
             {query && (
               <button
@@ -318,17 +317,9 @@ export default function BusManagementPage() {
 
           <button
             onClick={openAdd}
-            className="w-full lg:w-auto bg-brick-500 text-white px-8 py-5 rounded-4xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-2xl shadow-brick-500/30 flex items-center justify-center gap-3 border border-white/10"
+            className="flex-1 w-full bg-brick-500 text-white px-8 py-5 rounded-4xl font-black text-xs uppercase tracking-widest hover:bg-brick-600 transition-all shadow-2xl shadow-brick-500/30 flex items-center justify-center gap-3 border border-white/10"
           >
             <Plus size={20} /> Register Bus
-          </button>
-
-          <button
-            onClick={loadBuses}
-            className="p-5 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 rounded-3xl transition-all border border-white/5 shadow-xl"
-            title="Refresh"
-          >
-            <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>

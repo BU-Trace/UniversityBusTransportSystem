@@ -317,32 +317,32 @@ const MergedDashboard = () => {
 
       <DashboardCalendar />
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-        {/* System Health Module (New Robust Component) */}
+      {/* Stats + System Health */}
+      <div className=" my-2 gap-6">
+        {/* System Health */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="xl:col-span-1 bg-white/5 backdrop-blur-3xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group"
+          className="xl:col-span-1 bg-white/5 backdrop-blur-3xl border border-white/10 p-6 rounded-3xl shadow-xl relative overflow-hidden group flex flex-col justify-between"
         >
-          <div className="relative z-10">
-            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 flex items-center justify-between">
+          <div className="relative z-10  my-2">
+            <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-5 flex items-center justify-between">
               Live System Health
               <span className="flex h-2 w-2 relative">
                 <span
                   className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${socketStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'}`}
-                ></span>
+                />
                 <span
                   className={`relative inline-flex rounded-full h-2 w-2 ${socketStatus === 'connected' ? 'bg-emerald-500' : 'bg-red-500'}`}
-                ></span>
+                />
               </span>
             </h4>
 
-            <div className="space-y-6">
+            <div className="space-y-4  mb-2 ">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                    <MdWifi size={18} />
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400">
+                    <MdWifi size={15} />
                   </div>
                   <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">
                     Network
@@ -352,11 +352,11 @@ const MergedDashboard = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   <div
-                    className={`p-2 rounded-lg ${socketStatus === 'connected' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}
+                    className={`p-1.5 rounded-lg ${socketStatus === 'connected' ? 'bg-blue-500/10 text-blue-400' : 'bg-red-500/10 text-red-400'}`}
                   >
-                    <MdSettingsEthernet size={18} />
+                    <MdSettingsEthernet size={15} />
                   </div>
                   <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">
                     Socket.io
@@ -370,61 +370,69 @@ const MergedDashboard = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
-                    <MdMemory size={18} />
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 bg-purple-500/10 rounded-lg text-purple-400">
+                    <MdMemory size={15} />
                   </div>
                   <span className="text-[11px] font-bold text-gray-300 uppercase tracking-wider">
                     Last Sync
                   </span>
                 </div>
-                <span className="text-[10px] font-black text-purple-500 uppercase">{lastSync}</span>
+                <span className="text-[10px] font-black text-purple-400 uppercase">{lastSync}</span>
               </div>
             </div>
-
-            <button
-              onClick={() => {
-                fetchStats();
-                setLastSync(new Date().toLocaleTimeString());
-              }}
-              className="w-full mt-8 py-3 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/5 transition-all flex items-center justify-center gap-2 group-hover:border-brick-500/30"
-            >
-              <MdRefresh size={14} className={loading ? 'animate-spin' : ''} /> Force Re-Sync
-            </button>
           </div>
-          <div className="absolute -bottom-6 -right-6 text-white/5 opacity-5 pointer-events-none transform rotate-12 scale-150">
-            <MdMemory size={80} />
+
+          <button
+            onClick={() => {
+              fetchStats();
+              setLastSync(new Date().toLocaleTimeString());
+            }}
+            className="relative z-10 w-full mt-6 py-2.5 bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/5 transition-all flex items-center justify-center gap-2 hover:border-brick-500/30"
+          >
+            <MdRefresh size={13} className={loading ? 'animate-spin' : ''} /> Force Re-Sync
+          </button>
+
+          <div className="absolute -bottom-4 -right-4 opacity-5 pointer-events-none rotate-12 scale-150">
+            <MdMemory size={72} className="text-white" />
           </div>
         </motion.div>
 
-        {/* Dynamic Stats Row (3 items now) */}
-        <div className="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {stats.slice(0, 3).map((stat, i) => (
+        {/* Stats — 2×2 grid on small, 4 cols on xl */}
+        <div className="xl:col-span-3 my-10 grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {stats.map((stat, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              whileHover={{ y: -8, scale: 1.02 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-[2.5rem] shadow-2xl hover:shadow-brick-500/10 transition-all cursor-default group relative overflow-hidden"
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ y: -4, scale: 1.02 }}
+              className="bg-white/5 backdrop-blur-xl border border-white/10 p-5 rounded-3xl shadow-xl hover:shadow-brick-500/10 hover:border-white/20 transition-all cursor-default group relative overflow-hidden flex flex-col justify-between min-h-[140px]"
             >
-              <div className="flex justify-between items-start relative z-10">
-                <div>
-                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-2">
-                    {stat.label}
-                  </p>
-                  <h3 className="text-5xl font-black text-white leading-none tracking-tighter">
-                    {stat.value}
-                  </h3>
-                </div>
-                <div
-                  className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:rotate-12 transition-transform duration-500 shadow-inner`}
-                >
-                  {stat.icon}
-                </div>
+              {/* Icon */}
+              <div
+                className={`p-2.5 rounded-xl self-start ${stat.bg} ${stat.color} group-hover:scale-110 transition-transform duration-300 shadow-inner mb-3`}
+              >
+                {React.cloneElement(stat.icon as React.ReactElement<{ size?: number }>, {
+                  size: 20,
+                })}
               </div>
-              <div className="absolute -bottom-6 -right-6 text-white/5 opacity-10 pointer-events-none transform rotate-12 scale-150">
-                {stat.icon}
+
+              {/* Value + Label */}
+              <div>
+                <h3 className="text-4xl font-black text-white leading-none tracking-tighter mb-1.5">
+                  {stat.value}
+                </h3>
+                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.18em] leading-tight">
+                  {stat.label}
+                </p>
+              </div>
+
+              {/* Decorative ghost icon */}
+              <div className="absolute -bottom-3 -right-3 opacity-5 pointer-events-none rotate-6 scale-125">
+                {React.cloneElement(stat.icon as React.ReactElement<{ size?: number }>, {
+                  size: 56,
+                })}
               </div>
             </motion.div>
           ))}
@@ -437,7 +445,7 @@ const MergedDashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 shadow-3xl"
+        className="bg-white/5 backdrop-blur-3xl mt-10 rounded-[3rem] border border-white/10 p-10 shadow-3xl"
       >
         <h4 className="text-sm font-black text-gray-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-brick-500"></span>
@@ -490,7 +498,7 @@ const MergedDashboard = () => {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 my-10 gap-8">
         {/* Bus Status Pie Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -625,7 +633,7 @@ const MergedDashboard = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className="bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 shadow-3xl"
+        className="bg-white/5 backdrop-blur-3xl mt-5 rounded-[3rem] border border-white/10 p-10 shadow-3xl"
       >
         <div className="flex items-center justify-between mb-8">
           <div>
