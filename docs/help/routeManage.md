@@ -8,8 +8,6 @@
 8. Save the route
 
 ---
-
-## How students use routes
 Students can:
 - View all available routes
 - See route stops
