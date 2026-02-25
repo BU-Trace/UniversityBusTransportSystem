@@ -1,7 +1,6 @@
 # Route Management
 ## What is a route?
 - List of stops
-- 3 Occasional
 1. Go to **Route Manage**
 2. Click **Add Route**
 3. Enter route name
