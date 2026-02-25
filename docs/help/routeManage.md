@@ -3,7 +3,6 @@
 - List of stops
 1. Go to **Route Manage**
 4. Select route type
-6. Enter stop names
 7. Add Google Map location if required
 8. Save the route
 
