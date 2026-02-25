@@ -7,7 +7,6 @@
 7. Add Google Map location if required
 8. Save the route
 
----
 Students can:
 - View all available routes
 - See route stops
