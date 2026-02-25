@@ -4,8 +4,6 @@ A route defines:
 - Type (Regular or Occasional)
 - List of stops
 - Map path
-
-- 3 Regular
 - 3 Occasional
 
 ---
