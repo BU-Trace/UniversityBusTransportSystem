@@ -6,8 +6,6 @@ A route defines:
 - Map path
 - 3 Occasional
 
----
-
 ## How admin creates a route
 1. Go to **Route Manage**
 2. Click **Add Route**
