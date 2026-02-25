@@ -1,7 +1,4 @@
 # Route Management
-
-## What is a route?
-A route defines:
 - Route name
 - Type (Regular or Occasional)
 - List of stops
