@@ -5,7 +5,6 @@
 2. Click **Add Route**
 3. Enter route name
 4. Select route type
-5. Select number of stops
 6. Enter stop names
 7. Add Google Map location if required
 8. Save the route
