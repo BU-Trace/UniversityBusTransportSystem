@@ -5,7 +5,6 @@
 - Map path
 There are **6 routes**:
 - 3 Regular
-- 3 Occasional
 
 ---
 
