@@ -2,8 +2,6 @@
 4. Select route type
 7. Add Google Map location if required
 8. Save the route
-- View all available routes
-- See route stops
 - Check which buses run on each route
 
 ---
