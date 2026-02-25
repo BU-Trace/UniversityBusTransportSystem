@@ -3,6 +3,7 @@
 A route defines:
 - Route name
 - Type (Regular or Occasional)
+- List of stops
 - Map path
 
 There are **6 routes**:
