@@ -1,1 +1,0 @@
-﻿src/lib/axios.ts(1,17): error TS2305: Module '"axios"' has no exported member 'InternalAxiosRequestConfig'.
