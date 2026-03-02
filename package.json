@@ -8,9 +8,9 @@
   "scripts": {
     "prepare": "husky install",
     "bootstrap": "node ./scripts/bootstrap.mjs",
-    "dev": "node ./scripts/dev.mjs",
-    "build": "node ./scripts/build.mjs",
-    "start": "node -e \"console.log('\\x1b[32mStarting server...\\x1b[0m')\" && npm --prefix server run start",
+    "dev": "node init && node ./scripts/dev.mjs",
+    "build": "node init && node ./scripts/build.mjs",
+    "start": "node init && node -e \"console.log('\\x1b[32mStarting server...\\x1b[0m')\" && npm --prefix server run start",
     "lint": "node ./scripts/lint.mjs",
     "typecheck": "node ./scripts/typecheck.mjs",
     "format": "node ./scripts/format.mjs",
